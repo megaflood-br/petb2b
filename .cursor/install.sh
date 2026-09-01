@@ -44,6 +44,8 @@ fi
 npm run build
 
 # Symlink public/storage -> storage/app/public (idempotent).
-php artisan storage:link || true
+if [ ! -e public/storage ]; then
+    php artisan storage:link
+fi
 
 echo "petb2b install complete."
