@@ -80,13 +80,9 @@ class CreditEngineTest extends TestCase
 
         $this->assertEquals(1, $ad->fresh()->views);
 
-        // O débito ocorre e o saldo nunca fica negativo. NÃO fixamos o valor
-        // exato do sub-centavo porque `credit_balance` é decimal(10,2): custos
-        // de impressão (ex.: 0.0070) sofrem arredondamento. A precisão
-        // monetária (micro-unidades inteiras) será tratada no próximo lote.
-        $novoSaldo = (float) $supplier->fresh()->credit_balance;
-        $this->assertLessThan(1.00, $novoSaldo);
-        $this->assertGreaterThanOrEqual(0, $novoSaldo);
+        // Com decimal(_,4) o custo sub-centavo (0.0070) é preservado sem
+        // arredondamento: 1.0000 - 0.0070 = 0.9930.
+        $this->assertEqualsWithDelta(0.9930, (float) $supplier->fresh()->credit_balance, 0.00001);
 
         $this->assertDatabaseHas('supplier_credit_transactions', [
             'supplier_id' => $supplier->id,

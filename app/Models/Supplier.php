@@ -36,7 +36,7 @@ class Supplier extends Model
         'is_active' => 'boolean',
         'is_verified' => 'boolean',
         'is_approved' => 'boolean',
-        'credit_balance' => 'decimal:2',
+        'credit_balance' => 'decimal:4',
     ];
 
     // Otimização de SEO: Gera o slug automaticamente ao salvar o nome
