@@ -13,6 +13,10 @@
                         <span class="text-xs font-bold text-gray-400 uppercase tracking-tighter">
                             {{ $post->created_at->format('d \d\e M, Y') }}
                         </span>
+                        @if($post->is_premium)
+                            <span class="text-gray-300">•</span>
+                            <span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">★ Exclusivo</span>
+                        @endif
                     </div>
 
                     <h1 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tighter leading-[0.95] mb-8">
@@ -48,9 +52,26 @@
 
             {{-- Conteúdo do Post --}}
             <div class="max-w-3xl mx-auto px-6">
-                <div class="prose prose-lg prose-brand max-w-none text-xl text-gray-600 leading-relaxed">
-                    {!! $post->content !!}
-                </div>
+                @if($post->is_premium && ! auth()->check())
+                    {{-- Prévia + paywall: conteúdo exclusivo para usuários cadastrados --}}
+                    <div class="prose prose-lg prose-brand max-w-none text-xl text-gray-600 leading-relaxed">
+                        {{ \Illuminate\Support\Str::limit(strip_tags($post->content), 450) }}
+                    </div>
+
+                    <div class="mt-6 bg-gray-950 text-white rounded-[2.5rem] p-10 text-center shadow-xl">
+                        <p class="text-[10px] font-black uppercase tracking-[0.3em] text-brand-400 mb-2">Conteúdo Exclusivo</p>
+                        <h3 class="text-2xl font-black uppercase italic tracking-tight mb-3">Continue lendo gratuitamente</h3>
+                        <p class="text-sm text-gray-400 font-medium max-w-md mx-auto mb-6">Cadastre-se no portal para ler esta matéria completa e acessar todo o conteúdo exclusivo do mercado pet.</p>
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                            <a href="{{ route('register') }}" class="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition">Criar conta grátis</a>
+                            <a href="{{ route('login') }}" class="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition">Já sou cadastrado</a>
+                        </div>
+                    </div>
+                @else
+                    <div class="prose prose-lg prose-brand max-w-none text-xl text-gray-600 leading-relaxed">
+                        {!! $post->content !!}
+                    </div>
+                @endif
 
                 {{-- AD ESPAÇO: FINAL DO CONTEÚDO --}}
                 <div class="mt-16">

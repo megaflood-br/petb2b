@@ -108,6 +108,13 @@
                     </label>
                 </div>
 
+                <div class="flex items-center gap-3 bg-amber-50/60 p-4 rounded-2xl border border-amber-100 mb-6">
+                    <input type="checkbox" wire:model="is_premium" id="is_premium" class="w-5 h-5 text-amber-600 rounded-lg border-gray-300 focus:ring-amber-500">
+                    <label for="is_premium" class="text-[10px] font-black uppercase text-amber-900 tracking-widest cursor-pointer">
+                        Conteúdo exclusivo (somente usuários cadastrados)
+                    </label>
+                </div>
+
                 <button type="submit" class="w-full bg-gray-900 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-brand-600 transition shadow-lg">
                     Salvar Postagem
                 </button>
