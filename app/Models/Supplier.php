@@ -32,6 +32,13 @@ class Supplier extends Model
     'is_approved',
 ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_verified' => 'boolean',
+        'is_approved' => 'boolean',
+        'credit_balance' => 'decimal:4',
+    ];
+
     // Otimização de SEO: Gera o slug automaticamente ao salvar o nome
     protected static function boot()
     {
@@ -41,5 +48,30 @@ class Supplier extends Model
                 $supplier->slug = Str::slug($supplier->name);
             }
         });
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function advertisements()
+    {
+        return $this->hasMany(Advertisement::class);
+    }
+
+    public function creditTransactions()
+    {
+        return $this->hasMany(SupplierCreditTransaction::class);
+    }
+
+    public function classifieds()
+    {
+        return $this->hasMany(Classified::class);
+    }
+
+    public function leads()
+    {
+        return $this->hasMany(Lead::class);
     }
 }

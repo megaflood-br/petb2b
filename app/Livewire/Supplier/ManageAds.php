@@ -34,10 +34,7 @@ class ManageAds extends Component
 
         $myAds = Advertisement::where('supplier_id', $this->supplier->id)
             ->latest()
-            ->get()
-            ->map(function ($ad) {
-                return $ad->fresh();
-            });
+            ->get();
 
         $transactions = SupplierCreditTransaction::where('supplier_id', $this->supplier->id)
             ->latest()
@@ -52,11 +49,14 @@ class ManageAds extends Component
 
     public function addCredits()
     {
+        $min = config('ads.recharge_min');
+        $max = config('ads.recharge_max');
+
         $this->validate([
-            'amount' => 'required|numeric|min:10|max:5000',
+            'amount' => "required|numeric|min:{$min}|max:{$max}",
         ], [
-            'amount.min' => 'O valor mínimo de recarga é R$ 10,00',
-            'amount.max' => 'O valor máximo por recarga é R$ 5.000,00',
+            'amount.min' => 'O valor mínimo de recarga é R$ ' . number_format($min, 2, ',', '.'),
+            'amount.max' => 'O valor máximo por recarga é R$ ' . number_format($max, 2, ',', '.'),
         ]);
 
         DB::transaction(function () {
@@ -132,8 +132,8 @@ class ManageAds extends Component
             'position' => $this->position,
             'image_path' => $path,
             'is_active' => $this->supplier->credit_balance > 0,
-            'cost_per_click' => env('ADS_COST_PER_CLICK', 0.50),
-            'cost_per_impression' => env('ADS_COST_PER_IMPRESSION', 0.0070)
+            'cost_per_click' => config('ads.cost_per_click'),
+            'cost_per_impression' => config('ads.cost_per_impression'),
         ]);
 
         $this->closeModal();
