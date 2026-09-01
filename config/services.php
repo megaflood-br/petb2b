@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'asaas' => [
+        // Chave de API do Asaas (sandbox: começa com $aact_...).
+        'key' => env('ASAAS_API_KEY'),
+        // Base da API. Sandbox por padrão; produção: https://api.asaas.com
+        'base_url' => env('ASAAS_BASE_URL', 'https://api-sandbox.asaas.com'),
+        // authToken configurado no webhook do Asaas (NÃO é a API key).
+        'webhook_token' => env('ASAAS_WEBHOOK_TOKEN'),
+    ],
+
 ];

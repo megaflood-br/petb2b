@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use App\Models\User;
 use App\Models\BlogCategory;
+use App\Services\Pix\AsaasPixGateway;
+use App\Services\Pix\FakePixGateway;
+use App\Services\Pix\PixGateway;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +18,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Provedor PIX: usa o Asaas quando há API key configurada; caso
+        // contrário, um driver Fake (dev local/testes sem credenciais).
+        $this->app->bind(PixGateway::class, function () {
+            $key = config('services.asaas.key');
+
+            if (empty($key)) {
+                return new FakePixGateway();
+            }
+
+            return new AsaasPixGateway(
+                (string) config('services.asaas.base_url'),
+                (string) $key,
+            );
+        });
     }
 
     /**

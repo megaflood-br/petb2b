@@ -22,6 +22,7 @@ use App\Models\Kennel;
 use App\Models\Advertisement;
 
 // Controllers & Livewire Públicos
+use App\Http\Controllers\AsaasWebhookController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\SupplierList;
 use App\Livewire\SupplierDetail;
@@ -56,6 +57,10 @@ Route::get('/ads/redirect/{advertisement}', function (Advertisement $advertiseme
     $advertisement->trackClick();
     return redirect()->away($advertisement->link);
 })->name('ads.redirect');
+
+// Webhook de confirmação de pagamento PIX (Asaas). Validação por token no
+// header 'asaas-access-token' dentro do controller; isento de CSRF.
+Route::post('/webhooks/asaas', AsaasWebhookController::class)->name('webhooks.asaas');
 
 // -------------------------------------------------------------------
 // HOME PAGE DINÂMICA DA REVISTA NEGÓCIOS PET (ATUALIZADA E CORRIGIDA)
