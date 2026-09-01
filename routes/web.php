@@ -24,6 +24,8 @@ use App\Models\Advertisement;
 // Controllers & Livewire Públicos
 use App\Http\Controllers\AsaasWebhookController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Livewire\JobList;
+use App\Livewire\Supplier\ManageJobs;
 use App\Livewire\SupplierList;
 use App\Livewire\SupplierDetail;
 use App\Livewire\ClassifiedsIndex;
@@ -143,6 +145,17 @@ Route::get('/cadastro-selecao', function () {
 Route::get('/busca', GeneralSearch::class)->name('general.search');
 Route::get('/classificados', ClassifiedsIndex::class)->name('classifieds.index');
 Route::get('/classificados/{classified:slug}', ClassifiedShow::class)->name('classifieds.show');
+
+// Guia de Empregos / Vagas
+Route::get('/vagas', JobList::class)->name('jobs.index');
+Route::get('/vagas/{slug}', function ($slug) {
+    $job = \App\Models\JobPosting::where('slug', $slug)
+        ->where('is_active', true)
+        ->with('supplier')
+        ->firstOrFail();
+
+    return view('jobs.show', compact('job'));
+})->name('jobs.show');
 
 // Agenda Pet apontando diretamente para o componente reativo do Livewire
 Route::get('/feiras-pet-2026/{slug?}', \App\Livewire\EventList::class)->name('events.index');
@@ -309,6 +322,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/mensagens', function () { return view('pages.supplier-leads'); })->name('supplier.messages');
         Route::get('/classificados', function() { return view('pages.supplier-classifieds'); })->name('supplier.classifieds');
         Route::get('/banners-e-creditos', ManageAds::class)->name('supplier.ads');
+        Route::get('/vagas', ManageJobs::class)->name('supplier.jobs');
     });
 
     // Logout Seguro da Conta
@@ -356,6 +370,6 @@ Route::get('/{prefixCategory}/{slug}', function ($prefixCategory, $slug) {
         ->get();
 
     return view('blog.show', compact('post', 'relatedPosts'));
-})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|agenda-pet|canis|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
+})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|vagas|agenda-pet|canis|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
 
 require __DIR__.'/auth.php';
