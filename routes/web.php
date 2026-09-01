@@ -25,6 +25,7 @@ use App\Models\Advertisement;
 use App\Http\Controllers\AsaasWebhookController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
+use App\Livewire\BreedList;
 use App\Livewire\Supplier\ManageJobs;
 use App\Livewire\Supplier\ManageSponsoredPosts;
 use App\Livewire\SupplierList;
@@ -50,6 +51,7 @@ use App\Livewire\Admin\ManageContacts;
 use App\Livewire\Admin\ManageAds as AdminManageAds;
 use App\Livewire\Admin\ManageCategories;
 use App\Livewire\Admin\ManageKennels;
+use App\Livewire\Admin\ManageBreeds;
 
 // -------------------------------------------------------------------
 // 1. ÁREA PÚBLICA DO PORTAL
@@ -157,6 +159,14 @@ Route::get('/vagas/{slug}', function ($slug) {
 
     return view('jobs.show', compact('job'));
 })->name('jobs.show');
+
+// Guia de Espécies / Raças
+Route::get('/racas', BreedList::class)->name('breeds.index');
+Route::get('/racas/{slug}', function ($slug) {
+    $breed = \App\Models\Breed::where('slug', $slug)->where('is_active', true)->firstOrFail();
+
+    return view('breeds.show', compact('breed'));
+})->name('breeds.show');
 
 // Agenda Pet apontando diretamente para o componente reativo do Livewire
 Route::get('/feiras-pet-2026/{slug?}', \App\Livewire\EventList::class)->name('events.index');
@@ -303,6 +313,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reivindicacoes', \App\Livewire\Admin\ManageClaims::class)->name('admin.claims');
         Route::get('/categorias', ManageCategories::class)->name('admin.categories');
         Route::get('/canis', ManageKennels::class)->name('admin.kennels');
+        Route::get('/racas', ManageBreeds::class)->name('admin.breeds');
 
         Route::get('/eventos', function () { return view('admin.events.index'); })->name('admin.events');
         Route::get('/analises', function() { return view('admin.reviews.index'); })->name('admin.reviews');
@@ -372,6 +383,6 @@ Route::get('/{prefixCategory}/{slug}', function ($prefixCategory, $slug) {
         ->get();
 
     return view('blog.show', compact('post', 'relatedPosts'));
-})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|vagas|agenda-pet|canis|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
+})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|vagas|agenda-pet|canis|racas|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
 
 require __DIR__.'/auth.php';
