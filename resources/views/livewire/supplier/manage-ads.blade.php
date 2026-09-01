@@ -48,19 +48,35 @@
                     </div>
                 </div>
 
-                {{-- Input e Botão de Inserção de Crédito --}}
+                {{-- Input e Botão de Geração de PIX --}}
                 <div class="pt-5 border-t border-gray-900 space-y-3">
-                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Adicionar Crédito Comercial</p>
-                    <form wire:submit.prevent="addCredits" class="flex gap-2">
+                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Adicionar Crédito via PIX</p>
+                    <form wire:submit.prevent="generatePix" class="flex gap-2">
                         <div class="relative flex-1">
                             <span class="absolute left-3 top-3.5 text-gray-500 font-mono text-[10px]">R$</span>
                             <input type="number" wire:model="amount" placeholder="50" min="10" step="1" class="w-full bg-gray-900 border-gray-800 rounded-xl p-3.5 pl-8 text-white focus:ring-2 focus:ring-brand-500 text-xs font-mono font-bold">
                         </div>
-                        <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white px-4 rounded-xl font-black uppercase text-[10px] tracking-wider transition shrink-0">
-                            Colocar Saldo
+                        <button type="submit" wire:loading.attr="disabled" class="bg-brand-500 hover:bg-brand-600 text-white px-4 rounded-xl font-black uppercase text-[10px] tracking-wider transition shrink-0 disabled:opacity-50">
+                            <span wire:loading.remove wire:target="generatePix">Gerar PIX</span>
+                            <span wire:loading wire:target="generatePix">...</span>
                         </button>
                     </form>
                     @error('amount') <span class="text-red-400 text-[10px] block font-medium normal-case">{{ $message }}</span> @enderror
+
+                    {{-- QR Code / Copia e Cola da cobrança em aberto --}}
+                    @if($pixPayload)
+                        <div class="mt-4 bg-white rounded-2xl p-4 text-center space-y-3" wire:poll.6s="checkPixStatus">
+                            @if($pixQrImage)
+                                <img src="data:image/png;base64,{{ $pixQrImage }}" alt="QR Code PIX" class="w-40 h-40 mx-auto rounded-lg border border-gray-100">
+                            @endif
+                            <p class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Escaneie o QR ou use o copia e cola</p>
+                            <div class="bg-gray-50 border border-gray-100 rounded-lg p-2 break-all font-mono text-[9px] text-gray-700 select-all">{{ $pixPayload }}</div>
+                            @if($pixExpiration)
+                                <p class="text-[8px] text-gray-400 normal-case">Válido até {{ $pixExpiration }}. Aguardando pagamento…</p>
+                            @endif
+                            <button type="button" wire:click="cancelPix" class="text-[9px] font-black uppercase tracking-wider text-gray-400 hover:text-gray-600">Cancelar</button>
+                        </div>
+                    @endif
                 </div>
             </div>
 

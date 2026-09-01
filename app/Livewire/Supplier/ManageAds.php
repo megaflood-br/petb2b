@@ -3,10 +3,12 @@
 namespace App\Livewire\Supplier;
 
 use App\Models\Advertisement;
+use App\Models\PixCharge;
 use App\Models\Supplier;
 use App\Models\SupplierCreditTransaction;
+use App\Services\Pix\PixGateway;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -17,6 +19,12 @@ class ManageAds extends Component
     public $supplier;
     public $title, $link, $position, $image;
     public $amount;
+
+    // Estado da cobrança PIX em aberto (QR Code / copia e cola).
+    public ?int $pixChargeId = null;
+    public ?string $pixPayload = null;
+    public ?string $pixQrImage = null;
+    public ?string $pixExpiration = null;
 
     // Controles do Modal de Cadastro/Edição
     public $isModalOpen = false;
@@ -47,7 +55,12 @@ class ManageAds extends Component
         ])->layout('layouts.supplier');
     }
 
-    public function addCredits()
+    /**
+     * Gera uma cobrança PIX (QR Code dinâmico) no provedor. O saldo NÃO é
+     * creditado aqui: o crédito acontece de forma assíncrona quando o webhook
+     * de pagamento confirmado chega (idempotente).
+     */
+    public function generatePix(PixGateway $gateway)
     {
         $min = config('ads.recharge_min');
         $max = config('ads.recharge_max');
@@ -59,25 +72,48 @@ class ManageAds extends Component
             'amount.max' => 'O valor máximo por recarga é R$ ' . number_format($max, 2, ',', '.'),
         ]);
 
-        DB::transaction(function () {
-            $this->supplier->increment('credit_balance', $this->amount);
+        $result = $gateway->createCharge($this->supplier, (float) $this->amount);
 
-            SupplierCreditTransaction::create([
-                'supplier_id' => $this->supplier->id,
-                'type' => 'deposit',
-                'amount' => $this->amount,
-                'description' => 'Recarga de saldo via PIX (Simulado Local)',
-            ]);
+        $charge = PixCharge::create([
+            'supplier_id' => $this->supplier->id,
+            'asaas_payment_id' => $result->paymentId,
+            'amount' => $this->amount,
+            'status' => $result->status,
+            'pix_payload' => $result->payload,
+            'pix_encoded_image' => $result->encodedImage,
+            'pix_expiration' => $result->expiration ? Carbon::parse($result->expiration) : null,
+        ]);
 
-            Advertisement::where('supplier_id', $this->supplier->id)
-                ->where('is_active', false)
-                ->update(['is_active' => true]);
-        });
+        $this->pixChargeId = $charge->id;
+        $this->pixPayload = $result->payload;
+        $this->pixQrImage = $result->encodedImage;
+        $this->pixExpiration = $charge->pix_expiration?->format('d/m/Y');
 
-        $this->supplier->refresh();
-        $this->reset('amount');
+        session()->flash('message', 'Cobrança PIX gerada! Escaneie o QR Code ou copie o código. O saldo é creditado automaticamente após o pagamento.');
+    }
 
-        session()->flash('message', 'Créditos adicionados e campanhas reativadas com sucesso!');
+    /**
+     * Consultado por wire:poll enquanto há uma cobrança em aberto: quando o
+     * webhook creditar a cobrança, limpa o QR e atualiza o saldo na tela.
+     */
+    public function checkPixStatus()
+    {
+        if (! $this->pixChargeId) {
+            return;
+        }
+
+        $charge = PixCharge::find($this->pixChargeId);
+
+        if ($charge && $charge->isCredited()) {
+            $this->reset(['amount', 'pixChargeId', 'pixPayload', 'pixQrImage', 'pixExpiration']);
+            $this->supplier->refresh();
+            session()->flash('message', 'Pagamento PIX confirmado! Seu saldo foi atualizado.');
+        }
+    }
+
+    public function cancelPix()
+    {
+        $this->reset(['pixChargeId', 'pixPayload', 'pixQrImage', 'pixExpiration']);
     }
 
     /**
