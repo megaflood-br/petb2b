@@ -17,6 +17,7 @@ class ManageBlog extends Component
     public $showForm = false;
     public $postId, $title, $content, $image, $meta_description, $meta_keywords;
     public $is_featured = false;
+    public $is_premium = false;
 
     public $search = '';
     public $created_at;
@@ -63,6 +64,7 @@ class ManageBlog extends Component
             'slug' => Str::slug($this->title),
             'content' => $this->content,
             'is_featured' => $this->is_featured,
+            'is_premium' => $this->is_premium,
             'meta_description' => $this->meta_description,
             'meta_keywords' => $this->meta_keywords,
             'is_active' => true,
@@ -95,6 +97,7 @@ class ManageBlog extends Component
         $this->title = $post->title;
         $this->content = $post->content;
         $this->is_featured = $post->is_featured;
+        $this->is_premium = $post->is_premium;
         $this->meta_description = $post->meta_description;
         $this->meta_keywords = $post->meta_keywords;
         $this->created_at = $post->created_at ? $post->created_at->format('Y-m-d\TH:i') : null;
@@ -115,7 +118,7 @@ class ManageBlog extends Component
     {
         $this->reset([
             'postId', 'title', 'content', 'image', 'meta_description',
-            'meta_keywords', 'is_featured', 'selected_categories',
+            'meta_keywords', 'is_featured', 'is_premium', 'selected_categories',
             'showForm', 'search', 'created_at'
         ]);
     }

@@ -18,6 +18,7 @@ class Post extends Model
         'image',
         'is_active',
         'is_featured',
+        'is_premium',
         'meta_description',
         'meta_keywords',
     ];
@@ -26,6 +27,7 @@ class Post extends Model
     protected $casts = [
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
+        'is_premium' => 'boolean',
     ];
 
     /**
