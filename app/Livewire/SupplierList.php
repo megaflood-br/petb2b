@@ -35,12 +35,7 @@ class SupplierList extends Component
         // Query principal refletindo apenas fornecedores aprovados e ativos
         $suppliers = Supplier::where('is_approved', true) // Filtro de aprovação corrigido
             ->where('is_active', true)
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
-                });
-            })
+            ->search($this->search, ['name', 'description'])
             ->when($this->category, function($query) {
                 $query->where('category', $this->category);
             })

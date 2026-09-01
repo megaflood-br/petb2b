@@ -38,11 +38,7 @@ class GeneralSearch extends Component
         // 1. Busca em Fornecedores Ativos
         $suppliers = Supplier::where('is_active', true)
             ->where('is_approved', true)
-            ->where(function($query) {
-                $query->where('name', 'like', '%' . $this->term . '%')
-                      ->orWhere('description', 'like', '%' . $this->term . '%')
-                      ->orWhere('category', 'like', '%' . $this->term . '%');
-            })
+            ->search($this->term, ['name', 'description'])
             ->take(6)->get();
 
         // 2. Busca em Eventos Futuros Ativos
@@ -64,12 +60,9 @@ class GeneralSearch extends Component
             })
             ->latest()->take(6)->get();
 
-        // 4. CORRIGIDO: Busca pura em Notícias sem tentar carregar relacionamentos ausentes (Eager Loading)
+        // 4. Busca em Notícias
         $posts = Post::where('is_active', true)
-            ->where(function($query) {
-                $query->where('title', 'like', '%' . $this->term . '%')
-                      ->orWhere('content', 'like', '%' . $this->term . '%');
-            })
+            ->search($this->term, ['title', 'content'])
             ->latest()
             ->take(6)->get();
 
