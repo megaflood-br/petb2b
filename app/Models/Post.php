@@ -12,6 +12,7 @@ class Post extends Model
 
     // Define quais campos podem ser preenchidos em massa (Removida a FK direta)
     protected $fillable = [
+        'supplier_id',
         'title',
         'slug',
         'content',
@@ -19,6 +20,7 @@ class Post extends Model
         'is_active',
         'is_featured',
         'is_premium',
+        'is_sponsored',
         'meta_description',
         'meta_keywords',
     ];
@@ -28,7 +30,13 @@ class Post extends Model
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
         'is_premium' => 'boolean',
+        'is_sponsored' => 'boolean',
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
     /**
      * RELACIONAMENTO: Uma matéria (Post) pertence a várias categorias de blog.

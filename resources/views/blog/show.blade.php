@@ -17,6 +17,10 @@
                             <span class="text-gray-300">•</span>
                             <span class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">★ Exclusivo</span>
                         @endif
+                        @if($post->is_sponsored)
+                            <span class="text-gray-300">•</span>
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">Patrocinado</span>
+                        @endif
                     </div>
 
                     <h1 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tighter leading-[0.95] mb-8">
@@ -29,8 +33,13 @@
                             NP
                         </div>
                         <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Redação</p>
-                            <p class="font-black text-gray-900 uppercase text-xs">Negócios Pet</p>
+                            @if($post->is_sponsored && $post->supplier)
+                                <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none mb-1">Conteúdo Patrocinado por</p>
+                                <p class="font-black text-gray-900 uppercase text-xs">{{ $post->supplier->name }}</p>
+                            @else
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Redação</p>
+                                <p class="font-black text-gray-900 uppercase text-xs">Negócios Pet</p>
+                            @endif
                         </div>
                     </div>
                 </div>

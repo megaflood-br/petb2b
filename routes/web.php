@@ -26,6 +26,7 @@ use App\Http\Controllers\AsaasWebhookController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
 use App\Livewire\Supplier\ManageJobs;
+use App\Livewire\Supplier\ManageSponsoredPosts;
 use App\Livewire\SupplierList;
 use App\Livewire\SupplierDetail;
 use App\Livewire\ClassifiedsIndex;
@@ -323,6 +324,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/classificados', function() { return view('pages.supplier-classifieds'); })->name('supplier.classifieds');
         Route::get('/banners-e-creditos', ManageAds::class)->name('supplier.ads');
         Route::get('/vagas', ManageJobs::class)->name('supplier.jobs');
+        Route::get('/materias', ManageSponsoredPosts::class)->name('supplier.sponsored');
     });
 
     // Logout Seguro da Conta

@@ -41,4 +41,15 @@ return [
 
     'tracking_queue' => (bool) env('ADS_TRACKING_QUEUE', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Matéria patrocinada (publieditorial)
+    |--------------------------------------------------------------------------
+    |
+    | Custo em créditos (R$) para o fornecedor publicar uma matéria patrocinada.
+    |
+    */
+
+    'sponsored_post_cost' => (float) env('ADS_SPONSORED_POST_COST', 150),
+
 ];
