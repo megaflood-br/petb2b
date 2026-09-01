@@ -23,9 +23,12 @@ use App\Models\Advertisement;
 
 // Controllers & Livewire Públicos
 use App\Http\Controllers\AsaasWebhookController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
+use App\Livewire\BreedList;
 use App\Livewire\Supplier\ManageJobs;
+use App\Livewire\Supplier\ManageSponsoredPosts;
 use App\Livewire\SupplierList;
 use App\Livewire\SupplierDetail;
 use App\Livewire\ClassifiedsIndex;
@@ -49,6 +52,7 @@ use App\Livewire\Admin\ManageContacts;
 use App\Livewire\Admin\ManageAds as AdminManageAds;
 use App\Livewire\Admin\ManageCategories;
 use App\Livewire\Admin\ManageKennels;
+use App\Livewire\Admin\ManageBreeds;
 
 // -------------------------------------------------------------------
 // 1. ÁREA PÚBLICA DO PORTAL
@@ -65,76 +69,11 @@ Route::get('/ads/redirect/{advertisement}', function (Advertisement $advertiseme
 Route::post('/webhooks/asaas', AsaasWebhookController::class)->name('webhooks.asaas');
 
 // -------------------------------------------------------------------
-// HOME PAGE DINÂMICA DA REVISTA NEGÓCIOS PET (ATUALIZADA E CORRIGIDA)
+// HOME PAGE DINÂMICA DA REVISTA NEGÓCIOS PET
+// Lógica movida para App\Http\Controllers\HomeController (com cache dos
+// blocos de leitura; banner/tracking rodam por requisição).
 // -------------------------------------------------------------------
-Route::get('/', function () {
-    $latestMagazine = Magazine::where('is_active', true)->latest()->first();
-
-    // Carrega os 6 posts mais recentes do blog para a seção "Destaques da Edição"
-    $latestPosts = Post::where('is_active', true)
-        ->orderBy('is_featured', 'desc')
-        ->latest()
-        ->take(9)
-        ->get();
-
-    // CORREÇÃO DEFINITIVA: Filtra os fornecedores diretamente pela coluna 'category' com o slug gerado pelo Excel
-    $raceSuppliers = Supplier::where('is_approved', true)
-        ->where('is_active', true)
-        ->where(function($q) {
-            $q->where('category', 'racas')
-              ->orWhere('category', 'canis')
-              ->orWhere('category', 'adestradores'); // Fallback seguro com os dados que você importou
-        })
-        ->latest()
-        ->take(3)
-        ->get();
-
-    $featuredSuppliers = Supplier::where('is_approved', true)
-        ->where('is_active', true)
-        ->where('is_verified', true)
-        ->latest()
-        ->take(3)
-        ->get();
-
-    $topCategories = Supplier::select('category', DB::raw('count(*) as total'))
-        ->where('is_approved', true)
-        ->whereNotNull('category')
-        ->groupBy('category')
-        ->orderBy('total', 'desc')
-        ->take(4)
-        ->get();
-
-    $featuredClassifieds = Classified::where('is_active', true)
-        ->with('supplier')->latest()->take(3)->get();
-
-    $upcomingEvents = Event::where('is_active', true)
-        ->where('start_date', '>=', now())
-        ->orderBy('start_date', 'asc')->take(2)->get();
-
-    $featuredReviews = ProductReview::where('is_active', true)
-        ->latest()->take(2)->get();
-
-    $bannerHome = Advertisement::where('is_active', true)
-        ->where('position', 'banner_topo')
-        ->inRandomOrder()
-        ->first();
-
-    if ($bannerHome) {
-        $bannerHome->trackImpression();
-    }
-
-    return view('welcome', compact(
-        'latestPosts',
-        'latestMagazine',
-        'featuredSuppliers',
-        'topCategories',
-        'upcomingEvents',
-        'featuredClassifieds',
-        'featuredReviews',
-        'bannerHome',
-        'raceSuppliers' // Injetando a variável limpa na View
-    ));
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // Seleção de Tipo de Cadastro (Canil vs Fornecedor)
 Route::get('/cadastro-selecao', function () {
@@ -156,6 +95,14 @@ Route::get('/vagas/{slug}', function ($slug) {
 
     return view('jobs.show', compact('job'));
 })->name('jobs.show');
+
+// Guia de Espécies / Raças
+Route::get('/racas', BreedList::class)->name('breeds.index');
+Route::get('/racas/{slug}', function ($slug) {
+    $breed = \App\Models\Breed::where('slug', $slug)->where('is_active', true)->firstOrFail();
+
+    return view('breeds.show', compact('breed'));
+})->name('breeds.show');
 
 // Agenda Pet apontando diretamente para o componente reativo do Livewire
 Route::get('/feiras-pet-2026/{slug?}', \App\Livewire\EventList::class)->name('events.index');
@@ -302,6 +249,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reivindicacoes', \App\Livewire\Admin\ManageClaims::class)->name('admin.claims');
         Route::get('/categorias', ManageCategories::class)->name('admin.categories');
         Route::get('/canis', ManageKennels::class)->name('admin.kennels');
+        Route::get('/racas', ManageBreeds::class)->name('admin.breeds');
 
         Route::get('/eventos', function () { return view('admin.events.index'); })->name('admin.events');
         Route::get('/analises', function() { return view('admin.reviews.index'); })->name('admin.reviews');
@@ -323,6 +271,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/classificados', function() { return view('pages.supplier-classifieds'); })->name('supplier.classifieds');
         Route::get('/banners-e-creditos', ManageAds::class)->name('supplier.ads');
         Route::get('/vagas', ManageJobs::class)->name('supplier.jobs');
+        Route::get('/materias', ManageSponsoredPosts::class)->name('supplier.sponsored');
     });
 
     // Logout Seguro da Conta
@@ -370,6 +319,6 @@ Route::get('/{prefixCategory}/{slug}', function ($prefixCategory, $slug) {
         ->get();
 
     return view('blog.show', compact('post', 'relatedPosts'));
-})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|vagas|agenda-pet|canis|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
+})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|vagas|agenda-pet|canis|racas|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
 
 require __DIR__.'/auth.php';

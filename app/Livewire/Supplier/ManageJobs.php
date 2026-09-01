@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Supplier;
 
+use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,9 @@ class ManageJobs extends Component
 
     public $showForm = false;
     public $editingId = null;
+
+    // Painel de candidaturas da vaga selecionada.
+    public $selectedJobId = null;
 
     public function mount()
     {
@@ -101,13 +105,33 @@ class ManageJobs extends Component
         $this->is_active = true;
     }
 
+    public function viewApplications($id)
+    {
+        // Garante que a vaga é do fornecedor logado.
+        JobPosting::where('supplier_id', $this->supplier->id)->findOrFail($id);
+        $this->selectedJobId = $id;
+    }
+
+    public function closeApplications()
+    {
+        $this->selectedJobId = null;
+    }
+
     public function render()
     {
-        $jobs = JobPosting::where('supplier_id', $this->supplier->id)->latest()->get();
+        $jobs = JobPosting::where('supplier_id', $this->supplier->id)
+            ->withCount('applications')
+            ->latest()
+            ->get();
+
+        $applications = $this->selectedJobId
+            ? JobApplication::where('job_posting_id', $this->selectedJobId)->latest()->get()
+            : collect();
 
         return view('livewire.supplier.manage-jobs', [
             'jobs' => $jobs,
             'types' => JobPosting::TYPES,
+            'applications' => $applications,
         ])->layout('layouts.supplier');
     }
 }

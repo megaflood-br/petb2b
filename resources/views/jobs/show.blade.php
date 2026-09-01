@@ -34,14 +34,18 @@
                 <div class="prose prose-sm max-w-none mt-8 text-gray-700 whitespace-pre-line leading-relaxed">{{ $job->description }}</div>
 
                 <div class="mt-10 pt-6 border-t border-gray-100">
-                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-2">Como se candidatar</p>
-                    @if($applyHref)
-                        <a href="{{ $applyHref }}" target="_blank" rel="noopener" class="inline-block bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition shadow-md shadow-brand-500/10">
-                            Candidatar-se
-                        </a>
-                    @else
-                        <p class="text-sm font-bold text-gray-900 bg-gray-50 border border-gray-100 rounded-xl p-4">{{ $apply }}</p>
-                    @endif
+                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Candidate-se a esta vaga</p>
+
+                    @livewire('job-apply', ['jobId' => $job->id])
+
+                    <div class="mt-6 text-center">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ou fale direto com a empresa</p>
+                        @if($applyHref)
+                            <a href="{{ $applyHref }}" target="_blank" rel="noopener" class="text-brand-500 font-black hover:underline text-sm break-all">{{ $apply }}</a>
+                        @else
+                            <p class="text-sm font-bold text-gray-900">{{ $apply }}</p>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
