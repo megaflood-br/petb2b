@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
 
     // Define quais campos podem ser preenchidos em massa (Removida a FK direta)
     protected $fillable = [
