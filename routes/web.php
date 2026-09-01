@@ -23,6 +23,7 @@ use App\Models\Advertisement;
 
 // Controllers & Livewire Públicos
 use App\Http\Controllers\AsaasWebhookController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
 use App\Livewire\BreedList;
@@ -68,76 +69,11 @@ Route::get('/ads/redirect/{advertisement}', function (Advertisement $advertiseme
 Route::post('/webhooks/asaas', AsaasWebhookController::class)->name('webhooks.asaas');
 
 // -------------------------------------------------------------------
-// HOME PAGE DINÂMICA DA REVISTA NEGÓCIOS PET (ATUALIZADA E CORRIGIDA)
+// HOME PAGE DINÂMICA DA REVISTA NEGÓCIOS PET
+// Lógica movida para App\Http\Controllers\HomeController (com cache dos
+// blocos de leitura; banner/tracking rodam por requisição).
 // -------------------------------------------------------------------
-Route::get('/', function () {
-    $latestMagazine = Magazine::where('is_active', true)->latest()->first();
-
-    // Carrega os 6 posts mais recentes do blog para a seção "Destaques da Edição"
-    $latestPosts = Post::where('is_active', true)
-        ->orderBy('is_featured', 'desc')
-        ->latest()
-        ->take(9)
-        ->get();
-
-    // CORREÇÃO DEFINITIVA: Filtra os fornecedores diretamente pela coluna 'category' com o slug gerado pelo Excel
-    $raceSuppliers = Supplier::where('is_approved', true)
-        ->where('is_active', true)
-        ->where(function($q) {
-            $q->where('category', 'racas')
-              ->orWhere('category', 'canis')
-              ->orWhere('category', 'adestradores'); // Fallback seguro com os dados que você importou
-        })
-        ->latest()
-        ->take(3)
-        ->get();
-
-    $featuredSuppliers = Supplier::where('is_approved', true)
-        ->where('is_active', true)
-        ->where('is_verified', true)
-        ->latest()
-        ->take(3)
-        ->get();
-
-    $topCategories = Supplier::select('category', DB::raw('count(*) as total'))
-        ->where('is_approved', true)
-        ->whereNotNull('category')
-        ->groupBy('category')
-        ->orderBy('total', 'desc')
-        ->take(4)
-        ->get();
-
-    $featuredClassifieds = Classified::where('is_active', true)
-        ->with('supplier')->latest()->take(3)->get();
-
-    $upcomingEvents = Event::where('is_active', true)
-        ->where('start_date', '>=', now())
-        ->orderBy('start_date', 'asc')->take(2)->get();
-
-    $featuredReviews = ProductReview::where('is_active', true)
-        ->latest()->take(2)->get();
-
-    $bannerHome = Advertisement::where('is_active', true)
-        ->where('position', 'banner_topo')
-        ->inRandomOrder()
-        ->first();
-
-    if ($bannerHome) {
-        $bannerHome->trackImpression();
-    }
-
-    return view('welcome', compact(
-        'latestPosts',
-        'latestMagazine',
-        'featuredSuppliers',
-        'topCategories',
-        'upcomingEvents',
-        'featuredClassifieds',
-        'featuredReviews',
-        'bannerHome',
-        'raceSuppliers' // Injetando a variável limpa na View
-    ));
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // Seleção de Tipo de Cadastro (Canil vs Fornecedor)
 Route::get('/cadastro-selecao', function () {
