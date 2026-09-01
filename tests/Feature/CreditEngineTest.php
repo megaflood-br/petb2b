@@ -60,7 +60,7 @@ class CreditEngineTest extends TestCase
         $supplier = $this->makeSupplier(10.00);
         $ad = $this->makeAd($supplier);
 
-        $this->assertTrue($ad->trackClick());
+        $this->assertTrue($ad->chargeClick());
 
         $this->assertEquals(1, $ad->fresh()->clicks);
         $this->assertEqualsWithDelta(9.50, (float) $supplier->fresh()->credit_balance, 0.0001);
@@ -76,7 +76,7 @@ class CreditEngineTest extends TestCase
         $supplier = $this->makeSupplier(1.00);
         $ad = $this->makeAd($supplier);
 
-        $this->assertTrue($ad->trackImpression());
+        $this->assertTrue($ad->chargeImpression());
 
         $this->assertEquals(1, $ad->fresh()->views);
 
@@ -95,7 +95,7 @@ class CreditEngineTest extends TestCase
         $supplier = $this->makeSupplier(0.10);
         $ad = $this->makeAd($supplier, ['cost_per_click' => 0.50]);
 
-        $this->assertFalse($ad->trackClick());
+        $this->assertFalse($ad->chargeClick());
 
         // Não debitou, não contou clique e pausou a campanha.
         $this->assertEquals(0, $ad->fresh()->clicks);
@@ -113,9 +113,9 @@ class CreditEngineTest extends TestCase
         $ad = $this->makeAd($supplier, ['cost_per_click' => 0.50]);
 
         // 2 cobranças válidas (1.00 -> 0.50 -> 0.00), a 3ª deve falhar.
-        $this->assertTrue($ad->trackClick());
-        $this->assertTrue($ad->trackClick());
-        $this->assertFalse($ad->trackClick());
+        $this->assertTrue($ad->chargeClick());
+        $this->assertTrue($ad->chargeClick());
+        $this->assertFalse($ad->chargeClick());
 
         $this->assertGreaterThanOrEqual(0, (float) $supplier->fresh()->credit_balance);
         $this->assertEquals(2, $ad->fresh()->clicks);

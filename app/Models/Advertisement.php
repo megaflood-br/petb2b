@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\AdTracker;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -48,12 +49,32 @@ class Advertisement extends Model
     }
 
     /**
-     * Registra uma impressão e debita o custo por visualização.
+     * Ponto de entrada de impressão chamado nas views/rotas.
+     *
+     * Aplica antifraude (dedup por IP+user-agent dentro da janela) e despacha
+     * a cobrança para fora do caminho síncrono da resposta. Retorna true quando
+     * o evento foi contabilizado (não duplicado).
+     */
+    public function trackImpression(): bool
+    {
+        return app(AdTracker::class)->record($this, 'impression');
+    }
+
+    /**
+     * Ponto de entrada de clique chamado na rota de redirecionamento.
+     */
+    public function trackClick(): bool
+    {
+        return app(AdTracker::class)->record($this, 'click');
+    }
+
+    /**
+     * Cobrança atômica de uma impressão (executada pelo Job de fila).
      *
      * @return bool true quando a cobrança ocorreu; false quando não houve
      *              saldo (e o anúncio foi pausado) ou não há fornecedor.
      */
-    public function trackImpression(): bool
+    public function chargeImpression(): bool
     {
         return $this->charge(
             (float) $this->cost_per_impression,
@@ -64,9 +85,9 @@ class Advertisement extends Model
     }
 
     /**
-     * Registra um clique e debita o custo por clique.
+     * Cobrança atômica de um clique (executada pelo Job de fila).
      */
-    public function trackClick(): bool
+    public function chargeClick(): bool
     {
         return $this->charge(
             (float) $this->cost_per_click,
