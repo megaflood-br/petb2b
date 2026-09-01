@@ -92,7 +92,10 @@
                         {{ $job->type }} · {{ $job->city ?: '—' }}/{{ $job->state ?: '—' }}{{ $job->salary ? ' · ' . $job->salary : '' }}
                     </p>
                 </div>
-                <div class="flex gap-2 shrink-0">
+                <div class="flex gap-2 shrink-0 flex-wrap justify-end">
+                    <button wire:click="viewApplications({{ $job->id }})" class="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 transition">
+                        Candidaturas ({{ $job->applications_count }})
+                    </button>
                     <button wire:click="toggleStatus({{ $job->id }})" class="text-[9px] font-black uppercase tracking-wider px-3 py-2 rounded-lg {{ $job->is_active ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-green-50 text-green-600 hover:bg-green-100' }} transition">
                         {{ $job->is_active ? 'Pausar' : 'Ativar' }}
                     </button>
@@ -106,4 +109,38 @@
             </div>
         @endforelse
     </div>
+
+    {{-- Painel de candidaturas --}}
+    @if($selectedJobId)
+        <div class="fixed inset-0 bg-gray-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" wire:click.self="closeApplications">
+            <div class="bg-white rounded-[2rem] border shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-8 space-y-4">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h2 class="text-lg font-black text-gray-900 uppercase italic tracking-tight">Candidaturas recebidas</h2>
+                    <button wire:click="closeApplications" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                @forelse($applications as $app)
+                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-5">
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="min-w-0">
+                                <p class="font-black text-gray-900 text-sm">{{ $app->name }}</p>
+                                <p class="text-xs text-gray-500 font-medium">{{ $app->email }}{{ $app->phone ? ' · ' . $app->phone : '' }}</p>
+                            </div>
+                            <span class="text-[9px] text-gray-400 font-mono shrink-0">{{ $app->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                        @if($app->message)
+                            <p class="text-xs text-gray-700 mt-3 whitespace-pre-line">{{ $app->message }}</p>
+                        @endif
+                        @if($app->resume_path)
+                            <a href="{{ asset('storage/' . $app->resume_path) }}" target="_blank" rel="noopener" class="inline-block mt-3 text-[10px] font-black uppercase tracking-wider text-brand-600 hover:underline">↓ Baixar currículo</a>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-center text-gray-400 font-bold uppercase tracking-widest text-xs py-10">Nenhuma candidatura para esta vaga ainda.</p>
+                @endforelse
+            </div>
+        </div>
+    @endif
 </div>
