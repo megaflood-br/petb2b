@@ -10,11 +10,35 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')] class extends Component
 {
+    /** Papéis permitidos no cadastro self-service. */
+    public const ALLOWED_ROLES = ['reader', 'supplier', 'breeder'];
+
     public string $name = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
-public string $cnpj = '';
+    public string $cnpj = '';
+    public string $role = 'reader';
+
+    public function mount(): void
+    {
+        // Perfil escolhido na tela de seleção (?role=supplier|breeder|reader).
+        $requested = (string) request('role', 'reader');
+        $this->role = in_array($requested, self::ALLOWED_ROLES, true) ? $requested : 'reader';
+    }
+
+    /**
+     * Rótulo amigável do perfil selecionado (usado no cabeçalho do formulário).
+     */
+    public function roleLabel(): string
+    {
+        return match ($this->role) {
+            'supplier' => 'Indústria / Fornecedor B2B',
+            'breeder' => 'Canil Registrado / Criador',
+            default => 'Lojista / Profissional',
+        };
+    }
+
     /**
      * Handle an incoming registration request.
      */
@@ -29,15 +53,33 @@ public string $cnpj = '';
 
         $validated['password'] = Hash::make($validated['password']);
 
-        event(new Registered($user = User::create($validated)));
+        $user = User::create($validated);
+
+        // 'role' não é mass-assignable (proteção contra escalonamento de
+        // privilégio). Aplicamos o papel escolhido, restrito à allowlist.
+        $role = in_array($this->role, self::ALLOWED_ROLES, true) ? $this->role : 'reader';
+        if ($role !== 'reader') {
+            $user->forceFill(['role' => $role])->save();
+        }
+
+        event(new Registered($user));
 
         Auth::login($user);
-$this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-        //$this->redirect(route('dashboard', absolute: false), navigate: true);
+
+        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 }; ?>
 
 <div>
+    {{-- Perfil selecionado na tela anterior --}}
+    <div class="mb-6 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3 flex items-center justify-between">
+        <div>
+            <p class="text-[9px] font-black uppercase tracking-widest text-brand-500">Criando perfil</p>
+            <p class="text-sm font-black text-gray-900">{{ $this->roleLabel() }}</p>
+        </div>
+        <a href="{{ route('register.select') }}" class="text-[10px] font-bold uppercase tracking-wider text-brand-500 hover:underline">Trocar</a>
+    </div>
+
     <form wire:submit="register">
         <!-- Name -->
         <div>

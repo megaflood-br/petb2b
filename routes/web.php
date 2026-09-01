@@ -113,7 +113,7 @@ Route::get('/', function () {
         ->latest()->take(2)->get();
 
     $bannerHome = Advertisement::where('is_active', true)
-        ->where('position', 'topo_home')
+        ->where('position', 'banner_topo')
         ->inRandomOrder()
         ->first();
 

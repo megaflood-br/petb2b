@@ -33,7 +33,13 @@ class ManageAds extends Component
 
     public function mount()
     {
-        $this->supplier = Supplier::where('user_id', Auth::id())->firstOrFail();
+        $this->supplier = Supplier::where('user_id', Auth::id())->first();
+
+        // Fornecedor recém-cadastrado ainda sem perfil: o registro é criado no
+        // dashboard (EditProfile). Redireciona para lá em vez de dar erro.
+        if (! $this->supplier) {
+            return $this->redirect(route('supplier.dashboard'), navigate: true);
+        }
     }
 
     public function render()
