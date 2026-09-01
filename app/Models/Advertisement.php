@@ -39,6 +39,8 @@ class Advertisement extends Model
             'banner_topo' => 'Topo do Site (Geral)',
             'sidebar_guia' => 'Barra Lateral (Guia de Fornecedores)',
             'meio_blog' => 'Meio do Blog (Entre os Artigos)',
+            'post_top' => 'Topo do Artigo (Interno)',
+            'post_footer' => 'Rodapé do Artigo (Interno)',
             'banner_mobile_footer' => 'Banner Fixo Mobile (Rodapé Celular - 320x50)',
         ];
     }
