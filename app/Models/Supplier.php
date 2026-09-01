@@ -74,4 +74,9 @@ class Supplier extends Model
     {
         return $this->hasMany(Lead::class);
     }
+
+    public function jobPostings()
+    {
+        return $this->hasMany(JobPosting::class);
+    }
 }

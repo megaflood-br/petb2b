@@ -61,6 +61,17 @@
                     </div>
                 </a>
 
+                {{-- Vagas de Emprego --}}
+                <a href="{{ route('supplier.jobs') }}"
+                   class="block p-4 rounded-2xl font-bold text-xs uppercase tracking-wider transition {{ Route::currentRouteName() == 'supplier.jobs' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span>Vagas</span>
+                    </div>
+                </a>
+
                 {{-- Mensagens / Leads Link --}}
                 <a href="{{ route('supplier.messages') }}"
                    class="block p-4 rounded-2xl font-bold text-xs uppercase tracking-wider transition {{ Route::currentRouteName() == 'supplier.messages' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
