@@ -121,6 +121,27 @@ class ProductAnalysisPostTest extends TestCase
             ->assertSee('O melhor custo-benefício da categoria.');
     }
 
+    public function test_detalhe_analise_slug_ainda_resolve_review_legado(): void
+    {
+        \App\Models\ProductReview::create([
+            'title' => 'Secador Legacy',
+            'slug' => 'secador-legacy',
+            'category' => 'Secadores',
+            'rating' => 4.2,
+            'pros' => 'Leve',
+            'cons' => 'Filtro pequeno',
+            'content' => 'Review legado da tabela product_reviews.',
+            'verdict' => 'Bom para bancada pequena.',
+            'is_active' => true,
+        ]);
+
+        $this->get('/analise/secador-legacy')
+            ->assertOk()
+            ->assertSee('Secador Legacy')
+            ->assertSee('Leve')
+            ->assertSee('Bom para bancada pequena.');
+    }
+
     public function test_home_exibe_analise_com_nota_e_veredito(): void
     {
         Cache::forget(HomeController::CACHE_KEY);
