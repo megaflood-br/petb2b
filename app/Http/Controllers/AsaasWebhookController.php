@@ -10,7 +10,7 @@ class AsaasWebhookController extends Controller
 {
     public function __invoke(Request $request, PixCreditService $credit): JsonResponse
     {
-        $expected = (string) config('services.asaas.webhook_token');
+        $expected = (string) \App\Support\Settings::asaasWebhookToken();
         $received = (string) $request->header('asaas-access-token');
 
         // Sem token configurado ou token inválido => rejeita.
