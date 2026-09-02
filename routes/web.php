@@ -100,11 +100,9 @@ Route::get('/vagas/{slug}', function ($slug) {
 
 // Guia de Espécies / Raças
 Route::get('/racas', BreedList::class)->name('breeds.index');
-Route::get('/racas/{slug}', function ($slug) {
-    $breed = \App\Models\Breed::where('slug', $slug)->where('is_active', true)->firstOrFail();
-
-    return view('breeds.show', compact('breed'));
-})->name('breeds.show');
+// Detalhe: resolve raça do guia ou, como fallback, artigo legado (WordPress)
+// publicado sob /racas/{slug}.
+Route::get('/racas/{slug}', [\App\Http\Controllers\BreedController::class, 'show'])->name('breeds.show');
 
 // Agenda Pet apontando diretamente para o componente reativo do Livewire
 Route::get('/feiras-pet-2026/{slug?}', \App\Livewire\EventList::class)->name('events.index');

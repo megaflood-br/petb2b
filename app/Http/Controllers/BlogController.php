@@ -25,6 +25,15 @@ class BlogController extends Controller
 
         $post = Post::where('slug', $slug)->where('is_active', true)->firstOrFail();
 
+        return $this->renderPost($post);
+    }
+
+    /**
+     * Renderiza a página do artigo (SEO + relacionados). Reutilizado por outras
+     * rotas que também podem servir artigos legados (ex.: /racas/{slug}).
+     */
+    public function renderPost(Post $post)
+    {
         $description = $post->meta_description ?? Str::limit(strip_tags($post->content), 150);
 
         SEOTools::setTitle($post->title . ' | Revista Negócios Pet');
