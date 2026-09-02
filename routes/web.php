@@ -28,6 +28,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
 use App\Livewire\BreedList;
+use App\Livewire\ClaimRegister;
 use App\Livewire\Supplier\ManageJobs;
 use App\Livewire\Supplier\ManageSponsoredPosts;
 use App\Livewire\SupplierList;
@@ -97,6 +98,9 @@ Route::get('/vagas/{slug}', function ($slug) {
 
     return view('jobs.show', compact('job'));
 })->name('jobs.show');
+
+// Cadastro do dono da empresa após aprovação da reivindicação (link por e-mail)
+Route::get('/reivindicacao/cadastro/{token}', ClaimRegister::class)->name('claim.register');
 
 // Guia de Espécies / Raças
 Route::get('/racas', BreedList::class)->name('breeds.index');
