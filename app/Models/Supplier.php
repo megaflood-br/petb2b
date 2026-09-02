@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesHomeCache;
 use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Supplier extends Model
 {
-    use HasFactory, Searchable;
+    use HasFactory, Searchable, FlushesHomeCache;
 
    protected $fillable = [
     'user_id', // Adicione esta linha

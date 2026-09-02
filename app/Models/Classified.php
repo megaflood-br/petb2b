@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesHomeCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Classified extends Model
 {
-    use HasFactory;
+    use HasFactory, FlushesHomeCache;
 
     protected $fillable = ['supplier_id', 'title', 'slug', 'description', 'price', 'image', 'condition', 'is_active'];
 

@@ -32,22 +32,35 @@ class HomeControllerTest extends TestCase
         $this->assertArrayHasKey('latestPosts', Cache::get(HomeController::CACHE_KEY));
     }
 
-    public function test_secoes_sao_cacheadas_ate_invalidar(): void
+    public function test_conteudo_novo_invalida_o_cache_da_home(): void
     {
-        Cache::forget(HomeController::CACHE_KEY);
-
         $this->makePost('Post Alpha');
         $this->get('/')->assertOk();
         $this->assertEquals(1, Cache::get(HomeController::CACHE_KEY)['latestPosts']->count());
 
-        // Novo post não aparece enquanto o cache não expira/invalida.
+        // Criar um post invalida o cache automaticamente (evento saved).
         $this->makePost('Post Beta');
-        $this->get('/')->assertOk();
-        $this->assertEquals(1, Cache::get(HomeController::CACHE_KEY)['latestPosts']->count());
+        $this->assertFalse(Cache::has(HomeController::CACHE_KEY));
 
-        // Após invalidar, reflete os dois posts.
-        Cache::forget(HomeController::CACHE_KEY);
+        // O próximo acesso reconstrói já com os dois posts.
         $this->get('/')->assertOk();
         $this->assertEquals(2, Cache::get(HomeController::CACHE_KEY)['latestPosts']->count());
+    }
+
+    public function test_alteracao_de_fornecedor_invalida_o_cache_da_home(): void
+    {
+        $this->get('/')->assertOk();
+        $this->assertTrue(Cache::has(HomeController::CACHE_KEY));
+
+        \App\Models\Supplier::create([
+            'name' => 'Nova Empresa',
+            'email' => 'nova_' . uniqid() . '@t.com',
+            'description' => 'd',
+            'category' => 'racas',
+            'is_active' => true,
+            'is_approved' => true,
+        ]);
+
+        $this->assertFalse(Cache::has(HomeController::CACHE_KEY));
     }
 }
