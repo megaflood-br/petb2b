@@ -21,7 +21,12 @@
                         </div>
 
                         <h3 class="text-xl font-black text-gray-900 uppercase mb-1">{{ $claim->supplier->name }}</h3>
-                        <p class="text-sm font-bold text-gray-500 mb-4 italic">Usuário: {{ $claim->user->name }} ({{ $claim->user->email }})</p>
+                        <p class="text-sm font-bold text-gray-500 mb-4 italic">
+                            Reivindicador: {{ $claim->claimantDisplayName() }}
+                            @if($claim->claimantDisplayEmail())
+                                ({{ $claim->claimantDisplayEmail() }})
+                            @endif
+                        </p>
 
                         <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs text-gray-600 leading-relaxed font-medium italic">"{{ $claim->message }}"</p>

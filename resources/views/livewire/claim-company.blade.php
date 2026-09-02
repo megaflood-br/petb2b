@@ -21,41 +21,31 @@
     @if($showModal)
         <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-indigo-950/60 backdrop-blur-sm">
             <div class="bg-white w-full max-w-lg rounded-[3rem] p-10 shadow-2xl animate-in zoom-in duration-300">
+                <h2 class="text-xl font-black uppercase italic text-gray-900 mb-2 border-l-4 border-indigo-600 pl-4">Reivindicar Empresa</h2>
+                <p class="text-xs text-gray-500 font-medium mb-6 pl-5">Após a aprovação, enviaremos um e-mail com o link para você criar o acesso da sua empresa.</p>
 
-                @auth
-                    {{-- USUÁRIO LOGADO: Aparece o campo para preencher --}}
-                    <h2 class="text-xl font-black uppercase italic text-gray-900 mb-6 border-l-4 border-indigo-600 pl-4">Confirmar Identidade</h2>
-                    <p class="text-xs text-gray-500 font-medium mb-6">Explique brevemente como podemos confirmar que você é o proprietário.</p>
-
-                    <textarea wire:model="message" rows="4"
-                        class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs mb-6 focus:ring-4 focus:ring-indigo-500/10"
-                        placeholder="Ex: Sou o dono e gostaria de atualizar meus dados..."></textarea>
-
-                    <div class="flex justify-end gap-4">
-                        <button wire:click="$set('showModal', false)" class="text-[10px] font-black uppercase text-gray-400">Cancelar</button>
-                        <button wire:click="submitClaim" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Enviar Pedido</button>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Seu nome</label>
+                        <input type="text" wire:model="name" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs focus:ring-4 focus:ring-indigo-500/10">
+                        @error('name') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
-                @else
-                    {{-- VISITANTE: Apenas aviso e link --}}
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-6">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <h2 class="text-xl font-black uppercase italic text-gray-900 mb-4">Acesso Necessário</h2>
-                        <p class="text-xs text-gray-500 font-medium mb-8 leading-relaxed">
-                            Para reivindicar uma empresa, você precisa ter uma conta no portal. <br>
-                            <strong>Após o cadastro, você será trazido de volta a esta página automaticamente.</strong>
-                        </p>
-
-                        <div class="flex flex-col gap-3">
-                           <button wire:click="redirectToRegister"
-        class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-indigo-200">
-    Criar Minha Conta Grátis
-</button>
-                            <button wire:click="$set('showModal', false)" class="text-[10px] font-black uppercase text-gray-400 p-2">Voltar</button>
-                        </div>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Seu e-mail</label>
+                        <input type="email" wire:model="email" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs focus:ring-4 focus:ring-indigo-500/10">
+                        @error('email') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
-                @endauth
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Como podemos confirmar que você é o proprietário?</label>
+                        <textarea wire:model="message" rows="4" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs focus:ring-4 focus:ring-indigo-500/10" placeholder="Ex: Sou o dono e gostaria de atualizar os dados da empresa..."></textarea>
+                        @error('message') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 mt-6">
+                    <button wire:click="$set('showModal', false)" class="text-[10px] font-black uppercase text-gray-400">Cancelar</button>
+                    <button wire:click="submitClaim" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Enviar Pedido</button>
+                </div>
             </div>
         </div>
     @endif

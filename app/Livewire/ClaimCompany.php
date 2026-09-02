@@ -3,53 +3,55 @@
 namespace App\Livewire;
 
 use App\Models\CompanyClaim;
-use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 class ClaimCompany extends Component
 {
     public $supplierId;
-    public $message;
+    public $name = '';
+    public $email = '';
+    public $message = '';
     public $showModal = false;
-
     public $hasPendingClaim = false;
 
-public function mount($supplierId)
-{
-    $this->supplierId = $supplierId;
-    // Verifica se o utilizador logado já tem um pedido pendente para esta empresa
-    if (auth()->check()) {
-        $this->hasPendingClaim = \App\Models\CompanyClaim::where('supplier_id', $this->supplierId)
-            ->where('user_id', auth()->id())
-            ->where('status', 'pending')
-            ->exists();
+    public function mount($supplierId)
+    {
+        $this->supplierId = $supplierId;
+
+        if (auth()->check()) {
+            $this->name = auth()->user()->name;
+            $this->email = auth()->user()->email;
+
+            $this->hasPendingClaim = CompanyClaim::where('supplier_id', $this->supplierId)
+                ->where('user_id', auth()->id())
+                ->where('status', 'pending')
+                ->exists();
+        }
     }
-}
 
     public function submitClaim()
     {
         $this->validate([
+            'name' => 'required|min:3|max:120',
+            'email' => 'required|email|max:150',
             'message' => 'required|min:10',
         ]);
 
-        // Se o usuário não estiver logado, salvamos a mensagem na sessão e mandamos para o registro
-        if (!Auth::check()) {
-            session(['pending_claim_msg' => $this->message, 'pending_claim_supplier' => $this->supplierId]);
-            return redirect()->route('register');
-        }
-
-        // Se já estiver logado, salva direto (O Admin recebe aqui)
         CompanyClaim::create([
             'supplier_id' => $this->supplierId,
-            'user_id' => Auth::id(),
+            'user_id' => auth()->id(), // null quando visitante
+            'claimant_name' => $this->name,
+            'claimant_email' => $this->email,
             'message' => $this->message,
             'status' => 'pending',
         ]);
 
         $this->showModal = false;
         $this->reset('message');
-        session()->flash('message', 'Sua solicitação foi enviada com sucesso!');
+        $this->hasPendingClaim = auth()->check();
+
+        session()->flash('message', 'Solicitação de reivindicação enviada! Após a aprovação do administrador, você receberá um e-mail para ativar o acesso à sua empresa.');
     }
 
     #[Layout('layouts.app')]
@@ -57,13 +59,4 @@ public function mount($supplierId)
     {
         return view('livewire.claim-company');
     }
-    public function redirectToRegister()
-{
-    // Salva a URL atual na sessão para o Laravel saber onde voltar
-    session(['url.intended' => url()->previous()]);
-
-    return redirect()->route('register');
-}
-
-
 }
