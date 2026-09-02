@@ -1,9 +1,12 @@
 <div class="space-y-6 text-xs font-bold">
-    <div class="flex justify-between items-center border-b pb-4">
+    <div class="flex justify-between items-center border-b pb-4 gap-4">
         <div>
             <h1 class="text-2xl font-black text-gray-900 uppercase tracking-tight italic">Gerenciamento de Campanhas & Anúncios</h1>
             <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Controle financeiro, auditoria de cliques e alteração de taxas dos fornecedores</p>
         </div>
+        <button wire:click="openCreateModal" class="shrink-0 bg-brand-500 hover:bg-brand-600 text-white font-black uppercase text-[10px] tracking-wider px-5 py-3.5 rounded-xl transition shadow-md shadow-brand-500/10">
+            + Criar Anúncio
+        </button>
     </div>
 
     {{-- Feedback do Admin --}}
@@ -80,6 +83,92 @@
             </div>
         @endif
     </div>
+
+    {{-- MODAL DE CRIAÇÃO MANUAL DE ANÚNCIO (ADMIN) --}}
+    @if($isCreateModalOpen)
+        <div class="fixed inset-0 bg-gray-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-[2.5rem] border shadow-2xl max-w-2xl w-full p-8 space-y-6 relative max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-start border-b pb-4">
+                    <div>
+                        <h3 class="text-lg font-black text-gray-900 uppercase italic tracking-tight">Criar Anúncio Manualmente</h3>
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Vincule uma campanha a uma empresa cadastrada</p>
+                    </div>
+                    <button wire:click="closeCreateModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="createAd" class="space-y-4">
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Empresa (Fornecedor)</label>
+                        <select wire:model="newSupplierId" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-gray-900 focus:ring-2 focus:ring-brand-500">
+                            <option value="">Selecione a empresa...</option>
+                            @foreach($suppliers as $sup)
+                                <option value="{{ $sup->id }}">{{ $sup->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('newSupplierId') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Título da Campanha</label>
+                            <input type="text" wire:model="newTitle" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-gray-900 focus:ring-2 focus:ring-brand-500">
+                            @error('newTitle') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Link de Destino (URL)</label>
+                            <input type="text" wire:model="newLink" placeholder="https://..." class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-gray-900 focus:ring-2 focus:ring-brand-500">
+                            @error('newLink') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Posição</label>
+                            <select wire:model="newPosition" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-gray-900 focus:ring-2 focus:ring-brand-500">
+                                <option value="">Selecione...</option>
+                                @foreach($positions as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('newPosition') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Banner (imagem)</label>
+                            <input type="file" wire:model="newImage" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
+                            @error('newImage') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Custo/Clique (R$)</label>
+                            <input type="number" step="0.01" min="0" wire:model="newCostPerClick" class="w-full bg-gray-50 border-none rounded-xl p-3.5 font-mono focus:ring-2 focus:ring-brand-500">
+                            @error('newCostPerClick') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Custo/View (R$)</label>
+                            <input type="number" step="0.0001" min="0" wire:model="newCostPerImpression" class="w-full bg-gray-50 border-none rounded-xl p-3.5 font-mono focus:ring-2 focus:ring-brand-500">
+                            @error('newCostPerImpression') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Status</label>
+                            <select wire:model="newIsActive" class="w-full bg-gray-50 border-none rounded-xl p-3.5 focus:ring-2 focus:ring-brand-500">
+                                <option value="1">Ativo</option>
+                                <option value="0">Pausado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-2 border-t border-gray-100">
+                        <button type="button" wire:click="closeCreateModal" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 p-3.5 rounded-xl font-black uppercase tracking-widest transition">Cancelar</button>
+                        <button type="submit" wire:loading.attr="disabled" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white p-3.5 rounded-xl font-black uppercase tracking-widest transition shadow-md disabled:opacity-50">Criar Anúncio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     {{-- MODAL DE CONFIGURAÇÃO FINANCEIRA DO ANÚNCIO --}}
     @if($isModalOpen)

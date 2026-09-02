@@ -3,17 +3,27 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Advertisement;
+use App\Models\Supplier;
+use App\Support\Settings;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class ManageAds extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
-    // Propriedades para o Modal de Edição Comercial
+    // Modal de Edição Comercial (ajuste de taxas)
     public $isModalOpen = false;
     public $selectedAdId;
     public $title, $cost_per_click, $cost_per_impression, $is_active;
+
+    // Modal de Criação Manual (admin cria anúncio para uma empresa)
+    public $isCreateModalOpen = false;
+    public $newSupplierId;
+    public $newTitle, $newLink, $newPosition, $newImage;
+    public $newCostPerClick, $newCostPerImpression;
+    public bool $newIsActive = true;
 
     protected $rules = [
         'cost_per_click' => 'required|numeric|min:0',
@@ -23,19 +33,67 @@ class ManageAds extends Component
 
     public function render()
     {
-        // Busca todos os anúncios do portal paginados para o Admin gerenciar
         $ads = Advertisement::with('supplier')
             ->latest()
             ->paginate(10);
 
         return view('livewire.admin.manage-ads', [
-            'ads' => $ads
-        ])->layout('layouts.admin'); // Certifique-se de que o seu layout do admin se chama assim
+            'ads' => $ads,
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'positions' => Advertisement::getPositions(),
+        ])->layout('layouts.admin');
     }
 
-    /**
-     * Carrega os dados do anúncio e abre o modal de edição
-     */
+    // ----- Criação manual -----
+
+    public function openCreateModal()
+    {
+        $this->reset(['newSupplierId', 'newTitle', 'newLink', 'newPosition', 'newImage']);
+        $this->newCostPerClick = Settings::adsCostPerClick();
+        $this->newCostPerImpression = Settings::adsCostPerImpression();
+        $this->newIsActive = true;
+        $this->isCreateModalOpen = true;
+    }
+
+    public function createAd()
+    {
+        $validated = $this->validate([
+            'newSupplierId' => 'required|exists:suppliers,id',
+            'newTitle' => 'required|min:3|max:150',
+            'newLink' => 'required|url',
+            'newPosition' => 'required|in:' . implode(',', array_keys(Advertisement::getPositions())),
+            'newImage' => 'required|image|max:2048',
+            'newCostPerClick' => 'required|numeric|min:0',
+            'newCostPerImpression' => 'required|numeric|min:0',
+        ]);
+
+        $path = $this->newImage->store('advertisements/banners', 'public');
+
+        Advertisement::create([
+            'supplier_id' => $this->newSupplierId,
+            'title' => $this->newTitle,
+            'link' => $this->newLink,
+            'position' => $this->newPosition,
+            'image_path' => $path,
+            'is_active' => $this->newIsActive,
+            'clicks' => 0,
+            'views' => 0,
+            'cost_per_click' => $this->newCostPerClick,
+            'cost_per_impression' => $this->newCostPerImpression,
+        ]);
+
+        $this->closeCreateModal();
+        session()->flash('message', 'Anúncio criado manualmente e vinculado à empresa com sucesso!');
+    }
+
+    public function closeCreateModal()
+    {
+        $this->isCreateModalOpen = false;
+        $this->reset(['newSupplierId', 'newTitle', 'newLink', 'newPosition', 'newImage', 'newCostPerClick', 'newCostPerImpression', 'newIsActive']);
+    }
+
+    // ----- Edição de taxas (existente) -----
+
     public function editAd($id)
     {
         $ad = Advertisement::findOrFail($id);
@@ -49,9 +107,6 @@ class ManageAds extends Component
         $this->isModalOpen = true;
     }
 
-    /**
-     * Salva os novos valores ajustados pelo administrador
-     */
     public function saveAdSettings()
     {
         $this->validate();
@@ -70,9 +125,6 @@ class ManageAds extends Component
         session()->flash('message', 'Parâmetros financeiros do anúncio atualizados com sucesso!');
     }
 
-    /**
-     * Fecha o modal de edição
-     */
     public function closeModal()
     {
         $this->isModalOpen = false;
