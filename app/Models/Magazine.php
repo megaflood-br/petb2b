@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesHomeCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Magazine extends Model
 {
-    use HasFactory;
+    use HasFactory, FlushesHomeCache;
 
     protected $fillable = [
         'title',
