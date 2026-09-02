@@ -45,9 +45,26 @@ class Supplier extends Model
     protected static function boot()
     {
         parent::boot();
+
         static::creating(function ($supplier) {
             if (empty($supplier->slug)) {
                 $supplier->slug = Str::slug($supplier->name);
+            }
+        });
+
+        // Mantém category_id em sincronia com o slug de categoria (texto),
+        // garantindo integridade referencial sem quebrar os filtros por slug.
+        static::saving(function ($supplier) {
+            if ($supplier->isDirty('category') || is_null($supplier->category_id)) {
+                if (! empty($supplier->category)) {
+                    $category = Category::firstOrCreate(
+                        ['slug' => $supplier->category],
+                        ['name' => Str::title(str_replace('-', ' ', $supplier->category))]
+                    );
+                    $supplier->category_id = $category->id;
+                } else {
+                    $supplier->category_id = null;
+                }
             }
         });
     }
@@ -55,6 +72,15 @@ class Supplier extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Categoria normalizada (FK). O atributo texto `category` (slug) é mantido
+     * para compatibilidade; este relacionamento dá integridade e eager loading.
+     */
+    public function categoryModel()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     public function advertisements()
