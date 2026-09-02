@@ -23,6 +23,7 @@ use App\Models\Advertisement;
 
 // Controllers & Livewire Públicos
 use App\Http\Controllers\AsaasWebhookController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
@@ -285,40 +286,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // -------------------------------------------------------------------
 // ROTA DO ARTIGO DO WORDPRESS (SEO COMPATÍVEL COM YOAST)
+// Catch-all de dois segmentos. Segmentos reservados (seções reais do site)
+// são derivados dinamicamente no BlogController — sem lista de exclusão manual.
 // -------------------------------------------------------------------
-Route::get('/{prefixCategory}/{slug}', function ($prefixCategory, $slug) {
-    $post = Post::where('slug', $slug)->where('is_active', true)->firstOrFail();
-
-    SEOTools::setTitle($post->title . ' | Revista Negócios Pet');
-    SEOTools::setDescription($post->meta_description ?? Str::limit(strip_tags($post->content), 150));
-
-    if (!empty($post->meta_keywords)) {
-        SEOTools::metatags()->addKeyword($post->meta_keywords);
-    }
-
-    SEOTools::opengraph()->setUrl(url()->current());
-    SEOTools::opengraph()->addProperty('type', 'article');
-    SEOTools::opengraph()->setTitle($post->title);
-    SEOTools::opengraph()->setDescription($post->meta_description ?? Str::limit(strip_tags($post->content), 150));
-
-    if ($post->image) {
-        SEOTools::opengraph()->addImage(asset('storage/' . $post->image));
-    }
-
-    SEOTools::twitter()->setTitle($post->title);
-    SEOTools::twitter()->setDescription($post->meta_description ?? Str::limit(strip_tags($post->content), 150));
-    if ($post->image) {
-        SEOTools::twitter()->setImage(asset('storage/' . $post->image));
-    }
-
-    $relatedPosts = Post::where('is_active', true)
-        ->where('id', '!=', $post->id)
-        ->with('blogCategories')
-        ->inRandomOrder()
-        ->take(3)
-        ->get();
-
-    return view('blog.show', compact('post', 'relatedPosts'));
-})->where('prefixCategory', '^(?!(admin|minha-empresa|meu-canil|fornecedores|noticias|categoria|busca|classificados|vagas|agenda-pet|canis|racas|revistas|revista|analises-produtos|analise|sobre-nos|contato|anuncie-conosco|profile|dashboard|login|register|logout)$)[a-z0-9\-]+')->name('blog.show');
+Route::get('/{prefixCategory}/{slug}', [BlogController::class, 'show'])
+    ->where('prefixCategory', '[a-z0-9\-]+')
+    ->name('blog.show');
 
 require __DIR__.'/auth.php';
