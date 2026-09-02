@@ -24,11 +24,13 @@
                         @endif
 
                         {{-- Badge de Nota Técnica --}}
-                        <div class="absolute top-4 right-4 z-10">
-                            <span class="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-xl font-black text-brand-500 text-[10px] shadow-sm border border-brand-50 flex items-center gap-1">
-                                ★ {{ number_format($review->rating, 1) }}
-                            </span>
-                        </div>
+                        @if($review->rating !== null)
+                            <div class="absolute top-4 right-4 z-10">
+                                <span class="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-xl font-black text-brand-500 text-[10px] shadow-sm border border-brand-50 flex items-center gap-1">
+                                    ★ {{ number_format($review->rating, 1) }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Bloco de Conteúdos e Ações --}}
@@ -43,7 +45,11 @@
                             </h3>
 
                             <p class="text-gray-500 text-sm line-clamp-3 mb-6 font-medium italic">
-                                "{{ $review->verdict }}"
+                                @if($review->verdict)
+                                    "{{ $review->verdict }}"
+                                @else
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($review->content), 140) }}
+                                @endif
                             </p>
                         </div>
 

@@ -1,18 +1,33 @@
 <?php
 
-namespace App\Livewire; // Corrigido aqui
+namespace App\Livewire;
 
+use App\Models\Post;
 use App\Models\ProductReview;
-use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 class ProductReviewShow extends Component
 {
-    public ProductReview $review;
+    public $review;
 
-    public function mount($slug)
+    public bool $isHtmlContent = false;
+
+    public function mount(string $slug)
     {
-        $this->review = ProductReview::where('slug', $slug)->firstOrFail();
+        $legacy = ProductReview::where('slug', $slug)->first();
+        if ($legacy) {
+            $this->review = $legacy;
+            $this->isHtmlContent = false;
+
+            return;
+        }
+
+        $this->review = Post::with('blogCategories')
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
+        $this->isHtmlContent = true;
     }
 
     #[Layout('layouts.app')]

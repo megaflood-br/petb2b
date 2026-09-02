@@ -18,6 +18,10 @@ class ManageBlog extends Component
     public $postId, $title, $content, $image, $meta_description, $meta_keywords;
     public $is_featured = false;
     public $is_premium = false;
+    public $rating;
+    public $pros = '';
+    public $cons = '';
+    public $verdict = '';
 
     public $search = '';
     public $created_at;
@@ -30,7 +34,11 @@ class ManageBlog extends Component
         'meta_description' => 'nullable|max:160',
         'meta_keywords' => 'nullable',
         'image' => 'nullable|image|max:2048',
-        'created_at' => 'nullable'
+        'created_at' => 'nullable',
+        'rating' => 'nullable|numeric|min:0|max:5',
+        'pros' => 'nullable|string',
+        'cons' => 'nullable|string',
+        'verdict' => 'nullable|string',
     ];
 
     public function updatingSearch()
@@ -65,6 +73,10 @@ class ManageBlog extends Component
             'content' => $this->content,
             'is_featured' => $this->is_featured,
             'is_premium' => $this->is_premium,
+            'rating' => $this->rating === '' || $this->rating === null ? null : $this->rating,
+            'pros' => $this->pros ?: null,
+            'cons' => $this->cons ?: null,
+            'verdict' => $this->verdict ?: null,
             'meta_description' => $this->meta_description,
             'meta_keywords' => $this->meta_keywords,
             'is_active' => true,
@@ -98,6 +110,10 @@ class ManageBlog extends Component
         $this->content = $post->content;
         $this->is_featured = $post->is_featured;
         $this->is_premium = $post->is_premium;
+        $this->rating = $post->rating;
+        $this->pros = $post->pros ?? '';
+        $this->cons = $post->cons ?? '';
+        $this->verdict = $post->verdict ?? '';
         $this->meta_description = $post->meta_description;
         $this->meta_keywords = $post->meta_keywords;
         $this->created_at = $post->created_at ? $post->created_at->format('Y-m-d\TH:i') : null;
@@ -118,7 +134,8 @@ class ManageBlog extends Component
     {
         $this->reset([
             'postId', 'title', 'content', 'image', 'meta_description',
-            'meta_keywords', 'is_featured', 'is_premium', 'selected_categories',
+            'meta_keywords', 'is_featured', 'is_premium', 'rating', 'pros', 'cons', 'verdict',
+            'selected_categories',
             'showForm', 'search', 'created_at'
         ]);
     }
