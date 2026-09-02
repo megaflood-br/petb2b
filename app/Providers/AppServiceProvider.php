@@ -22,14 +22,14 @@ class AppServiceProvider extends ServiceProvider
         // Provedor PIX: usa o Asaas quando há API key configurada; caso
         // contrário, um driver Fake (dev local/testes sem credenciais).
         $this->app->bind(PixGateway::class, function () {
-            $key = config('services.asaas.key');
+            $key = \App\Support\Settings::asaasKey();
 
             if (empty($key)) {
                 return new FakePixGateway();
             }
 
             return new AsaasPixGateway(
-                (string) config('services.asaas.base_url'),
+                \App\Support\Settings::asaasBaseUrl(),
                 (string) $key,
             );
         });

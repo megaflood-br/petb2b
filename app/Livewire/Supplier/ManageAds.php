@@ -7,6 +7,7 @@ use App\Models\PixCharge;
 use App\Models\Supplier;
 use App\Models\SupplierCreditTransaction;
 use App\Services\Pix\PixGateway;
+use App\Support\Settings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -68,8 +69,8 @@ class ManageAds extends Component
      */
     public function generatePix(PixGateway $gateway)
     {
-        $min = config('ads.recharge_min');
-        $max = config('ads.recharge_max');
+        $min = Settings::adsRechargeMin();
+        $max = Settings::adsRechargeMax();
 
         $this->validate([
             'amount' => "required|numeric|min:{$min}|max:{$max}",
@@ -174,8 +175,8 @@ class ManageAds extends Component
             'position' => $this->position,
             'image_path' => $path,
             'is_active' => $this->supplier->credit_balance > 0,
-            'cost_per_click' => config('ads.cost_per_click'),
-            'cost_per_impression' => config('ads.cost_per_impression'),
+            'cost_per_click' => Settings::adsCostPerClick(),
+            'cost_per_impression' => Settings::adsCostPerImpression(),
         ]);
 
         $this->closeModal();

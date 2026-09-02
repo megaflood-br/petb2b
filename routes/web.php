@@ -54,6 +54,7 @@ use App\Livewire\Admin\ManageAds as AdminManageAds;
 use App\Livewire\Admin\ManageCategories;
 use App\Livewire\Admin\ManageKennels;
 use App\Livewire\Admin\ManageBreeds;
+use App\Livewire\Admin\ManageSettings;
 
 // -------------------------------------------------------------------
 // 1. ÁREA PÚBLICA DO PORTAL
@@ -251,6 +252,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/categorias', ManageCategories::class)->name('admin.categories');
         Route::get('/canis', ManageKennels::class)->name('admin.kennels');
         Route::get('/racas', ManageBreeds::class)->name('admin.breeds');
+        Route::get('/configuracoes', ManageSettings::class)->name('admin.settings');
 
         Route::get('/eventos', function () { return view('admin.events.index'); })->name('admin.events');
         Route::get('/analises', function() { return view('admin.reviews.index'); })->name('admin.reviews');

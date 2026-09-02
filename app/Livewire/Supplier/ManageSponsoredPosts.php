@@ -6,6 +6,7 @@ use App\Models\BlogCategory;
 use App\Models\Post;
 use App\Models\Supplier;
 use App\Models\SupplierCreditTransaction;
+use App\Support\Settings;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -50,7 +51,7 @@ class ManageSponsoredPosts extends Component
     {
         $this->validate();
 
-        $cost = (float) config('ads.sponsored_post_cost');
+        $cost = Settings::sponsoredPostCost();
 
         $published = DB::transaction(function () use ($cost) {
             $supplier = Supplier::whereKey($this->supplier->id)->lockForUpdate()->first();
@@ -119,7 +120,7 @@ class ManageSponsoredPosts extends Component
         return view('livewire.supplier.manage-sponsored-posts', [
             'posts' => $posts,
             'categories' => BlogCategory::orderBy('name')->get(),
-            'cost' => (float) config('ads.sponsored_post_cost'),
+            'cost' => Settings::sponsoredPostCost(),
         ])->layout('layouts.supplier');
     }
 }
