@@ -23,6 +23,10 @@ class Post extends Model
         'is_featured',
         'is_premium',
         'is_sponsored',
+        'rating',
+        'pros',
+        'cons',
+        'verdict',
         'meta_description',
         'meta_keywords',
     ];
@@ -33,6 +37,7 @@ class Post extends Model
         'is_active' => 'boolean',
         'is_premium' => 'boolean',
         'is_sponsored' => 'boolean',
+        'rating' => 'float',
     ];
 
     public function supplier()
@@ -47,5 +52,45 @@ class Post extends Model
     public function blogCategories(): BelongsToMany
     {
         return $this->belongsToMany(BlogCategory::class, 'blog_category_post');
+    }
+
+    /**
+     * Rótulo de categoria para cards de análise (home / vitrine).
+     * O módulo legado ProductReview usa a coluna `category`; posts usam o pivô.
+     */
+    public function getCategoryAttribute(): string
+    {
+        return $this->blogCategories->first()?->name ?? 'Análise';
+    }
+
+    public function hasReviewExtras(): bool
+    {
+        return $this->rating !== null
+            || filled($this->pros)
+            || filled($this->cons)
+            || filled($this->verdict);
+    }
+
+    public function isProductAnalysis(): bool
+    {
+        if ($this->hasReviewExtras()) {
+            return true;
+        }
+
+        return $this->blogCategories->contains(
+            fn (BlogCategory $category) => $category->isProductAnalysis()
+        );
+    }
+
+    /**
+     * Matérias da vitrine de análises: categoria "analises*" ou campos de review preenchidos.
+     */
+    public function scopeProductAnalyses($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNotNull('rating')
+                ->orWhereNotNull('verdict')
+                ->orWhereHas('blogCategories', fn ($c) => $c->productAnalysis());
+        });
     }
 }

@@ -70,10 +70,16 @@ class HomeController extends Controller
                     ->take(2)
                     ->get(),
 
-                'featuredReviews' => ProductReview::where('is_active', true)
+                'featuredReviews' => Post::where('is_active', true)
+                    ->with('blogCategories')
+                    ->productAnalyses()
                     ->latest()
                     ->take(2)
-                    ->get(),
+                    ->get()
+                    ->whenEmpty(fn () => ProductReview::where('is_active', true)
+                        ->latest()
+                        ->take(2)
+                        ->get()),
             ];
         });
 

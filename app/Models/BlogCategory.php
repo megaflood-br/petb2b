@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class BlogCategory extends Model
 {
@@ -23,5 +25,26 @@ class BlogCategory extends Model
     public function posts()
     {
         return $this->hasMany(Post::class, 'blog_category_id');
+    }
+
+    /**
+     * Categoria de análises de produto (slug/nome com "analis").
+     * Cobre "Análises de Produtos", "analises", "analise-de-produtos", etc.
+     */
+    public function isProductAnalysis(): bool
+    {
+        $slug = Str::lower((string) $this->slug);
+        $name = Str::lower(Str::ascii((string) $this->name));
+
+        return str_contains($slug, 'analis') || str_contains($name, 'analis');
+    }
+
+    public function scopeProductAnalysis(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->where('slug', 'like', '%analis%')
+                ->orWhere('name', 'like', '%analis%')
+                ->orWhere('name', 'like', '%anális%');
+        });
     }
 }
