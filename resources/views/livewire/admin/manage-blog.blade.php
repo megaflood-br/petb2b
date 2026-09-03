@@ -101,33 +101,6 @@
                     </div>
                 </div>
 
-                {{-- Análise de produto: nota, prós, contras e veredito --}}
-                <div class="bg-amber-50/40 p-8 rounded-[2rem] border border-amber-100/80 space-y-4">
-                    <div>
-                        <h3 class="text-[10px] font-black uppercase text-amber-700 tracking-widest">Análise de produto</h3>
-                        <p class="text-[10px] text-gray-500 font-medium mt-1 normal-case">Preencha quando a matéria for uma análise (categoria de análises de produtos). Matérias comuns podem deixar em branco.</p>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block tracking-widest">Nota (0 a 5)</label>
-                        <input type="number" step="0.1" min="0" max="5" wire:model="rating" class="w-full md:w-40 bg-white border-none rounded-xl p-3.5 font-mono font-bold text-gray-900 focus:ring-2 focus:ring-brand-500 shadow-sm">
-                        @error('rating') <span class="text-red-500 text-[10px] font-bold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-black uppercase text-green-700 mb-2 block tracking-widest">Prós</label>
-                            <textarea wire:model="pros" rows="4" placeholder="Um ponto por linha" class="w-full bg-white border-none rounded-xl p-4 text-sm font-medium text-gray-900 focus:ring-2 focus:ring-green-500 shadow-sm"></textarea>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-black uppercase text-red-600 mb-2 block tracking-widest">Contras</label>
-                            <textarea wire:model="cons" rows="4" placeholder="Um ponto por linha" class="w-full bg-white border-none rounded-xl p-4 text-sm font-medium text-gray-900 focus:ring-2 focus:ring-red-500 shadow-sm"></textarea>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block tracking-widest">Veredito</label>
-                        <textarea wire:model="verdict" rows="2" placeholder="Resumo final da análise" class="w-full bg-white border-none rounded-xl p-4 text-sm font-bold italic text-gray-900 focus:ring-2 focus:ring-brand-500 shadow-sm"></textarea>
-                    </div>
-                </div>
-
                 <div class="flex items-center gap-3 bg-brand-50/50 p-4 rounded-2xl border border-brand-100 mb-6">
                     <input type="checkbox" wire:model="is_featured" id="is_featured" class="w-5 h-5 text-brand-600 rounded-lg border-gray-300 focus:ring-brand-500">
                     <label for="is_featured" class="text-[10px] font-black uppercase text-brand-900 tracking-widest cursor-pointer">

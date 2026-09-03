@@ -1,6 +1,6 @@
 <div class="space-y-8">
     <div class="flex justify-between items-center">
-        <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight italic">Gerenciar <span class="text-indigo-600">Análises Técnicas</span></h3>
+        <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight italic">Gerenciar <span class="text-indigo-600">Análises</span></h3>
         <button wire:click="toggleForm" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition hover:bg-indigo-700">
             {{ $showForm ? 'Cancelar' : 'Nova Análise' }}
         </button>
@@ -17,41 +17,26 @@
             <form wire:submit.prevent="save" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Nome do Produto</label>
+                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Título</label>
                         <input type="text" wire:model="title" class="w-full border-gray-100 bg-gray-50 rounded-2xl py-4 font-bold focus:ring-indigo-500">
+                        @error('title') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
                     <div>
                         <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Categoria</label>
                         <input type="text" wire:model="category" class="w-full border-gray-100 bg-gray-50 rounded-2xl py-4 font-bold">
+                        @error('category') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
-                    <div>
-                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Nota (0 a 5)</label>
-                        <input type="number" step="0.1" wire:model="rating" class="w-full border-gray-100 bg-gray-50 rounded-2xl py-4 font-bold">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Foto do Produto</label>
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Foto</label>
                         <input type="file" wire:model="image" class="text-xs">
                         @if($existingImage && !$image)
                             <img src="{{ asset('storage/'.$existingImage) }}" class="mt-4 w-20 h-20 rounded-xl object-cover border">
                         @endif
                     </div>
-                    <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-black text-green-600 uppercase mb-2 tracking-widest">Prós</label>
-                            <textarea wire:model="pros" rows="3" class="w-full border-gray-100 bg-green-50/30 rounded-2xl p-4 text-sm font-medium"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-black text-red-600 uppercase mb-2 tracking-widest">Contras</label>
-                            <textarea wire:model="cons" rows="3" class="w-full border-gray-100 bg-red-50/30 rounded-2xl p-4 text-sm font-medium"></textarea>
-                        </div>
-                    </div>
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Análise Completa</label>
-                        <textarea wire:model="content" rows="6" class="w-full border-gray-100 bg-gray-50 rounded-2xl p-4 text-sm font-medium"></textarea>
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-xs font-black text-indigo-600 uppercase mb-2 tracking-widest">Veredito Final</label>
-                        <textarea wire:model="verdict" rows="2" class="w-full border-gray-100 bg-indigo-50/30 rounded-2xl p-4 text-sm font-bold italic"></textarea>
+                        <label class="block text-xs font-black text-gray-400 uppercase mb-2 tracking-widest">Descrição</label>
+                        <textarea wire:model="content" rows="8" class="w-full border-gray-100 bg-gray-50 rounded-2xl p-4 text-sm font-medium"></textarea>
+                        @error('content') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
                 </div>
                 <button type="submit" class="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg hover:bg-indigo-700 transition">
@@ -69,7 +54,7 @@
                         @if($review->image)
                             <img src="{{ asset('storage/'.$review->image) }}" class="w-full h-full object-cover">
                         @else
-                            <span class="font-black text-indigo-600">★ {{ $review->rating }}</span>
+                            <span class="font-black text-indigo-600 text-[10px] uppercase">Foto</span>
                         @endif
                     </div>
                     <div>

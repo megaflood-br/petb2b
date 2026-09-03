@@ -7,7 +7,7 @@
                 Análises de <span class="text-indigo-600">Produtos</span>
             </h1>
             <p class="text-gray-500 font-medium mt-2">
-                Crie reviews técnicos e avaliações de equipamentos e insumos pet.
+                Cadastre análises com título, categoria, foto e descrição.
             </p>
         </div>
 

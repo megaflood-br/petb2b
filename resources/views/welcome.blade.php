@@ -371,18 +371,11 @@
                                 @if($review->image)
                                     <img src="{{ asset('storage/' . $review->image) }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" alt="{{ $review->title }}">
                                 @endif
-                                <div class="absolute top-5 right-5 z-10">
-                                @if($review->rating !== null)
-                                    <span class="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-xl font-black text-brand-500 text-[10px] shadow-sm border border-brand-50">★ {{ number_format($review->rating, 1) }}</span>
-                                @endif
-                                </div>
                             </div>
                             <div class="flex flex-col mt-2">
                                 <span class="text-[9px] font-black text-brand-500 uppercase tracking-[0.3em] mb-2">{{ $review->category }}</span>
                                 <h3 class="text-xl font-black text-gray-900 uppercase leading-tight group-hover:text-brand-500 transition mb-3">{{ $review->title }}</h3>
-                                @if($review->verdict)
-                                    <p class="text-gray-500 text-sm line-clamp-2 font-medium italic">"{{ $review->verdict }}"</p>
-                                @endif
+                                <p class="text-gray-500 text-sm line-clamp-2 font-medium">{{ \Illuminate\Support\Str::limit(strip_tags($review->content), 140) }}</p>
                             </div>
                         </a>
                     @endforeach
