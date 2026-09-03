@@ -3,9 +3,10 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\HomeController;
-use App\Livewire\Admin\ManageBlog;
+use App\Livewire\Admin\ManageReviews;
 use App\Models\BlogCategory;
 use App\Models\Post;
+use App\Models\ProductReview;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
@@ -32,10 +33,6 @@ class ProductAnalysisPostTest extends TestCase
             'slug' => 'soprador-turbo-10',
             'content' => '<p>Análise completa do soprador em ambiente de tosa.</p>',
             'is_active' => true,
-            'rating' => 4.5,
-            'pros' => "Motor potente\nBaixo ruído",
-            'cons' => 'Preço elevado',
-            'verdict' => 'O melhor custo-benefício da categoria.',
         ], $overrides));
 
         $post->blogCategories()->sync([$category->id]);
@@ -43,59 +40,50 @@ class ProductAnalysisPostTest extends TestCase
         return $post->fresh('blogCategories');
     }
 
-    public function test_admin_salva_nota_pros_contras_e_veredito_no_post(): void
+    public function test_admin_publica_analise_so_com_titulo_categoria_e_descricao(): void
     {
-        $category = $this->analysisCategory();
-
-        Livewire::test(ManageBlog::class)
+        Livewire::test(ManageReviews::class)
             ->set('title', 'Shampoo Neutro Pro')
+            ->set('category', 'Higiene')
             ->set('content', 'Texto da análise com detalhes do produto testado.')
-            ->set('selected_categories', [(string) $category->id])
-            ->set('rating', 4.8)
-            ->set('pros', 'Rende bastante')
-            ->set('cons', 'Cheiro forte')
-            ->set('verdict', 'Recomendado para pet shops de alto fluxo.')
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertDontSee('Nota')
+            ->assertDontSee('Prós')
+            ->assertDontSee('Veredito');
 
-        $this->assertDatabaseHas('posts', [
+        $this->assertDatabaseHas('product_reviews', [
             'title' => 'Shampoo Neutro Pro',
-            'rating' => 4.8,
-            'pros' => 'Rende bastante',
-            'cons' => 'Cheiro forte',
-            'verdict' => 'Recomendado para pet shops de alto fluxo.',
+            'category' => 'Higiene',
+            'content' => 'Texto da análise com detalhes do produto testado.',
+            'rating' => null,
+            'pros' => null,
+            'cons' => null,
+            'verdict' => null,
         ]);
     }
 
-    public function test_artigo_publico_exibe_nota_pros_contras_e_veredito(): void
+    public function test_formulario_admin_nao_tem_nota_pros_contras_nem_veredito(): void
+    {
+        Livewire::test(ManageReviews::class)
+            ->call('toggleForm')
+            ->assertSee('Título')
+            ->assertSee('Categoria')
+            ->assertSee('Descrição')
+            ->assertDontSee('Nota (0 a 5)')
+            ->assertDontSee('Veredito Final')
+            ->assertDontSeeHtml('wire:model="pros"')
+            ->assertDontSeeHtml('wire:model="cons"');
+    }
+
+    public function test_artigo_publico_nao_exibe_bloco_de_nota(): void
     {
         $post = $this->analysisPost();
 
         $this->get('/materias-analises-de-produtos/' . $post->slug)
             ->assertOk()
-            ->assertSee('4.5')
-            ->assertSee('Pontos positivos')
-            ->assertSee('Motor potente')
-            ->assertSee('Pontos negativos')
-            ->assertSee('Preço elevado')
-            ->assertSee('Veredito')
-            ->assertSee('O melhor custo-benefício da categoria.');
-    }
-
-    public function test_materia_comum_nao_exibe_bloco_de_analise(): void
-    {
-        $news = BlogCategory::create(['name' => 'Notícias', 'slug' => 'noticias']);
-        $post = Post::create([
-            'title' => 'Feira do setor pet',
-            'slug' => 'feira-do-setor-pet',
-            'content' => 'Cobertura da feira sem nota técnica.',
-            'is_active' => true,
-        ]);
-        $post->blogCategories()->sync([$news->id]);
-
-        $this->get('/materias-noticias/' . $post->slug)
-            ->assertOk()
-            ->assertSee('Feira do setor pet')
+            ->assertSee('Soprador Turbo 10')
+            ->assertSee('Análise completa do soprador')
             ->assertDontSee('Pontos positivos')
             ->assertDontSee('Veredito');
     }
@@ -107,7 +95,7 @@ class ProductAnalysisPostTest extends TestCase
         $this->get('/analises-produtos')
             ->assertOk()
             ->assertSee('Soprador Turbo 10')
-            ->assertSee('O melhor custo-benefício da categoria.');
+            ->assertSee('Análise completa do soprador');
     }
 
     public function test_detalhe_analise_slug_resolve_post(): void
@@ -117,39 +105,34 @@ class ProductAnalysisPostTest extends TestCase
         $this->get('/analise/' . $post->slug)
             ->assertOk()
             ->assertSee('Soprador Turbo 10')
-            ->assertSee('Motor potente')
-            ->assertSee('O melhor custo-benefício da categoria.');
+            ->assertSee('Análise completa do soprador')
+            ->assertDontSee('Pontos positivos');
     }
 
     public function test_detalhe_analise_slug_ainda_resolve_review_legado(): void
     {
-        \App\Models\ProductReview::create([
+        ProductReview::create([
             'title' => 'Secador Legacy',
             'slug' => 'secador-legacy',
             'category' => 'Secadores',
-            'rating' => 4.2,
-            'pros' => 'Leve',
-            'cons' => 'Filtro pequeno',
             'content' => 'Review legado da tabela product_reviews.',
-            'verdict' => 'Bom para bancada pequena.',
             'is_active' => true,
         ]);
 
         $this->get('/analise/secador-legacy')
             ->assertOk()
             ->assertSee('Secador Legacy')
-            ->assertSee('Leve')
-            ->assertSee('Bom para bancada pequena.');
+            ->assertSee('Review legado da tabela product_reviews.')
+            ->assertDontSee('Pontos positivos');
     }
 
-    public function test_home_exibe_analise_com_nota_e_veredito(): void
+    public function test_home_exibe_analise_pelo_titulo(): void
     {
         Cache::forget(HomeController::CACHE_KEY);
         $this->analysisPost();
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Soprador Turbo 10')
-            ->assertSee('O melhor custo-benefício da categoria.');
+            ->assertSee('Soprador Turbo 10');
     }
 }

@@ -61,8 +61,6 @@
 
             {{-- Conteúdo do Post --}}
             <div class="max-w-3xl mx-auto px-6">
-                @include('partials.product-review-scorecard', ['review' => $post])
-
                 @if($post->is_premium && ! auth()->check())
                     {{-- Prévia + paywall: conteúdo exclusivo para usuários cadastrados --}}
                     <div class="prose prose-lg prose-brand max-w-none text-xl text-gray-600 leading-relaxed">
