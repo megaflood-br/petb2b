@@ -16,6 +16,8 @@
         </div>
     @endif
 
+    <x-ad-positions-table />
+
     {{-- Tabela de Controle Master --}}
     <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
         <table class="w-full text-left border-collapse">
@@ -128,8 +130,8 @@
                             <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Posição</label>
                             <select wire:model="newPosition" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-gray-900 focus:ring-2 focus:ring-brand-500">
                                 <option value="">Selecione...</option>
-                                @foreach($positions as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @foreach(\App\Models\Advertisement::getPositionSpecs() as $value => $spec)
+                                    <option value="{{ $value }}">{{ $spec['label'] }} — {{ $spec['width'] }}×{{ $spec['height'] }}</option>
                                 @endforeach
                             </select>
                             @error('newPosition') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror

@@ -29,6 +29,8 @@
         </div>
     </div>
 
+    <x-ad-positions-table />
+
     {{-- Grid Principal do Painel --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
@@ -161,7 +163,10 @@
                             <div>
                                 <h4 class="text-sm font-black text-gray-900 uppercase truncate">{{ $ad->title }}</h4>
                                 {{-- CORRIGIDO: Agora cruza a chave com o array comercial de posições unificadas da Model --}}
-                                <p class="text-[9px] text-gray-500 font-mono mt-0.5">Posição: {{ strtoupper(\App\Models\Advertisement::getPositions()[$ad->position] ?? str_replace('_', ' ', $ad->position)) }}</p>
+                                <p class="text-[9px] text-gray-500 font-mono mt-0.5">
+                                    Posição: {{ strtoupper(\App\Models\Advertisement::getPositions()[$ad->position] ?? str_replace('_', ' ', $ad->position)) }}
+                                    · {{ \App\Models\Advertisement::dimensionFor($ad->position) }}
+                                </p>
                             </div>
                         </div>
 
@@ -230,8 +235,8 @@
                             <select wire:model="position" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-gray-900 focus:ring-2 focus:ring-brand-500">
                                 <option value="">Selecione a posição...</option>
                                 {{-- CORRIGIDO: Loop dinâmico lendo as chaves comerciais e incluindo a nova opção mobile nativa --}}
-                                @foreach(\App\Models\Advertisement::getPositions() as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @foreach(\App\Models\Advertisement::getPositionSpecs() as $value => $spec)
+                                    <option value="{{ $value }}">{{ $spec['label'] }} — {{ $spec['width'] }}×{{ $spec['height'] }}</option>
                                 @endforeach
                             </select>
                             @error('position') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror

@@ -23,4 +23,28 @@ class AdvertisementPositionsTest extends TestCase
             $this->assertContains($expected, $positions, "Posição ausente em getPositions(): {$expected}");
         }
     }
+
+    public function test_cada_posicao_tem_medida_e_formato(): void
+    {
+        $specs = Advertisement::getPositionSpecs();
+
+        $this->assertSame(array_keys($specs), array_keys(Advertisement::getPositions()));
+
+        foreach ($specs as $key => $spec) {
+            $this->assertNotEmpty($spec['label'], "Label vazia em {$key}");
+            $this->assertNotEmpty($spec['location'], "Location vazia em {$key}");
+            $this->assertNotEmpty($spec['format'], "Format vazio em {$key}");
+            $this->assertGreaterThan(0, $spec['width'], "Largura inválida em {$key}");
+            $this->assertGreaterThan(0, $spec['height'], "Altura inválida em {$key}");
+            $this->assertSame(
+                $spec['width'] . ' × ' . $spec['height'] . ' px',
+                Advertisement::dimensionFor($key)
+            );
+        }
+
+        $this->assertSame('1200 × 160 px', Advertisement::dimensionFor('banner_topo'));
+        $this->assertSame('300 × 250 px', Advertisement::dimensionFor('sidebar_guia'));
+        $this->assertSame('320 × 50 px', Advertisement::dimensionFor('banner_mobile_footer'));
+        $this->assertSame('—', Advertisement::dimensionFor('posicao_inexistente'));
+    }
 }

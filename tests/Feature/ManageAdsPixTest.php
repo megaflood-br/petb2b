@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Supplier\ManageAds;
+use App\Models\Advertisement;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,5 +65,27 @@ class ManageAdsPixTest extends TestCase
             ->set('amount', 1)
             ->call('generatePix')
             ->assertHasErrors(['amount']);
+    }
+
+    public function test_aba_exibe_tabela_com_todas_as_medidas_e_posicoes(): void
+    {
+        $user = User::create([
+            'name' => 'F', 'email' => 'u_' . uniqid() . '@t.com', 'password' => 'secret',
+        ]);
+        Supplier::create([
+            'name' => 'Loja', 'email' => 'l_' . uniqid() . '@t.com', 'description' => 'd',
+            'category' => 'racas', 'user_id' => $user->id, 'is_active' => true, 'is_approved' => true,
+        ]);
+        $this->actingAs($user);
+
+        $component = Livewire::test(ManageAds::class)
+            ->assertSee('Medidas e Posições dos Anúncios');
+
+        foreach (Advertisement::getPositionSpecs() as $spec) {
+            $component
+                ->assertSee($spec['label'])
+                ->assertSee((string) $spec['width'])
+                ->assertSee((string) $spec['height']);
+        }
     }
 }
