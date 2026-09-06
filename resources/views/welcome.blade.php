@@ -123,19 +123,9 @@
             </div>
         </div>
 
-        {{-- BLOCO DO BANNER DE PUBLICIDADE ROTATIVA --}}
-        @if(isset($bannerHome) && $bannerHome)
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8">
-                <div class="w-full bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition hover:shadow-md">
-                    <a href="{{ route('ads.redirect', $bannerHome->id) }}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
-                        <img src="{{ asset('storage/' . $bannerHome->image_path) }}"
-                            alt="{{ $bannerHome->title }}"
-                            class="w-full h-auto max-h-[160px] object-cover mx-auto block"
-                            title="Patrocinado: {{ $bannerHome->title }}">
-                    </a>
-                </div>
-            </div>
-        @endif
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <x-ad-space position="banner_topo" />
+        </div>
 
         {{-- SEÇÃO 2: GRID DE MATÉRIAS - DESTAQUES DA EDIÇÃO --}}
         <section class="py-24 bg-white">

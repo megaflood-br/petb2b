@@ -8,6 +8,8 @@
             <p class="mt-3 text-base text-gray-500 font-medium">Oportunidades de carreira publicadas pelas empresas do portal B2B.</p>
         </div>
 
+        <x-ad-space position="setor_vagas" />
+
         {{-- Filtros --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <input type="text" wire:model.live.debounce.400ms="search" placeholder="Buscar cargo ou palavra-chave..." class="bg-white border border-gray-100 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500">

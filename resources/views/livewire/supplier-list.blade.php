@@ -100,44 +100,7 @@
 
                 {{-- Sidebar de Anúncios Dinâmicos Premium --}}
                 <aside class="w-full lg:w-80 shrink-0 lg:sticky lg:top-6">
-                    @php
-                        $bannerSidebar = \App\Models\Advertisement::where('is_active', true)
-                            ->where('position', 'sidebar_guia')
-                            ->inRandomOrder()
-                            ->first();
-
-                        if ($bannerSidebar) {
-                            $bannerSidebar->trackImpression();
-                            $bannerSidebar->refresh();
-                        }
-                    @endphp
-
-                    @if($bannerSidebar)
-                        <div class="bg-white p-5 rounded-[3rem] border border-gray-100 shadow-sm space-y-4 text-center">
-                            <div class="flex justify-between items-center border-b pb-3 border-gray-50">
-                                <span class="text-[8px] font-black uppercase text-gray-400 tracking-[0.15em]">Publicidade Pet B2B</span>
-                                <span class="bg-brand-50 text-brand-600 text-[8px] px-2 py-0.5 rounded-full uppercase font-black tracking-wider">Patrocinado</span>
-                            </div>
-
-                            <div class="rounded-2xl overflow-hidden border border-gray-50 aspect-square w-full bg-gray-50 relative group shadow-inner">
-                                <a href="{{ route('ads.redirect', $bannerSidebar->id) }}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
-                                    <img src="{{ asset('storage/' . $bannerSidebar->image_path) }}"
-                                         alt="{{ $bannerSidebar->title }}"
-                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                         title="Anúncio: {{ $bannerSidebar->title }}">
-                                </a>
-                            </div>
-                        </div>
-                    @else
-                        {{-- Placeholder Incentivador Alinhado com as Cores Atuais --}}
-                        <div class="bg-white border-2 border-dashed border-brand-100 p-8 rounded-[3rem] text-center space-y-4">
-                            <p class="text-brand-500 font-black uppercase tracking-widest text-[10px]">Anuncie a sua Marca Aqui</p>
-                            <p class="text-gray-400 text-xs font-medium leading-relaxed">Apareça no topo das buscas do mercado Pet de Atibaia e região.</p>
-                            <a href="{{ route('supplier.ads') }}" class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-black uppercase text-[9px] tracking-widest px-5 py-3 rounded-xl shadow-md transition">
-                                Criar Banner
-                            </a>
-                        </div>
-                    @endif
+                    <x-ad-space position="sidebar_guia" variant="sidebar" />
                 </aside>
 
             </div>

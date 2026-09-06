@@ -12,6 +12,8 @@
                 </p>
             </div>
 
+            <x-ad-space position="setor_revistas" />
+
             {{-- Grid da Estante --}}
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
                 @foreach($magazines as $mag)

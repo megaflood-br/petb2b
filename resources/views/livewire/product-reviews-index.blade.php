@@ -7,6 +7,8 @@
             <p class="mt-4 text-base text-gray-500 font-medium">Equipamentos, máquinas e insumos para o seu negócio pet.</p>
         </div>
 
+        <x-ad-space position="setor_analises" />
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             @forelse($reviews as $review)
                 <div class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-xl transition group">

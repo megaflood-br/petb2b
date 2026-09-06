@@ -8,6 +8,8 @@
             <p class="mt-3 text-base text-gray-500 font-medium">Características, porte, temperamento e origem das principais raças de pets.</p>
         </div>
 
+        <x-ad-space position="setor_racas" />
+
         {{-- Filtros --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
             <input type="text" wire:model.live.debounce.400ms="search" placeholder="Buscar raça..." class="bg-white border border-gray-100 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500">
