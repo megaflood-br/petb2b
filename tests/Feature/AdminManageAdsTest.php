@@ -61,4 +61,19 @@ class AdminManageAdsTest extends TestCase
 
         $this->assertEquals(0, Advertisement::count());
     }
+
+    public function test_aba_exibe_tabela_com_todas_as_medidas_e_posicoes(): void
+    {
+        $component = Livewire::test(ManageAds::class)
+            ->assertSee('Medidas e Posições dos Anúncios');
+
+        foreach (Advertisement::getPositionSpecs() as $key => $spec) {
+            $component
+                ->assertSee($spec['label'])
+                ->assertSee($spec['location'])
+                ->assertSee($spec['format'])
+                ->assertSee((string) $spec['width'])
+                ->assertSee((string) $spec['height']);
+        }
+    }
 }

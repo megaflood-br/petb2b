@@ -30,26 +30,134 @@ class Advertisement extends Model
     ];
 
     /**
-     * Retorna a lista unificada de posições válidas de anúncios do sistema
-     * Centraliza a chamada para o formulário admin e validações de requests
+     * Catálogo comercial de cada posição: rótulo, onde aparece, formato e medida.
+     * Fonte única para formulários, tabela de gerenciamento e validações.
+     *
+     * @return array<string, array{label: string, location: string, format: string, width: int, height: int}>
      */
-    public static function getPositions()
+    public static function getPositionSpecs(): array
     {
         return [
-            'banner_topo' => 'Topo do Site (Geral)',
-            'sidebar_guia' => 'Barra Lateral (Guia de Fornecedores)',
-            'meio_blog' => 'Meio do Blog (Entre os Artigos)',
-            'post_top' => 'Topo do Artigo (Interno)',
-            'post_footer' => 'Rodapé do Artigo (Interno)',
-            'banner_mobile_footer' => 'Banner Fixo Mobile (Rodapé Celular - 320x50)',
-            'setor_vagas' => 'Guia de Vagas',
-            'setor_racas' => 'Guia de Raças',
-            'setor_analises' => 'Análises de Produtos',
-            'setor_eventos' => 'Agenda / Eventos',
-            'setor_canis' => 'Guia de Canis',
-            'setor_classificados' => 'Classificados',
-            'setor_revistas' => 'Estante de Revistas',
+            'banner_topo' => [
+                'label' => 'Topo do Site (Geral)',
+                'location' => 'Home e páginas gerais',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'sidebar_guia' => [
+                'label' => 'Barra Lateral (Guia de Fornecedores)',
+                'location' => 'Guia de Fornecedores (sidebar)',
+                'format' => 'Retângulo médio',
+                'width' => 300,
+                'height' => 250,
+            ],
+            'meio_blog' => [
+                'label' => 'Meio do Blog (Entre os Artigos)',
+                'location' => 'Listagem do blog',
+                'format' => 'Banner',
+                'width' => 1200,
+                'height' => 200,
+            ],
+            'post_top' => [
+                'label' => 'Topo do Artigo (Interno)',
+                'location' => 'Página interna do artigo',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'post_footer' => [
+                'label' => 'Rodapé do Artigo (Interno)',
+                'location' => 'Página interna do artigo',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'banner_mobile_footer' => [
+                'label' => 'Banner Fixo Mobile (Rodapé Celular)',
+                'location' => 'Rodapé fixo em todas as páginas (celular)',
+                'format' => 'Sticky mobile',
+                'width' => 320,
+                'height' => 50,
+            ],
+            'setor_vagas' => [
+                'label' => 'Guia de Vagas',
+                'location' => 'Página /vagas',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'setor_racas' => [
+                'label' => 'Guia de Raças',
+                'location' => 'Página /racas',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'setor_analises' => [
+                'label' => 'Análises de Produtos',
+                'location' => 'Página /analises-produtos',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'setor_eventos' => [
+                'label' => 'Agenda / Eventos',
+                'location' => 'Página /feiras-pet-2026',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'setor_canis' => [
+                'label' => 'Guia de Canis',
+                'location' => 'Página /canis',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'setor_classificados' => [
+                'label' => 'Classificados',
+                'location' => 'Página /classificados',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
+            'setor_revistas' => [
+                'label' => 'Estante de Revistas',
+                'location' => 'Página /revistas',
+                'format' => 'Leaderboard',
+                'width' => 1200,
+                'height' => 160,
+            ],
         ];
+    }
+
+    /**
+     * Retorna a lista unificada de posições válidas (chave => rótulo).
+     */
+    public static function getPositions(): array
+    {
+        $labels = [];
+
+        foreach (static::getPositionSpecs() as $key => $spec) {
+            $labels[$key] = $spec['label'];
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Medida recomendada no formato "1200 × 160 px".
+     */
+    public static function dimensionFor(string $position): string
+    {
+        $spec = static::getPositionSpecs()[$position] ?? null;
+
+        if (! $spec) {
+            return '—';
+        }
+
+        return $spec['width'] . ' × ' . $spec['height'] . ' px';
     }
 
     /**
