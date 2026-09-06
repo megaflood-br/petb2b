@@ -104,6 +104,8 @@
                 <p class="text-gray-500 font-medium mt-4 uppercase tracking-widest text-sm">As principais feiras e congressos do setor no Brasil.</p>
             </div>
 
+            <x-ad-space position="setor_eventos" />
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($events as $event)
                     {{-- CORRIGIDO: Passando o slug para o método de seleção --}}

@@ -16,7 +16,10 @@ class AdvertisementPositionsTest extends TestCase
     {
         $positions = array_keys(Advertisement::getPositions());
 
-        foreach (['banner_topo', 'sidebar_guia', 'meio_blog', 'post_top', 'post_footer', 'banner_mobile_footer'] as $expected) {
+        foreach ([
+            'banner_topo', 'sidebar_guia', 'meio_blog', 'post_top', 'post_footer', 'banner_mobile_footer',
+            'setor_vagas', 'setor_racas', 'setor_analises', 'setor_eventos', 'setor_canis', 'setor_classificados', 'setor_revistas',
+        ] as $expected) {
             $this->assertContains($expected, $positions, "Posição ausente em getPositions(): {$expected}");
         }
     }

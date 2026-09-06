@@ -42,7 +42,33 @@ class Advertisement extends Model
             'post_top' => 'Topo do Artigo (Interno)',
             'post_footer' => 'Rodapé do Artigo (Interno)',
             'banner_mobile_footer' => 'Banner Fixo Mobile (Rodapé Celular - 320x50)',
+            'setor_vagas' => 'Guia de Vagas',
+            'setor_racas' => 'Guia de Raças',
+            'setor_analises' => 'Análises de Produtos',
+            'setor_eventos' => 'Agenda / Eventos',
+            'setor_canis' => 'Guia de Canis',
+            'setor_classificados' => 'Classificados',
+            'setor_revistas' => 'Estante de Revistas',
         ];
+    }
+
+    /**
+     * Sorteia um anúncio ativo da posição e registra impressão.
+     * Retorna null quando não há campanha rodando (a view mostra "Anuncie aqui").
+     */
+    public static function pickRandom(string $position): ?self
+    {
+        $ad = static::query()
+            ->where('position', $position)
+            ->where('is_active', true)
+            ->inRandomOrder()
+            ->first();
+
+        if ($ad) {
+            $ad->trackImpression();
+        }
+
+        return $ad;
     }
 
     public function supplier()

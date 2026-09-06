@@ -198,50 +198,7 @@
             @include('layouts.footer')
         </div>
 
-        {{-- ================================================================= --}}
-        {{-- NOVO: BLOCO DO BANNER INFERIOR FIXO EXCLUSIVO PARA CELULAR (STICKY ANCHOR) --}}
-        {{-- ================================================================= --}}
-        @php
-            $stickyMobileAd = \App\Models\Advertisement::where('is_active', true)
-                ->where('position', 'banner_mobile_footer')
-                ->inRandomOrder()
-                ->first();
-
-            if ($stickyMobileAd) {
-                $stickyMobileAd->trackImpression();
-                $stickyMobileAd->refresh();
-            }
-        @endphp
-
-        @if($stickyMobileAd)
-            <div x-data="{ showStickyAd: true }"
-                 x-show="showStickyAd"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="translate-y-full"
-                 x-transition:enter-end="translate-y-0"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="translate-y-0"
-                 x-transition:leave-end="translate-y-full"
-                 class="fixed bottom-0 left-0 right-0 z-[55] sm:hidden bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.08)] p-2 flex flex-col items-center justify-center"
-                 style="display: none;">
-
-                {{-- Botão Discreto de Fechar X --}}
-                <button @click="showStickyAd = false"
-                        class="absolute -top-7 right-3 bg-white/90 backdrop-blur text-gray-500 hover:text-gray-800 border border-gray-100 rounded-t-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest transition shadow-sm focus:outline-none">
-                    ✕ Fechar
-                </button>
-
-                {{-- Espaço do Anúncio Responsivo Mobile --}}
-                <div class="w-full max-w-[400px] aspect-[320/50] rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-                    <a href="{{ route('ads.redirect', $stickyMobileAd->id) }}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
-                        <img src="{{ asset('storage/' . $stickyMobileAd->image_path) }}"
-                             alt="{{ $stickyMobileAd->title }}"
-                             class="w-full h-full object-cover"
-                             title="Patrocinado: {{ $stickyMobileAd->title }}">
-                    </a>
-                </div>
-            </div>
-        @endif
+        <x-ad-space position="banner_mobile_footer" variant="mobile" />
 
         @livewireScripts
     </body>

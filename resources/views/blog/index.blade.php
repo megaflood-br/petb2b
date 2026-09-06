@@ -134,31 +134,7 @@
                 @endforelse
             </div>
 
-            {{-- Zona de Anúncio --}}
-            @php
-                $bannerBlog = \App\Models\Advertisement::where('is_active', true)
-                    ->where('position', 'meio_blog')
-                    ->inRandomOrder()
-                    ->first();
-
-                if ($bannerBlog) {
-                    $bannerBlog->trackImpression();
-                    $bannerBlog->refresh();
-                }
-            @endphp
-
-            @if($bannerBlog)
-                <div class="w-full my-12">
-                    <div class="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm transition hover:shadow-md">
-                        <a href="{{ route('ads.redirect', $bannerBlog->id) }}" target="_blank" rel="noopener noreferrer" class="block w-full">
-                            <img src="{{ asset('storage/' . $bannerBlog->image_path) }}"
-                                 alt="{{ $bannerBlog->title }}"
-                                 class="w-full h-auto max-h-[200px] object-cover mx-auto block"
-                                 title="Patrocinado: {{ $bannerBlog->title }}">
-                        </a>
-                    </div>
-                </div>
-            @endif
+            <x-ad-space position="meio_blog" />
 
             {{-- Paginação Dinâmica --}}
             @if($posts->hasPages())

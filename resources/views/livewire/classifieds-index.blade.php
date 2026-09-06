@@ -3,6 +3,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {{-- Barra Superior de Filtros Dinâmicos --}}
+        <x-ad-space position="setor_classificados" />
+
         <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto flex-wrap justify-end">
             <input type="text" wire:model.live="search" placeholder="O que você procura?"
                    class="border-gray-100 bg-white rounded-2xl py-3 px-6 font-bold text-sm shadow-sm focus:ring-brand-500 focus:border-brand-500 w-full md:w-64">

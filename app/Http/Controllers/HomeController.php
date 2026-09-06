@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Advertisement;
 use App\Models\Classified;
 use App\Models\Event;
 use App\Models\Magazine;
@@ -83,19 +82,7 @@ class HomeController extends Controller
             ];
         });
 
-        // Banner do topo: sorteio + registro de impressão precisam rodar a cada
-        // requisição, então ficam FORA do cache.
-        $bannerHome = Advertisement::where('is_active', true)
-            ->where('position', 'banner_topo')
-            ->inRandomOrder()
-            ->first();
-
-        if ($bannerHome) {
-            $bannerHome->trackImpression();
-        }
-
-        return view('welcome', array_merge($sections, [
-            'bannerHome' => $bannerHome,
-        ]));
+        // Banner do topo é sorteado no <x-ad-space> (fora do cache).
+        return view('welcome', $sections);
     }
 }

@@ -10,6 +10,8 @@
             <p class="mt-3 text-base text-gray-500 font-medium">Encontre criadores profissionais comprometidos com a saúde, pureza racial e bem-estar animal.</p>
         </div>
 
+        <x-ad-space position="setor_canis" />
+
         {{-- Barra de Filtros Rápidos --}}
         <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm mb-12 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
