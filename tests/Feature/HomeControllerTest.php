@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Http\Controllers\HomeController;
 use App\Models\BlogCategory;
 use App\Models\Classified;
+use App\Models\Event;
 use App\Models\JobPosting;
 use App\Models\Kennel;
+use App\Models\Magazine;
 use App\Models\Post;
 use App\Models\Supplier;
 use App\Models\User;
@@ -265,5 +267,48 @@ class HomeControllerTest extends TestCase
         ]);
 
         $this->assertFalse(Cache::has(HomeController::CACHE_KEY));
+    }
+
+    public function test_home_ordena_revista_digital_e_eventos_nas_secoes(): void
+    {
+        Magazine::create([
+            'title' => 'Revista NP',
+            'slug' => 'revista-np-teste',
+            'issue_period' => 'Setembro/2026',
+            'pdf_path' => 'magazines/teste.pdf',
+            'cover_path' => 'magazines/capa.jpg',
+            'is_active' => true,
+        ]);
+
+        Event::create([
+            'title' => 'Pet South America',
+            'slug' => 'pet-south-america',
+            'start_date' => now()->addWeek(),
+            'location' => 'São Paulo Expo',
+            'city' => 'São Paulo',
+            'state' => 'SP',
+            'is_active' => true,
+        ]);
+
+        $racas = BlogCategory::create([
+            'name' => 'Raças',
+            'slug' => 'racas',
+        ]);
+        $racePost = $this->makePost('Guia da raça Golden Retriever');
+        $racePost->blogCategories()->sync([$racas->id]);
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $revista = strpos($html, 'Revista Digital');
+        $destaques = strpos($html, 'Destaques da');
+        $eventos = strpos($html, 'Agenda de Eventos');
+        $especies = strpos($html, 'Guia de Espécies');
+
+        $this->assertNotFalse($revista);
+        $this->assertNotFalse($destaques);
+        $this->assertNotFalse($eventos);
+        $this->assertNotFalse($especies);
+        $this->assertLessThan($destaques, $revista);
+        $this->assertLessThan($especies, $eventos);
     }
 }
