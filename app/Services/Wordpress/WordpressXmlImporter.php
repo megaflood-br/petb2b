@@ -24,6 +24,8 @@ class WordpressXmlImporter
 
     private int $imageBudget = PHP_INT_MAX;
 
+    private ?float $deadlineAt = null;
+
     public function import(string $path, bool $downloadImages = true): WordpressImportResult
     {
         $extracted = $this->extract($path);
@@ -185,6 +187,18 @@ class WordpressXmlImporter
         $this->imageBudget = $budget;
 
         return $this;
+    }
+
+    public function setDeadline(float $timestamp): self
+    {
+        $this->deadlineAt = $timestamp;
+
+        return $this;
+    }
+
+    public function pastDeadline(): bool
+    {
+        return $this->deadlineAt !== null && microtime(true) >= $this->deadlineAt;
     }
 
     public function setSiteBaseUrl(string $url): self
@@ -553,6 +567,10 @@ class WordpressXmlImporter
             return $html;
         }
 
+        if (strlen($html) > 200_000) {
+            return $html;
+        }
+
         $html = preg_replace_callback(
             '/\b(src|data-src|data-orig-file|data-large-file|href)=([\'"])([^\'"]+)\2/i',
             function (array $match): string {
@@ -620,7 +638,7 @@ class WordpressXmlImporter
             return $this->downloaded[$canonical];
         }
 
-        if ($this->imageBudget <= 0) {
+        if ($this->imageBudget <= 0 || $this->pastDeadline()) {
             return null;
         }
 
@@ -706,19 +724,26 @@ class WordpressXmlImporter
 
     private function downloadImage(string $url): ?string
     {
-        if (! $this->isSafePublicUrl($url)) {
+        if (! $this->isSafePublicUrl($url) || $this->pastDeadline()) {
             return null;
         }
 
         try {
-            $response = Http::timeout(5)
+            $response = Http::timeout(4)
                 ->connectTimeout(2)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (compatible; RevistaNegociosPet/1.0; +https://rnpet.com.br)',
                     'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
                     'Referer' => $this->siteBaseUrl !== '' ? $this->siteBaseUrl . '/' : $url,
                 ])
-                ->withOptions(['allow_redirects' => ['max' => 5]])
+                ->withOptions([
+                    'allow_redirects' => ['max' => 3],
+                    'curl' => [
+                        CURLOPT_TIMEOUT => 4,
+                        CURLOPT_CONNECTTIMEOUT => 2,
+                        CURLOPT_NOSIGNAL => true,
+                    ],
+                ])
                 ->get($url);
 
             if (! $response->successful()) {
