@@ -13,10 +13,12 @@ class ManageCategories extends Component
     use WithPagination;
 
     public $name, $categoryId;
+    public $hide_from_home = false;
     public $showForm = false;
 
     protected $rules = [
         'name' => 'required|min:2|unique:blog_categories,name',
+        'hide_from_home' => 'boolean',
     ];
 
     #[Layout('layouts.admin')]
@@ -29,7 +31,7 @@ class ManageCategories extends Component
 
     public function toggleForm()
     {
-        $this->reset(['name', 'categoryId']);
+        $this->reset(['name', 'categoryId', 'hide_from_home']);
         $this->showForm = !$this->showForm;
     }
 
@@ -39,6 +41,7 @@ class ManageCategories extends Component
         if ($this->categoryId) {
             $this->validate([
                 'name' => 'required|min:2|unique:blog_categories,name,' . $this->categoryId,
+                'hide_from_home' => 'boolean',
             ]);
         } else {
             $this->validate();
@@ -47,6 +50,7 @@ class ManageCategories extends Component
         $data = [
             'name' => $this->name,
             'slug' => Str::slug($this->name),
+            'hide_from_home' => (bool) $this->hide_from_home,
         ];
 
         BlogCategory::updateOrCreate(['id' => $this->categoryId], $data);
@@ -61,6 +65,7 @@ class ManageCategories extends Component
         $category = BlogCategory::findOrFail($id);
         $this->categoryId = $id;
         $this->name = $category->name;
+        $this->hide_from_home = (bool) $category->hide_from_home;
         $this->showForm = true;
     }
 

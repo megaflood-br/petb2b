@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesHomeCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -9,10 +10,16 @@ use Illuminate\Support\Str;
 
 class BlogCategory extends Model
 {
+    use FlushesHomeCache;
+
     /** Chave de cache do menu de categorias (usado no view composer). */
     public const NAV_CACHE_KEY = 'nav.blog_categories';
 
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'hide_from_home'];
+
+    protected $casts = [
+        'hide_from_home' => 'boolean',
+    ];
 
     protected static function booted(): void
     {

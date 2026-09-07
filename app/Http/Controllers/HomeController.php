@@ -28,6 +28,8 @@ class HomeController extends Controller
                 'latestMagazine' => Magazine::where('is_active', true)->latest()->first(),
 
                 'latestPosts' => Post::where('is_active', true)
+                    ->visibleOnHome()
+                    ->with('blogCategories')
                     ->orderBy('is_featured', 'desc')
                     ->latest()
                     ->take(9)
