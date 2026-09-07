@@ -89,8 +89,9 @@
         <div>
             <h2 class="text-sm font-black text-gray-900 uppercase tracking-wide">Importar posts do WordPress</h2>
             <p class="text-[10px] text-gray-400 font-medium normal-case leading-relaxed mt-2">
-                No WordPress: <span class="font-bold text-gray-500">Ferramentas → Exportar → Posts</span>.
-                Envie o XML gerado. Posts já existentes (mesmo slug) são ignorados. Categorias são criadas automaticamente.
+                No WordPress: <span class="font-bold text-gray-500">Ferramentas → Exportar → Posts</span>
+                (de preferência com mídia). Envie o XML gerado. Posts já existentes (mesmo slug) não são duplicados;
+                uma nova importação com download de imagens completa a capa e as fotos do texto que faltaram.
             </p>
         </div>
 
@@ -113,7 +114,7 @@
 
             <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">
                 <input type="checkbox" name="download_images" value="1" checked class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
-                Baixar imagem destacada (capa) para o armazenamento do portal
+                Baixar imagens (capa e fotos do texto) para o armazenamento do portal
             </label>
 
             <button type="submit" class="bg-gray-900 hover:bg-brand-500 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition">

@@ -36,7 +36,7 @@ class WordpressImportController extends Controller
             return back()->with('wordpress_import_error', 'O arquivo precisa ser um XML (.xml) exportado pelo WordPress.');
         }
 
-        @set_time_limit(300);
+        @set_time_limit(0);
         ini_set('memory_limit', '512M');
 
         try {
@@ -53,7 +53,7 @@ class WordpressImportController extends Controller
             );
         }
 
-        if ($result->created === 0 && $result->skipped === 0 && $result->failed === 0) {
+        if ($result->created === 0 && $result->updated === 0 && $result->skipped === 0 && $result->failed === 0) {
             return back()->with(
                 'wordpress_import_error',
                 'Nenhum post publicado foi encontrado no XML. Exporte em Ferramentas → Exportar → Posts (não só páginas).'

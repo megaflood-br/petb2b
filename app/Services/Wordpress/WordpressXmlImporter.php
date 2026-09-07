@@ -15,9 +15,18 @@ class WordpressXmlImporter
 {
     private const FALLBACK_CATEGORY = ['name' => 'Geral', 'slug' => 'geral'];
 
+    private WordpressImportResult $result;
+
+    private string $siteBaseUrl = '';
+
+    /** @var array<string, string|null> url canônica => caminho no disco public */
+    private array $downloaded = [];
+
     public function import(string $path, bool $downloadImages = true): WordpressImportResult
     {
-        $result = new WordpressImportResult();
+        $this->result = new WordpressImportResult();
+        $this->downloaded = [];
+
         $xml = $this->loadXml($path);
         $channel = $this->findChannel($xml);
 
@@ -26,6 +35,7 @@ class WordpressXmlImporter
         $contentNs = $this->namespaceUri($namespaces, 'content', 'http://purl.org/rss/1.0/modules/content/');
         $excerptNs = $this->namespaceUri($namespaces, 'excerpt', 'http://wordpress.org/export/1.2/excerpt/');
 
+        $this->siteBaseUrl = $this->channelBaseUrl($channel, $wpNs);
         $attachments = $this->attachmentMap($channel, $wpNs);
 
         foreach ($this->items($channel) as $item) {
@@ -36,13 +46,13 @@ class WordpressXmlImporter
 
             $status = $this->nsValue($item, $wpNs, 'status');
             if ($status !== 'publish') {
-                $result->skipped++;
+                $this->result->skipped++;
                 continue;
             }
 
             $title = html_entity_decode(trim((string) $item->title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             if ($title === '') {
-                $result->skipped++;
+                $this->result->skipped++;
                 continue;
             }
 
@@ -53,19 +63,34 @@ class WordpressXmlImporter
                 $slug = 'wp-post-' . ($wpId ?: Str::lower(Str::random(8)));
             }
 
-            if (Post::where('slug', $slug)->exists()) {
-                $result->skipped++;
+            $existing = Post::where('slug', $slug)->first();
+            if ($existing) {
+                if ($downloadImages) {
+                    $this->refreshPostImages($existing, $item, $wpNs, $contentNs, $attachments);
+                } else {
+                    $this->result->skipped++;
+                }
                 continue;
             }
 
             try {
-                $content = $this->encoded($item, $contentNs, 'content');
+                $originalContent = $this->encoded($item, $contentNs, 'content');
+                $content = $originalContent;
                 $excerpt = trim(strip_tags($this->encoded($item, $excerptNs, 'excerpt')));
+                $cover = null;
+
+                if ($downloadImages) {
+                    $content = $this->rewriteContentImages($originalContent);
+                    $coverUrl = $this->featuredImageUrl($item, $wpNs, $attachments)
+                        ?: $this->firstContentImageUrl($originalContent);
+                    $cover = $coverUrl ? $this->localizeImageUrl($coverUrl) : null;
+                }
 
                 $post = new Post([
                     'title' => Str::limit($title, 250, ''),
                     'slug' => $slug,
                     'content' => $content !== '' ? $content : '<p></p>',
+                    'image' => $cover,
                     'is_active' => true,
                     'is_featured' => $this->nsValue($item, $wpNs, 'is_sticky') === '1',
                     'meta_description' => $excerpt !== '' ? Str::limit($excerpt, 160, '') : null,
@@ -77,26 +102,16 @@ class WordpressXmlImporter
                 $post->updated_at = $published;
                 $post->save();
 
-                $categoryIds = $this->syncCategories($item, $result);
+                $categoryIds = $this->syncCategories($item, $this->result);
                 $post->blogCategories()->sync($categoryIds);
 
-                if ($downloadImages) {
-                    $imageUrl = $this->featuredImageUrl($item, $wpNs, $attachments);
-                    if ($imageUrl) {
-                        $stored = $this->downloadImage($imageUrl);
-                        if ($stored) {
-                            $post->forceFill(['image' => $stored])->save();
-                        }
-                    }
-                }
-
-                $result->created++;
+                $this->result->created++;
             } catch (Throwable $e) {
-                $result->addError("“{$title}”: " . $e->getMessage());
+                $this->result->addError("“{$title}”: " . $e->getMessage());
             }
         }
 
-        return $result;
+        return $this->result;
     }
 
     private function loadXml(string $path): SimpleXMLElement
@@ -245,7 +260,8 @@ class WordpressXmlImporter
             }
 
             $id = $this->nsValue($item, $wpNs, 'post_id');
-            $url = $this->nsValue($item, $wpNs, 'attachment_url');
+            $url = $this->nsValue($item, $wpNs, 'attachment_url')
+                ?: trim((string) ($item->guid ?? ''));
             if ($id !== '' && $url !== '') {
                 $map[$id] = $url;
             }
@@ -352,6 +368,193 @@ class WordpressXmlImporter
         return null;
     }
 
+    /**
+     * @param  array<string, string>  $attachments
+     */
+    private function refreshPostImages(
+        Post $post,
+        SimpleXMLElement $item,
+        string $wpNs,
+        string $contentNs,
+        array $attachments
+    ): void {
+        $originalContent = $post->content ?: $this->encoded($item, $contentNs, 'content');
+        $rewritten = $this->rewriteContentImages($originalContent);
+        $changed = $rewritten !== $originalContent;
+
+        if (! $post->image) {
+            $coverUrl = $this->featuredImageUrl($item, $wpNs, $attachments)
+                ?: $this->firstContentImageUrl($originalContent);
+            $stored = $coverUrl ? $this->localizeImageUrl($coverUrl) : null;
+            if ($stored) {
+                $post->image = $stored;
+                $changed = true;
+            }
+        }
+
+        if (! $changed) {
+            $this->result->skipped++;
+
+            return;
+        }
+
+        $post->content = $rewritten;
+        $post->save();
+        $this->result->updated++;
+    }
+
+    private function rewriteContentImages(string $html): string
+    {
+        if ($html === '' || preg_match('/<img\b|srcset=/i', $html) !== 1) {
+            return $html;
+        }
+
+        $html = preg_replace_callback(
+            '/\b(src|data-src|data-orig-file|data-large-file|href)=([\'"])([^\'"]+)\2/i',
+            function (array $match): string {
+                $attr = strtolower($match[1]);
+                $url = html_entity_decode($match[3], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+                if ($attr === 'href' && ! $this->looksLikeImageUrl($url)) {
+                    return $match[0];
+                }
+
+                $public = $this->publicImageUrl($url);
+
+                return $public ? $match[1] . '=' . $match[2] . $public . $match[2] : $match[0];
+            },
+            $html
+        ) ?? $html;
+
+        return preg_replace_callback(
+            '/\bsrcset=([\'"])([^\'"]+)\1/i',
+            fn (array $match): string => 'srcset=' . $match[1] . $this->rewriteSrcset($match[2]) . $match[1],
+            $html
+        ) ?? $html;
+    }
+
+    private function rewriteSrcset(string $srcset): string
+    {
+        $parts = [];
+
+        foreach (array_map('trim', explode(',', $srcset)) as $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            $bits = preg_split('/\s+/', $part, 2) ?: [];
+            $url = $bits[0] ?? '';
+            $descriptor = $bits[1] ?? '';
+            $public = $url !== '' ? $this->publicImageUrl(html_entity_decode($url, ENT_QUOTES | ENT_HTML5, 'UTF-8')) : null;
+
+            $parts[] = trim(($public ?: $url) . ' ' . $descriptor);
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function publicImageUrl(string $url): ?string
+    {
+        $stored = $this->localizeImageUrl($url);
+
+        return $stored ? Storage::disk('public')->url($stored) : null;
+    }
+
+    private function localizeImageUrl(string $url): ?string
+    {
+        $absolute = $this->absoluteUrl($url);
+        if ($absolute === null) {
+            return null;
+        }
+
+        if (preg_match('#/storage/(blog/posts/[^?#]+)#', $absolute, $local)) {
+            return $local[1];
+        }
+
+        $canonical = $this->canonicalImageUrl($absolute);
+        if (array_key_exists($canonical, $this->downloaded)) {
+            return $this->downloaded[$canonical];
+        }
+
+        $stored = $this->downloadImage($canonical);
+        $this->downloaded[$canonical] = $stored;
+        $this->downloaded[$absolute] = $stored;
+
+        if ($stored) {
+            $this->result->imagesDownloaded++;
+        } else {
+            $this->result->imagesFailed++;
+        }
+
+        return $stored;
+    }
+
+    private function firstContentImageUrl(string $html): ?string
+    {
+        if (preg_match('/<img\b[^>]*\bsrc=[\'"]([^\'"]+)/i', $html, $match) !== 1) {
+            return null;
+        }
+
+        return $this->absoluteUrl(html_entity_decode($match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    private function channelBaseUrl(SimpleXMLElement $channel, string $wpNs): string
+    {
+        $raw = $this->nsValue($channel, $wpNs, 'base_blog_url')
+            ?: $this->nsValue($channel, $wpNs, 'base_site_url')
+            ?: trim((string) ($channel->link ?? ''));
+
+        $parts = parse_url($raw);
+        if (! isset($parts['scheme'], $parts['host'])) {
+            return '';
+        }
+
+        $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+
+        return strtolower($parts['scheme']) . '://' . strtolower($parts['host']) . $port;
+    }
+
+    private function absoluteUrl(string $url): ?string
+    {
+        $url = trim($url);
+        if ($url === '' || str_starts_with($url, 'data:') || str_starts_with($url, 'blob:')) {
+            return null;
+        }
+
+        $url = html_entity_decode($url, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        if (str_starts_with($url, '//')) {
+            $url = 'https:' . $url;
+        } elseif (str_starts_with($url, '/') && $this->siteBaseUrl !== '') {
+            $url = $this->siteBaseUrl . $url;
+        } elseif (! preg_match('#^https?://#i', $url)) {
+            return null;
+        }
+
+        return $this->isSafePublicUrl($url) ? $url : null;
+    }
+
+    private function canonicalImageUrl(string $url): string
+    {
+        $parts = parse_url($url);
+        if (! isset($parts['scheme'], $parts['host'], $parts['path'])) {
+            return $url;
+        }
+
+        $path = preg_replace('/-\d+x\d+(?=\.[a-zA-Z0-9]+$)/', '', $parts['path']) ?? $parts['path'];
+        $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+
+        return $parts['scheme'] . '://' . $parts['host'] . $port . $path;
+    }
+
+    private function looksLikeImageUrl(string $url): bool
+    {
+        $path = strtolower((string) parse_url($url, PHP_URL_PATH));
+
+        return str_contains($path, '/wp-content/uploads/')
+            || (bool) preg_match('/\.(jpe?g|png|gif|webp)$/', $path);
+    }
+
     private function downloadImage(string $url): ?string
     {
         if (! $this->isSafePublicUrl($url)) {
@@ -359,8 +562,13 @@ class WordpressXmlImporter
         }
 
         try {
-            $response = Http::timeout(10)
-                ->withOptions(['allow_redirects' => ['max' => 3]])
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (compatible; RevistaNegociosPet/1.0; +https://rnpet.com.br)',
+                    'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Referer' => $this->siteBaseUrl !== '' ? $this->siteBaseUrl . '/' : $url,
+                ])
+                ->withOptions(['allow_redirects' => ['max' => 5]])
                 ->get($url);
 
             if (! $response->successful()) {
@@ -373,25 +581,51 @@ class WordpressXmlImporter
             }
 
             $mime = strtolower(trim(explode(';', (string) $response->header('Content-Type'))[0]));
-            $ext = match (true) {
-                str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => 'jpg',
-                str_contains($mime, 'png') => 'png',
-                str_contains($mime, 'webp') => 'webp',
-                str_contains($mime, 'gif') => 'gif',
-                default => strtolower((string) pathinfo((string) parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION)),
-            };
+            $ext = $this->imageExtension($body, $mime, $url);
 
-            if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+            if ($ext === null) {
                 return null;
             }
 
-            $path = 'blog/posts/' . Str::uuid() . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+            $path = 'blog/posts/' . Str::uuid() . '.' . $ext;
             Storage::disk('public')->put($path, $body);
 
             return $path;
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private function imageExtension(string $body, string $mime, string $url): ?string
+    {
+        $fromMagic = match (true) {
+            str_starts_with($body, "\xFF\xD8\xFF") => 'jpg',
+            str_starts_with($body, "\x89PNG") => 'png',
+            str_starts_with($body, 'GIF8') => 'gif',
+            str_starts_with($body, 'RIFF') && str_contains(substr($body, 0, 16), 'WEBP') => 'webp',
+            default => null,
+        };
+
+        if ($fromMagic !== null) {
+            return $fromMagic;
+        }
+
+        $fromMime = match (true) {
+            str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => 'jpg',
+            str_contains($mime, 'png') => 'png',
+            str_contains($mime, 'webp') => 'webp',
+            str_contains($mime, 'gif') => 'gif',
+            default => null,
+        };
+
+        if ($fromMime !== null) {
+            return $fromMime;
+        }
+
+        $fromUrl = strtolower((string) pathinfo((string) parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
+        $fromUrl = $fromUrl === 'jpeg' ? 'jpg' : $fromUrl;
+
+        return in_array($fromUrl, ['jpg', 'png', 'webp', 'gif'], true) ? $fromUrl : null;
     }
 
     private function isSafePublicUrl(string $url): bool
