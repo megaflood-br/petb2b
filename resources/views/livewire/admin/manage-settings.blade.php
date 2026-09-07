@@ -102,23 +102,164 @@
             </ul>
         @endif
 
-        <form action="{{ route('admin.wordpress-import') }}" method="POST" enctype="multipart/form-data" class="space-y-4" wire:ignore>
-            @csrf
-            <div>
-                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Arquivo XML (WXR)</label>
-                <input type="file" name="wordpress_xml" accept=".xml,text/xml,application/xml" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
-                @error('wordpress_xml') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
-                <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. A importação pode levar alguns minutos se houver muitos posts.</p>
-            </div>
+        <div
+            wire:ignore
+            x-data="{
+                stage: 'idle',
+                uploadRatio: 0,
+                processed: 0,
+                total: 0,
+                percent: 0,
+                label: '',
+                error: '',
+                summary: '',
+                errors: [],
+                startUrl: '{{ route('admin.wordpress-import') }}',
+                processUrl: '{{ route('admin.wordpress-import.process') }}',
+                csrf() {
+                    return document.querySelector('meta[name=csrf-token]')?.content || '{{ csrf_token() }}';
+                },
+                barPercent() {
+                    if (this.stage === 'done') return 100;
+                    if (this.stage === 'upload') return Math.max(2, Math.round(this.uploadRatio * 25));
+                    if (this.stage === 'parse') return 28;
+                    if (this.stage === 'import' && this.total > 0) return 30 + Math.round((this.processed / this.total) * 70);
+                    if (this.stage === 'import') return 30;
+                    return 0;
+                },
+                async start(event) {
+                    event.preventDefault();
+                    this.error = '';
+                    this.summary = '';
+                    this.errors = [];
+                    const form = event.target;
+                    const fileInput = form.querySelector('input[type=file]');
+                    if (! fileInput.files.length) {
+                        this.error = 'Envie o arquivo XML exportado do WordPress.';
+                        return;
+                    }
+                    this.stage = 'upload';
+                    this.uploadRatio = 0;
+                    this.label = 'Enviando arquivo…';
+                    const token = await this.upload(form);
+                    if (! token) return;
+                    this.stage = 'import';
+                    await this.runBatches(token);
+                },
+                upload(form) {
+                    return new Promise((resolve) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('POST', this.startUrl);
+                        xhr.setRequestHeader('Accept', 'application/json');
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                        xhr.setRequestHeader('X-CSRF-TOKEN', this.csrf());
+                        xhr.upload.onprogress = (ev) => {
+                            if (ev.lengthComputable) {
+                                this.uploadRatio = ev.loaded / ev.total;
+                                this.label = 'Enviando arquivo… ' + Math.round(this.uploadRatio * 100) + '%';
+                            }
+                        };
+                        xhr.onload = () => {
+                            let data = {};
+                            try { data = JSON.parse(xhr.responseText || '{}'); } catch (e) { data = {}; }
+                            if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+                                this.total = data.total || 0;
+                                this.processed = 0;
+                                this.stage = 'parse';
+                                this.label = this.total ? ('XML lido: ' + this.total + ' posts. Importando…') : 'Lendo XML…';
+                                resolve(data.token);
+                                return;
+                            }
+                            this.stage = 'idle';
+                            this.error = data.message || (data.errors && Object.values(data.errors).flat()[0]) || 'Não foi possível ler o XML.';
+                            resolve(null);
+                        };
+                        xhr.onerror = () => {
+                            this.stage = 'idle';
+                            this.error = 'Falha de rede ao enviar o arquivo.';
+                            resolve(null);
+                        };
+                        xhr.send(new FormData(form));
+                    });
+                },
+                async runBatches(token) {
+                    try {
+                        while (true) {
+                            const response = await fetch(this.processUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': this.csrf(),
+                                },
+                                body: JSON.stringify({ token }),
+                            });
+                            const data = await response.json().catch(() => ({}));
+                            if (! response.ok || ! data.ok) {
+                                this.stage = 'idle';
+                                this.error = data.message || 'Falha ao importar os posts.';
+                                return;
+                            }
+                            this.processed = data.processed || 0;
+                            this.total = data.total || this.total;
+                            this.label = this.total
+                                ? ('Importando posts ' + this.processed + ' / ' + this.total)
+                                : 'Importando…';
+                            this.errors = data.errors || [];
+                            if (data.done) {
+                                this.stage = 'done';
+                                this.percent = 100;
+                                this.summary = data.summary || 'Importação concluída.';
+                                this.label = 'Concluído';
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        this.stage = 'idle';
+                        this.error = 'Falha de rede ao importar os posts.';
+                    }
+                },
+            }"
+            class="space-y-4"
+        >
+            <form @submit.prevent="start" action="{{ route('admin.wordpress-import') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Arquivo XML (WXR)</label>
+                    <input type="file" name="wordpress_xml" accept=".xml,text/xml,application/xml" required :disabled="stage === 'upload' || stage === 'parse' || stage === 'import'" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
+                    @error('wordpress_xml') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                    <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. A barra mostra o envio do arquivo e a importação dos posts.</p>
+                </div>
 
-            <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">
-                <input type="checkbox" name="download_images" value="1" checked class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
-                Baixar imagem destacada (capa) para o armazenamento do portal
-            </label>
+                <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">
+                    <input type="checkbox" name="download_images" value="1" checked class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+                    Baixar imagem destacada (capa) para o armazenamento do portal
+                </label>
 
-            <button type="submit" class="bg-gray-900 hover:bg-brand-500 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition">
-                Importar XML
-            </button>
-        </form>
+                <div x-show="stage !== 'idle' || summary" x-cloak class="space-y-2">
+                    <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
+                        <span x-text="label"></span>
+                        <span x-text="barPercent() + '%'"></span>
+                    </div>
+                    <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-brand-500 rounded-full transition-all duration-300" :style="'width:' + barPercent() + '%'"></div>
+                    </div>
+                </div>
+
+                <p x-show="error" x-cloak class="text-red-600 text-[11px] font-bold normal-case" x-text="error"></p>
+                <p x-show="summary" x-cloak class="text-green-700 text-[11px] font-bold normal-case" x-text="summary"></p>
+                <ul x-show="errors.length" x-cloak class="bg-red-50 p-4 rounded-xl border border-red-100 text-red-600 text-[11px] font-medium normal-case space-y-1">
+                    <template x-for="item in errors" :key="item">
+                        <li x-text="item"></li>
+                    </template>
+                </ul>
+
+                <button type="submit" :disabled="stage === 'upload' || stage === 'parse' || stage === 'import'" class="bg-gray-900 hover:bg-brand-500 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition disabled:opacity-50">
+                    <span x-show="stage === 'idle' || stage === 'done'">Importar XML</span>
+                    <span x-show="stage === 'upload' || stage === 'parse' || stage === 'import'" x-cloak>Importando…</span>
+                </button>
+            </form>
+        </div>
     </div>
 </div>

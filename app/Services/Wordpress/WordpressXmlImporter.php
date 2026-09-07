@@ -17,7 +17,24 @@ class WordpressXmlImporter
 
     public function import(string $path, bool $downloadImages = true): WordpressImportResult
     {
+        $extracted = $this->extract($path);
         $result = new WordpressImportResult();
+        $result->skipped = $extracted['skipped'];
+
+        foreach ($extracted['posts'] as $payload) {
+            $this->importPayload($payload, $result, $downloadImages);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Lê o WXR e devolve posts publicáveis (sem gravar no banco).
+     *
+     * @return array{posts: list<array<string, mixed>>, skipped: int}
+     */
+    public function extract(string $path): array
+    {
         $xml = $this->loadXml($path);
         $channel = $this->findChannel($xml);
 
@@ -27,6 +44,8 @@ class WordpressXmlImporter
         $excerptNs = $this->namespaceUri($namespaces, 'excerpt', 'http://wordpress.org/export/1.2/excerpt/');
 
         $attachments = $this->attachmentMap($channel, $wpNs);
+        $posts = [];
+        $skipped = 0;
 
         foreach ($this->items($channel) as $item) {
             $postType = $this->nsValue($item, $wpNs, 'post_type') ?: 'post';
@@ -36,13 +55,13 @@ class WordpressXmlImporter
 
             $status = $this->nsValue($item, $wpNs, 'status');
             if ($status !== 'publish') {
-                $result->skipped++;
+                $skipped++;
                 continue;
             }
 
             $title = html_entity_decode(trim((string) $item->title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             if ($title === '') {
-                $result->skipped++;
+                $skipped++;
                 continue;
             }
 
@@ -53,50 +72,65 @@ class WordpressXmlImporter
                 $slug = 'wp-post-' . ($wpId ?: Str::lower(Str::random(8)));
             }
 
-            if (Post::where('slug', $slug)->exists()) {
-                $result->skipped++;
-                continue;
-            }
+            $content = $this->encoded($item, $contentNs, 'content');
+            $excerpt = trim(strip_tags($this->encoded($item, $excerptNs, 'excerpt')));
 
-            try {
-                $content = $this->encoded($item, $contentNs, 'content');
-                $excerpt = trim(strip_tags($this->encoded($item, $excerptNs, 'excerpt')));
-
-                $post = new Post([
-                    'title' => Str::limit($title, 250, ''),
-                    'slug' => $slug,
-                    'content' => $content !== '' ? $content : '<p></p>',
-                    'is_active' => true,
-                    'is_featured' => $this->nsValue($item, $wpNs, 'is_sticky') === '1',
-                    'meta_description' => $excerpt !== '' ? Str::limit($excerpt, 160, '') : null,
-                    'meta_keywords' => $this->keywordsFromTags($item),
-                ]);
-
-                $published = $this->publishedAt($item, $wpNs);
-                $post->created_at = $published;
-                $post->updated_at = $published;
-                $post->save();
-
-                $categoryIds = $this->syncCategories($item, $result);
-                $post->blogCategories()->sync($categoryIds);
-
-                if ($downloadImages) {
-                    $imageUrl = $this->featuredImageUrl($item, $wpNs, $attachments);
-                    if ($imageUrl) {
-                        $stored = $this->downloadImage($imageUrl);
-                        if ($stored) {
-                            $post->forceFill(['image' => $stored])->save();
-                        }
-                    }
-                }
-
-                $result->created++;
-            } catch (Throwable $e) {
-                $result->addError("“{$title}”: " . $e->getMessage());
-            }
+            $posts[] = [
+                'title' => Str::limit($title, 250, ''),
+                'slug' => $slug,
+                'content' => $content !== '' ? $content : '<p></p>',
+                'excerpt' => $excerpt,
+                'keywords' => $this->keywordsFromTags($item),
+                'is_featured' => $this->nsValue($item, $wpNs, 'is_sticky') === '1',
+                'published_at' => $this->publishedAt($item, $wpNs)->format('Y-m-d H:i:s'),
+                'image_url' => $this->featuredImageUrl($item, $wpNs, $attachments),
+                'categories' => $this->categoryPayload($item),
+            ];
         }
 
-        return $result;
+        return ['posts' => $posts, 'skipped' => $skipped];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function importPayload(array $payload, WordpressImportResult $result, bool $downloadImages = true): void
+    {
+        if (Post::where('slug', $payload['slug'])->exists()) {
+            $result->skipped++;
+
+            return;
+        }
+
+        try {
+            $post = new Post([
+                'title' => $payload['title'],
+                'slug' => $payload['slug'],
+                'content' => $payload['content'] ?: '<p></p>',
+                'is_active' => true,
+                'is_featured' => (bool) ($payload['is_featured'] ?? false),
+                'meta_description' => filled($payload['excerpt'] ?? null) ? Str::limit((string) $payload['excerpt'], 160, '') : null,
+                'meta_keywords' => $payload['keywords'] ?? null,
+            ]);
+
+            $published = Carbon::parse($payload['published_at'] ?? now());
+            $post->created_at = $published;
+            $post->updated_at = $published;
+            $post->save();
+
+            $post->blogCategories()->sync($this->syncCategoriesFromPayload($payload['categories'] ?? [], $result));
+
+            if ($downloadImages && ! empty($payload['image_url'])) {
+                $stored = $this->downloadImage((string) $payload['image_url']);
+                if ($stored) {
+                    $post->forceFill(['image' => $stored])->save();
+                }
+            }
+
+            $result->created++;
+        } catch (Throwable $e) {
+            $result->addError('“' . ($payload['title'] ?? 'Post') . '”: ' . $e->getMessage());
+        }
     }
 
     private function loadXml(string $path): SimpleXMLElement
@@ -255,9 +289,9 @@ class WordpressXmlImporter
     }
 
     /**
-     * @return list<int>
+     * @return list<array{name: string, slug: string}>
      */
-    private function syncCategories(SimpleXMLElement $item, WordpressImportResult $result): array
+    private function categoryPayload(SimpleXMLElement $item): array
     {
         $ids = [];
 
@@ -284,11 +318,38 @@ class WordpressXmlImporter
                 $name = Str::title(str_replace('-', ' ', $slug));
             }
 
+            $ids[] = [
+                'name' => Str::limit($name, 120, ''),
+                'slug' => $slug ?: Str::slug($name),
+            ];
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param  list<array{name?: string, slug?: string}>  $categories
+     * @return list<int>
+     */
+    private function syncCategoriesFromPayload(array $categories, WordpressImportResult $result): array
+    {
+        $ids = [];
+
+        foreach ($categories as $category) {
+            $slug = (string) ($category['slug'] ?? '');
+            $name = (string) ($category['name'] ?? '');
+            if ($slug === '' && $name === '') {
+                continue;
+            }
+            if ($slug === '') {
+                $slug = Str::slug($name);
+            }
+
             $existing = BlogCategory::query()->where('slug', $slug)->first();
             if (! $existing) {
                 $existing = BlogCategory::create([
-                    'name' => Str::limit($name, 120, ''),
-                    'slug' => $slug ?: Str::slug($name),
+                    'name' => Str::limit($name !== '' ? $name : Str::title(str_replace('-', ' ', $slug)), 120, ''),
+                    'slug' => $slug,
                 ]);
                 $result->categoriesCreated++;
             }
