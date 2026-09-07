@@ -127,7 +127,42 @@
             <x-ad-space position="banner_topo" />
         </div>
 
-        {{-- SEÇÃO 2: GRID DE MATÉRIAS - DESTAQUES DA EDIÇÃO --}}
+        {{-- SEÇÃO 2: REVISTA DIGITAL --}}
+        @if($latestMagazine)
+        <section class="py-20 bg-gray-50 border-t border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="bg-brand-500 rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden shadow-2xl shadow-brand-200">
+                    <div class="flex flex-col md:flex-row items-center gap-16 relative z-10">
+                        <div class="w-64 md:w-80 flex-shrink-0 relative group">
+                            <div class="absolute -inset-4 bg-white/10 rounded-[2.5rem] blur-2xl group-hover:bg-brand-500/20 transition duration-700"></div>
+                            <img src="{{ asset('storage/' . $latestMagazine->cover_path) }}"
+                                class="rounded-2xl w-full shadow-[20px_20px_60px_rgba(0,0,0,0.5)] rotate-2 group-hover:rotate-0 transition-transform duration-700 relative z-10 border border-white/10">
+                        </div>
+
+                        <div class="flex-1 text-center md:text-left text-white">
+                            <span class="bg-brand-600 text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest inline-block mb-6">
+                                Conteúdo Exclusivo
+                            </span>
+                            <h2 class="text-5xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.85] mb-6">
+                                Revista Digital <br>
+                                <span class="text-brand-300">{{ $latestMagazine->issue_period }}</span>
+                            </h2>
+                            <p class="text-brand-100/70 font-bold italic text-base mb-10 max-w-md">
+                                Acesse agora a edição completa com as maiores tendências do setor pet brasileiro.
+                            </p>
+                            <a href="{{ route('magazines.show', $latestMagazine->slug) }}"
+                               class="inline-block bg-white text-brand-500 px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-gray-900 hover:text-white transition shadow-xl">
+                                Abrir e Folhear Revista
+                            </a>
+                        </div>
+                    </div>
+                    <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-800 rounded-full blur-[120px] opacity-40"></div>
+                </div>
+            </div>
+        </section>
+        @endif
+
+        {{-- SEÇÃO 3: GRID DE MATÉRIAS - DESTAQUES DA EDIÇÃO --}}
         <section class="py-24 bg-white">
             <div class="max-w-7xl mx-auto px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
@@ -180,42 +215,39 @@
             </div>
         </section>
 
-        {{-- SEÇÃO 3: REVISTA DIGITAL --}}
-        @if($latestMagazine)
-        <section class="py-20 bg-gray-50 border-t border-b border-gray-100">
-            <div class="max-w-7xl mx-auto px-6 lg:px-8">
-                <div class="bg-brand-500 rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden shadow-2xl shadow-brand-200">
-                    <div class="flex flex-col md:flex-row items-center gap-16 relative z-10">
-                        <div class="w-64 md:w-80 flex-shrink-0 relative group">
-                            <div class="absolute -inset-4 bg-white/10 rounded-[2.5rem] blur-2xl group-hover:bg-brand-500/20 transition duration-700"></div>
-                            <img src="{{ asset('storage/' . $latestMagazine->cover_path) }}"
-                                class="rounded-2xl w-full shadow-[20px_20px_60px_rgba(0,0,0,0.5)] rotate-2 group-hover:rotate-0 transition-transform duration-700 relative z-10 border border-white/10">
-                        </div>
-
-                        <div class="flex-1 text-center md:text-left text-white">
-                            <span class="bg-brand-600 text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest inline-block mb-6">
-                                Conteúdo Exclusivo
-                            </span>
-                            <h2 class="text-5xl md:text-6xl font-black uppercase italic tracking-tighter leading-[0.85] mb-6">
-                                Revista Digital <br>
-                                <span class="text-brand-300">{{ $latestMagazine->issue_period }}</span>
-                            </h2>
-                            <p class="text-brand-100/70 font-bold italic text-base mb-10 max-w-md">
-                                Acesse agora a edição completa com as maiores tendências do setor pet brasileiro.
-                            </p>
-                            <a href="{{ route('magazines.show', $latestMagazine->slug) }}"
-                               class="inline-block bg-white text-brand-500 px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-gray-900 hover:text-white transition shadow-xl">
-                                Abrir e Folhear Revista
-                            </a>
-                        </div>
-                    </div>
-                    <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-800 rounded-full blur-[120px] opacity-40"></div>
+        {{-- SEÇÃO 4: AGENDA DE EVENTOS --}}
+        <div class="py-24 bg-gray-50 border-t border-gray-100">
+            <div class="max-w-3xl mx-auto px-6 lg:px-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-black text-gray-900 uppercase tracking-tight">Agenda de Eventos</h2>
+                    <a href="{{ route('events.index') }}" class="text-xs font-black text-brand-500 uppercase tracking-widest">Ver Todos →</a>
+                </div>
+                <div class="space-y-6">
+                    @forelse($upcomingEvents as $event)
+                        <a href="{{ route('events.index', ['slug' => $event->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all group">
+                            <div class="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 relative border border-gray-50">
+                                @if($event->image)
+                                    <img src="{{ asset('storage/' . $event->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @else
+                                    <div class="w-full h-full bg-brand-50 flex flex-col items-center justify-center text-brand-500 font-black">
+                                        <span class="text-[9px] uppercase leading-none mb-0.5">{{ $event->start_date->translatedFormat('M') }}</span>
+                                        <span class="text-base leading-none">{{ $event->start_date->format('d') }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-black text-gray-900 uppercase text-sm leading-tight mb-1 group-hover:text-brand-500 transition-colors">{{ $event->title }}</h4>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ $event->city }}/{{ $event->state }} • {{ $event->start_date->format('d/m/Y') }}</p>
+                            </div>
+                        </a>
+                    @empty
+                        <p class="text-gray-400 text-xs font-bold uppercase italic text-center py-4">Nenhum evento próximo agendado.</p>
+                    @endforelse
                 </div>
             </div>
-        </section>
-        @endif
+        </div>
 
-        {{-- SEÇÃO NOVA: TUDO SOBRE RAÇAS --}}
+        {{-- SEÇÃO 5: TUDO SOBRE RAÇAS --}}
         @php
             $racePosts = \App\Models\Post::where('is_active', true)
                 ->whereHas('blogCategories', function($q) {
@@ -226,7 +258,7 @@
                 ->get();
         @endphp
         @if($racePosts->count() > 0)
-            <section class="py-24 bg-gray-50 border-b border-gray-100">
+            <section class="py-24 bg-white border-b border-gray-100">
                 <div class="max-w-7xl mx-auto px-6 lg:px-8">
                     <div class="mb-12">
                         <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Guia de Espécies</p>
@@ -478,38 +510,6 @@
                 </div>
             </section>
         @endif
-
-        {{-- SEÇÃO 8: AGENDA LOCAL COM EXIBIÇÃO DE IMAGENS --}}
-        <div class="py-24 bg-gray-50 border-t border-gray-100">
-            <div class="max-w-3xl mx-auto px-6 lg:px-8">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-2xl font-black text-gray-900 uppercase tracking-tight">Agenda de Eventos</h2>
-                    <a href="{{ route('events.index') }}" class="text-xs font-black text-brand-500 uppercase tracking-widest">Ver Todos →</a>
-                </div>
-                <div class="space-y-6">
-                    @forelse($upcomingEvents as $event)
-                        <a href="{{ route('events.index', ['slug' => $event->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all group">
-                            <div class="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 relative border border-gray-50">
-                                @if($event->image)
-                                    <img src="{{ asset('storage/' . $event->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                                @else
-                                    <div class="w-full h-full bg-brand-50 flex flex-col items-center justify-center text-brand-500 font-black">
-                                        <span class="text-[9px] uppercase leading-none mb-0.5">{{ $event->start_date->translatedFormat('M') }}</span>
-                                        <span class="text-base leading-none">{{ $event->start_date->format('d') }}</span>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-black text-gray-900 uppercase text-sm leading-tight mb-1 group-hover:text-brand-500 transition-colors">{{ $event->title }}</h4>
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ $event->city }}/{{ $event->state }} • {{ $event->start_date->format('d/m/Y') }}</p>
-                            </div>
-                        </a>
-                    @empty
-                        <p class="text-gray-400 text-xs font-bold uppercase italic text-center py-4">Nenhum evento próximo agendado.</p>
-                    @endforelse
-                </div>
-            </div>
-        </div>
 
     </div>
 </x-app-layout>
