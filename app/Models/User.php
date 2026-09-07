@@ -46,4 +46,35 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function hasRole(string $role): bool
+    {
+        return strtolower(trim((string) $this->role)) === strtolower($role);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isSupplier(): bool
+    {
+        return $this->hasRole('supplier');
+    }
+
+    public function isBreeder(): bool
+    {
+        return $this->hasRole('breeder');
+    }
+
+    /** Rota do painel após login / clique em Dashboard. */
+    public function panelRouteName(): string
+    {
+        return match (true) {
+            $this->isAdmin() => 'admin.dashboard',
+            $this->isSupplier() => 'supplier.dashboard',
+            $this->isBreeder() => 'breeder.dashboard',
+            default => 'profile',
+        };
+    }
 }

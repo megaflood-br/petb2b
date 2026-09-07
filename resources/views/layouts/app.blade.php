@@ -155,7 +155,9 @@
                             <div class="hidden sm:flex sm:items-center sm:ml-6">
                                 @auth
                                     <div class="flex items-center space-x-4">
-                                        <a href="{{ route('dashboard') }}" class="text-sm text-gray-700 hover:text-brand-500 font-bold transition">Dashboard</a>
+                                        <a href="{{ route('dashboard') }}" class="text-sm text-gray-700 hover:text-brand-500 font-bold transition">
+                                            {{ auth()->user()->isAdmin() || auth()->user()->isSupplier() || auth()->user()->isBreeder() ? 'Painel' : 'Minha conta' }}
+                                        </a>
                                         <form method="POST" action="{{ route('logout') }}">
                                             @csrf
                                             <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-bold transition">Sair</button>
