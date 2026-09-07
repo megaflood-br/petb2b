@@ -711,8 +711,8 @@ class WordpressXmlImporter
         }
 
         try {
-            $response = Http::timeout(12)
-                ->connectTimeout(4)
+            $response = Http::timeout(5)
+                ->connectTimeout(2)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (compatible; RevistaNegociosPet/1.0; +https://rnpet.com.br)',
                     'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',

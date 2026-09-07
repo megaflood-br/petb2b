@@ -306,7 +306,7 @@ XML);
 
         $token = $start->json('token');
         $this->assertNotEmpty($token);
-        Storage::disk('local')->assertExists("wxr/{$token}.json");
+        Storage::disk('local')->assertExists("wxr/{$token}.jsonl");
 
         $batch = $this->postJson(route('admin.wordpress-import.process'), [
             'token' => $token,
@@ -321,7 +321,7 @@ XML);
 
         $this->assertSame(2, Post::count());
         $this->assertDatabaseHas('posts', ['slug' => 'mercado-pet-cresce-no-brasil']);
-        Storage::disk('local')->assertMissing("wxr/{$token}.json");
+        Storage::disk('local')->assertMissing("wxr/{$token}.jsonl");
     }
 
     public function test_lote_com_imagens_processa_um_post_por_vez(): void
@@ -374,6 +374,47 @@ XML);
         $this->postJson(route('admin.wordpress-import.process'), [
             'token' => '11111111-1111-4111-8111-111111111111',
         ])->assertStatus(422)->assertJsonPath('ok', false);
+    }
+
+    public function test_lote_pode_pular_post_travado(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->admin());
+
+        $upload = UploadedFile::fake()->createWithContent(
+            'wordpress.xml',
+            file_get_contents($this->fixturePath())
+        );
+
+        $token = $this->withHeaders([
+            'Accept' => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])->post(route('admin.wordpress-import'), [
+            'wordpress_xml' => $upload,
+            'download_images' => '0',
+        ])->assertOk()->json('token');
+
+        $this->postJson(route('admin.wordpress-import.process'), [
+            'token' => $token,
+            'skip' => true,
+        ])->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', false)
+            ->assertJsonPath('processed', 1)
+            ->assertJsonPath('failed', 1);
+
+        $this->assertSame(0, Post::count());
+
+        $this->postJson(route('admin.wordpress-import.process'), [
+            'token' => $token,
+        ])->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', true)
+            ->assertJsonPath('created', 1);
+
+        $this->assertSame(1, Post::count());
+        $this->assertDatabaseHas('posts', ['slug' => 'guia-de-racas-sem-categoria']);
+        $this->assertDatabaseMissing('posts', ['slug' => 'mercado-pet-cresce-no-brasil']);
     }
 
     public function test_orcamento_de_imagens_continua_no_mesmo_post(): void
