@@ -56,6 +56,7 @@ use App\Livewire\Admin\ManageCategories;
 use App\Livewire\Admin\ManageKennels;
 use App\Livewire\Admin\ManageBreeds;
 use App\Livewire\Admin\ManageSettings;
+use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\WordpressImportController;
 
 // -------------------------------------------------------------------
@@ -249,6 +250,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/anuncios', AdminManageAds::class)->name('admin.ads');
         Route::get('/fornecedores', ApproveSuppliers::class)->name('admin.suppliers');
         Route::get('/blog', ManageBlog::class)->name('admin.blog');
+        Route::get('/blog/criar', [BlogPostController::class, 'create'])->name('admin.blog.create');
+        Route::post('/blog', [BlogPostController::class, 'store'])->name('admin.blog.store');
+        Route::get('/blog/{post}/editar', [BlogPostController::class, 'edit'])->name('admin.blog.edit');
+        Route::put('/blog/{post}', [BlogPostController::class, 'update'])->name('admin.blog.update');
+        Route::delete('/blog/{post}', [BlogPostController::class, 'destroy'])->name('admin.blog.destroy');
         Route::get('/mensagens', ManageContacts::class)->name('admin.messages');
         Route::get('/revistas', ManageMagazines::class)->name('admin.magazines');
         Route::get('/reivindicacoes', \App\Livewire\Admin\ManageClaims::class)->name('admin.claims');
