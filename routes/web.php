@@ -123,7 +123,7 @@ Route::get('/canis/{slug}', function ($slug) {
 // Estante de Revistas (Banca Digital)
 Route::get('/revistas', function () {
     $magazines = Magazine::where('is_active', true)->latest()->get();
-    SEOTools::setTitle('Estante de Revistas Digitais - Pet Business Pro');
+    SEOTools::setTitle('Estante de Revistas Digitais - Revista Negócios Pet');
     SEOTools::setDescription('Acesse todas as edições da nossa revista digital sobre o mercado pet brasileiro.');
     return view('magazines.index', compact('magazines'));
 })->name('magazines.index');

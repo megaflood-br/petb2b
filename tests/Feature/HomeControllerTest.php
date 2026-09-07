@@ -34,7 +34,10 @@ class HomeControllerTest extends TestCase
     {
         Cache::forget(HomeController::CACHE_KEY);
 
-        $this->get('/')->assertOk();
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<title>Revista Negócios Pet</title>', false)
+            ->assertDontSee('Pet Business Pro');
 
         $this->assertTrue(Cache::has(HomeController::CACHE_KEY));
         $this->assertArrayHasKey('latestPosts', Cache::get(HomeController::CACHE_KEY));

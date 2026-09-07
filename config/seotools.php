@@ -10,9 +10,9 @@ return [
          * The default configurations to be used by the meta generator.
          */
         'defaults'       => [
-            'title'        => "Pet Business Pro", // set false to total remove
-            'titleBefore'  => false, // Put defaults.title before page title, like 'It's Over 9000! - Dashboard'
-            'description'  => 'Plataforma Pet B2B em Desenvolvimento', // set false to total remove
+            'title'        => 'Revista Negócios Pet',
+            'titleBefore'  => false,
+            'description'  => 'Portal B2B da Revista Negócios Pet: notícias, fornecedores e conteúdo do mercado pet brasileiro.',
             'separator'    => ' - ',
             'keywords'     => [],
             'canonical'    => false, // Set to null or 'full' to use Url::full(), set to 'current' to use Url::current(), set false to total remove
@@ -37,8 +37,8 @@ return [
          * The default configurations to be used by the opengraph generator.
          */
         'defaults' => [
-            'title'       => 'Pet Business Pro', // set false to total remove
-            'description' => 'Plataforma Pet B2B em Desenvolvimento', // set false to total remove
+            'title'       => 'Revista Negócios Pet',
+            'description' => 'Portal B2B da Revista Negócios Pet: notícias, fornecedores e conteúdo do mercado pet brasileiro.',
             'url'         => false, // Set null for using Url::current(), set false to total remove
             'type'        => false,
             'site_name'   => false,
@@ -59,8 +59,8 @@ return [
          * The default configurations to be used by the json-ld generator.
          */
         'defaults' => [
-            'title'       => 'Pet Business Pro', // set false to total remove
-            'description' => 'Plataforma Pet B2B em Desenvolvimento', // set false to total remove
+            'title'       => 'Revista Negócios Pet',
+            'description' => 'Portal B2B da Revista Negócios Pet: notícias, fornecedores e conteúdo do mercado pet brasileiro.',
             'url'         => false, // Set to null or 'full' to use Url::full(), set to 'current' to use Url::current(), set false to total remove
             'type'        => 'WebPage',
             'images'      => [],
