@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+     xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+    <title>Revista Negócios Pet</title>
+    <wp:wxr_version>1.2</wp:wxr_version>
+
+    <item>
+        <title>Mercado pet cresce no Brasil</title>
+        <pubDate>Mon, 15 Jan 2024 10:00:00 +0000</pubDate>
+        <content:encoded><![CDATA[<p>O setor pet brasileiro acelerou em 2024.</p>]]></content:encoded>
+        <excerpt:encoded><![CDATA[Resumo do crescimento do mercado pet.]]></excerpt:encoded>
+        <wp:post_id>10</wp:post_id>
+        <wp:post_date>2024-01-15 10:00:00</wp:post_date>
+        <wp:post_name>mercado-pet-cresce-no-brasil</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>post</wp:post_type>
+        <wp:is_sticky>1</wp:is_sticky>
+        <category domain="category" nicename="noticias"><![CDATA[Notícias]]></category>
+        <category domain="post_tag" nicename="mercado"><![CDATA[Mercado]]></category>
+        <wp:postmeta>
+            <wp:meta_key><![CDATA[_thumbnail_id]]></wp:meta_key>
+            <wp:meta_value><![CDATA[99]]></wp:meta_value>
+        </wp:postmeta>
+    </item>
+
+    <item>
+        <title>Rascunho que não deve importar</title>
+        <content:encoded><![CDATA[<p>Rascunho.</p>]]></content:encoded>
+        <wp:post_id>11</wp:post_id>
+        <wp:post_date>2024-02-01 10:00:00</wp:post_date>
+        <wp:post_name>rascunho-que-nao-deve-importar</wp:post_name>
+        <wp:status>draft</wp:status>
+        <wp:post_type>post</wp:post_type>
+        <wp:is_sticky>0</wp:is_sticky>
+    </item>
+
+    <item>
+        <title>Página Institucional</title>
+        <content:encoded><![CDATA[<p>Sobre.</p>]]></content:encoded>
+        <wp:post_id>12</wp:post_id>
+        <wp:post_name>sobre</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>page</wp:post_type>
+    </item>
+
+    <item>
+        <title>Guia de raças sem categoria</title>
+        <content:encoded><![CDATA[<p>Conteúdo do guia.</p>]]></content:encoded>
+        <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+        <wp:post_id>13</wp:post_id>
+        <wp:post_date>2024-03-10 08:30:00</wp:post_date>
+        <wp:post_name>guia-de-racas-sem-categoria</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>post</wp:post_type>
+        <wp:is_sticky>0</wp:is_sticky>
+    </item>
+
+    <item>
+        <title>capa.jpg</title>
+        <wp:post_id>99</wp:post_id>
+        <wp:post_type>attachment</wp:post_type>
+        <wp:status>inherit</wp:status>
+        <wp:attachment_url>https://cdn.example.com/wp-content/uploads/2024/01/capa.jpg</wp:attachment_url>
+    </item>
+</channel>
+</rss>

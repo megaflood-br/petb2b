@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Admin;
 
+use App\Services\Wordpress\WordpressXmlImporter;
 use App\Support\Settings;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ManageSettings extends Component
 {
+    use WithFileUploads;
     // Custos de anúncios
     public $ads_cost_per_click;
     public $ads_cost_per_impression;
@@ -21,6 +24,12 @@ class ManageSettings extends Component
     public $asaas_webhook_token = ''; // em branco = mantém o atual
     public bool $asaas_key_set = false;
     public bool $asaas_token_set = false;
+
+    public $wordpressXml = null;
+    public bool $wordpressDownloadImages = true;
+    public ?string $wordpressImportSummary = null;
+    /** @var list<string> */
+    public array $wordpressImportErrors = [];
 
     public function mount(): void
     {
@@ -69,6 +78,37 @@ class ManageSettings extends Component
         $this->asaas_token_set = ! empty(Settings::asaasWebhookToken());
 
         session()->flash('message', 'Configurações salvas com sucesso!');
+    }
+
+    public function importWordpress(WordpressXmlImporter $importer): void
+    {
+        $this->validate([
+            'wordpressXml' => 'required|file|extensions:xml|max:20480',
+        ], [
+            'wordpressXml.required' => 'Envie o arquivo XML exportado do WordPress.',
+            'wordpressXml.extensions' => 'O arquivo precisa ser um XML (.xml).',
+            'wordpressXml.max' => 'O XML pode ter no máximo 20 MB.',
+        ]);
+
+        $this->wordpressImportSummary = null;
+        $this->wordpressImportErrors = [];
+
+        try {
+            $result = $importer->import(
+                $this->wordpressXml->getRealPath(),
+                $this->wordpressDownloadImages
+            );
+        } catch (\InvalidArgumentException $e) {
+            $this->addError('wordpressXml', $e->getMessage());
+
+            return;
+        }
+
+        $this->wordpressImportSummary = $result->summary();
+        $this->wordpressImportErrors = $result->errors;
+        $this->reset('wordpressXml');
+
+        session()->flash('message', $result->summary());
     }
 
     #[Layout('layouts.admin')]
