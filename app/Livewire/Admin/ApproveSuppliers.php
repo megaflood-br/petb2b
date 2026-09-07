@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Supplier;
 use App\Models\Category;
 use App\Imports\SuppliersImport;
@@ -13,7 +14,12 @@ use Livewire\Attributes\Layout;
 
 class ApproveSuppliers extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination, WithFileUploads, WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 15;
+    }
 
     // Filtros e Navegação
     public $search = '';
@@ -33,10 +39,10 @@ class ApproveSuppliers extends Component
     public $fileXls;
 
     // Resetar página ao alterar filtros
-    public function updatedSearch() { $this->resetPage(); }
-    public function updatedFilterCategory() { $this->resetPage(); }
-    public function updatedFilterState() { $this->resetPage(); $this->filterCity = ''; }
-    public function updatedFilterCity() { $this->resetPage(); }
+    public function updatedSearch() { $this->resetInfiniteScroll(); }
+    public function updatedFilterCategory() { $this->resetInfiniteScroll(); }
+    public function updatedFilterState() { $this->resetInfiniteScroll(); $this->filterCity = ''; }
+    public function updatedFilterCity() { $this->resetInfiniteScroll(); }
 
     #[Layout('layouts.admin')]
     public function render()
@@ -71,7 +77,7 @@ class ApproveSuppliers extends Component
             ->when($this->filterState, fn($q) => $q->where('state', $this->filterState))
             ->when($this->filterCity, fn($q) => $q->where('city', $this->filterCity))
             ->latest()
-            ->paginate(15);
+            ->paginate($this->perPage);
     }
 
     // Ações de Edição
@@ -158,7 +164,7 @@ class ApproveSuppliers extends Component
     {
         $this->status = $status;
         $this->reset(['selectedSuppliers', 'selectAll', 'search', 'filterCategory', 'filterState', 'filterCity']);
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     /**

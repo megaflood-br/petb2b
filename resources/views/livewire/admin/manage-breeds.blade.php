@@ -105,5 +105,5 @@
         </table>
     </div>
 
-    <div>{{ $breeds->links() }}</div>
+    <x-infinite-scroll :paginator="$breeds" />
 </div>

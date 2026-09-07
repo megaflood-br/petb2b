@@ -109,10 +109,7 @@
             @endforelse
         </div>
 
-        {{-- Links de Paginação --}}
-        <div class="mt-12">
-            {{ $kennels->links() }}
-        </div>
+        <x-infinite-scroll :paginator="$kennels" class="mt-12" />
 
     </div>
 </div>

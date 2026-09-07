@@ -76,5 +76,5 @@
             </tbody>
         </table>
     </div>
-    <div class="mt-4">{{ $posts->links() }}</div>
+    <x-infinite-scroll :paginator="$posts" class="mt-4" />
 </div>

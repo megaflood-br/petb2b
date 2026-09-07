@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Kennel;
 use App\Models\User;
 use App\Models\RelatedBreed;
@@ -15,7 +16,12 @@ use Illuminate\Support\Facades\Storage;
 
 class ManageKennels extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination, WithFileUploads, WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     public $name, $affix, $registration_number, $description, $city = 'Atibaia', $state = 'SP';
     public $whatsapp, $instagram, $user_id, $logo, $cover_image, $kennelId, $existingLogo, $existingCover;
@@ -45,7 +51,7 @@ class ManageKennels extends Component
     public function render()
     {
         return view('livewire.admin.manage-kennels', [
-            'kennels' => Kennel::with('user')->latest()->paginate(10),
+            'kennels' => Kennel::with('user')->latest()->paginate($this->perPage),
             'users' => User::orderBy('name')->get()
         ]);
     }

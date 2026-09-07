@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\BlogCategory;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,6 +12,12 @@ use Illuminate\Support\Str;
 class ManageCategories extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     public $name, $categoryId;
     public $hide_from_home = false;
@@ -25,7 +32,7 @@ class ManageCategories extends Component
     public function render()
     {
         return view('livewire.admin.manage-categories', [
-            'categories' => BlogCategory::orderBy('name')->paginate(10)
+            'categories' => BlogCategory::orderBy('name')->paginate($this->perPage)
         ]);
     }
 

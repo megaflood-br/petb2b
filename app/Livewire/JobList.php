@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\JobPosting;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -11,6 +12,7 @@ use Livewire\WithPagination;
 class JobList extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
 
     public $search = '';
     public $type = '';
@@ -18,17 +20,17 @@ class JobList extends Component
 
     public function updatingSearch()
     {
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     public function updatingType()
     {
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     public function updatingState()
     {
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     #[Layout('layouts.app')]
@@ -54,7 +56,7 @@ class JobList extends Component
             ->when($this->state, fn ($q) => $q->where('state', $this->state))
             ->with('supplier')
             ->latest()
-            ->paginate(12);
+            ->paginate($this->perPage);
 
         return view('livewire.job-list', [
             'jobs' => $jobs,

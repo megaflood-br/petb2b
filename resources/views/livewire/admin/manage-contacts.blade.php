@@ -43,4 +43,6 @@
             {{-- Vazio --}}
         @endforelse
     </div>
+
+    <x-infinite-scroll :paginator="$messages" class="mt-8" />
 </div>

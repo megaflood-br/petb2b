@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Magazine;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -12,7 +13,12 @@ use Illuminate\Support\Facades\Storage;
 
 class ManageMagazines extends Component
 {
-    use WithFileUploads, WithPagination;
+    use WithFileUploads, WithPagination, WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     // Propriedades do formulário
     public $title, $issue_period, $pdf, $cover, $editingMagazineId;
@@ -22,7 +28,7 @@ class ManageMagazines extends Component
     public function render()
     {
         return view('livewire.admin.manage-magazines', [
-            'magazines' => Magazine::latest()->paginate(10)
+            'magazines' => Magazine::latest()->paginate($this->perPage)
         ]);
     }
 

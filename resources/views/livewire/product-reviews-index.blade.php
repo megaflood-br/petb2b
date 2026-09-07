@@ -46,10 +46,6 @@
             @endforelse
         </div>
 
-        @if($reviews && method_exists($reviews, 'hasPages') && $reviews->hasPages())
-            <div class="mt-16 border-t border-gray-100 pt-10">
-                {{ $reviews->links() }}
-            </div>
-        @endif
+        <x-infinite-scroll :paginator="$reviews" class="mt-16" />
     </div>
 </div>

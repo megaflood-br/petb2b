@@ -79,11 +79,7 @@
             </tbody>
         </table>
 
-        @if($ads->hasPages())
-            <div class="p-4 border-t bg-gray-50">
-                {{ $ads->links() }}
-            </div>
-        @endif
+        <x-infinite-scroll :paginator="$ads" class="p-4 border-t bg-gray-50" />
     </div>
 
     {{-- MODAL DE CRIAÇÃO MANUAL DE ANÚNCIO (ADMIN) --}}

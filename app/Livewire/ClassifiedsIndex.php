@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Classified;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,15 +12,17 @@ use Illuminate\Support\Facades\DB;
 class ClassifiedsIndex extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
 
     public $search = '';
     public $condition = '';
     public $city = '';
     public $state = '';
 
-    public function updatingSearch() { $this->resetPage(); }
-    public function updatingCity() { $this->resetPage(); }
-    public function updatingState() { $this->resetPage(); }
+    public function updatingSearch() { $this->resetInfiniteScroll(); }
+    public function updatingCondition() { $this->resetInfiniteScroll(); }
+    public function updatingCity() { $this->resetInfiniteScroll(); }
+    public function updatingState() { $this->resetInfiniteScroll(); }
 
     #[Layout('layouts.app')]
     public function render()
@@ -54,7 +57,7 @@ class ClassifiedsIndex extends Component
             })
             ->with('supplier')
             ->latest()
-            ->paginate(12);
+            ->paginate($this->perPage);
 
         return view('livewire.classifieds-index', [
             'ads' => $ads,

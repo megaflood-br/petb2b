@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Admin\ManageBlog;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminBlogPaginationTest extends TestCase
@@ -19,7 +21,7 @@ class AdminBlogPaginationTest extends TestCase
         return $user;
     }
 
-    public function test_paginacao_do_blog_admin_abre_a_segunda_pagina(): void
+    public function test_blog_admin_carrega_mais_posts_ao_rolar(): void
     {
         for ($i = 1; $i <= 15; $i++) {
             Post::create([
@@ -33,16 +35,18 @@ class AdminBlogPaginationTest extends TestCase
 
         $admin = $this->admin();
 
-        $page1 = $this->actingAs($admin)->get(route('admin.blog'));
-        $page1->assertOk()
-            ->assertSee('Post paginacao n1x')
-            ->assertDontSee('Post paginacao n15x')
-            ->assertSee('/admin/blog?page=2', false);
-
-        $page2 = $this->actingAs($admin)->get('/admin/blog?page=2');
-        $page2->assertOk()
+        $this->actingAs($admin)->get(route('admin.blog'))
+            ->assertOk()
             ->assertSee('Post paginacao n15x')
             ->assertDontSee('Post paginacao n1x')
-            ->assertSee('Showing');
+            ->assertSee('Role para ver mais')
+            ->assertDontSee('/admin/blog?page=2', false);
+
+        Livewire::actingAs($admin)
+            ->test(ManageBlog::class)
+            ->assertSee('Post paginacao n15x')
+            ->assertDontSee('Post paginacao n1x')
+            ->call('loadMore')
+            ->assertSee('Post paginacao n1x');
     }
 }

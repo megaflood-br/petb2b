@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Kennel;
 use App\Models\RelatedBreed;
 use Livewire\Component;
@@ -11,6 +12,7 @@ use Livewire\Attributes\Layout;
 class KennelList extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
 
     public $searchBreed = '';
     public $searchName = '';
@@ -46,13 +48,23 @@ class KennelList extends Component
 
         return view('livewire.kennel-list', [
             // Canis verificados (VIPs) aparecem primeiro na listagem
-            'kennels' => $query->orderBy('is_verified', 'desc')->latest()->paginate(9),
+            'kennels' => $query->orderBy('is_verified', 'desc')->latest()->paginate($this->perPage),
             'availableBreeds' => $availableBreeds
         ]);
     }
 
-    public function updatingSearch()
+    protected function infiniteIncrement(): int
     {
-        $this->resetPage();
+        return 9;
+    }
+
+    public function updatingSearchName()
+    {
+        $this->resetInfiniteScroll();
+    }
+
+    public function updatingSearchBreed()
+    {
+        $this->resetInfiniteScroll();
     }
 }

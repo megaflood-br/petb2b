@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Breed;
 use App\Models\Post;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -14,6 +15,7 @@ use Livewire\WithPagination;
 class BreedList extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
 
     #[Url]
     public string $search = '';
@@ -23,12 +25,12 @@ class BreedList extends Component
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     public function updatingSpecies(): void
     {
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     #[Layout('layouts.app')]
@@ -64,7 +66,7 @@ class BreedList extends Component
             })
             ->when($this->species !== '', fn (Builder $query) => $query->where('species', $this->species))
             ->orderBy('name')
-            ->paginate(12);
+            ->paginate($this->perPage);
     }
 
     private function postsQuery(): LengthAwarePaginator
@@ -80,6 +82,6 @@ class BreedList extends Component
                 });
             })
             ->latest()
-            ->paginate(12);
+            ->paginate($this->perPage);
     }
 }
