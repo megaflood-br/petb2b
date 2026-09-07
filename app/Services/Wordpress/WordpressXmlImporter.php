@@ -66,7 +66,11 @@ class WordpressXmlImporter
             $existing = Post::where('slug', $slug)->first();
             if ($existing) {
                 if ($downloadImages) {
-                    $this->refreshPostImages($existing, $item, $wpNs, $contentNs, $attachments);
+                    try {
+                        $this->refreshPostImages($existing, $item, $wpNs, $contentNs, $attachments);
+                    } catch (Throwable $e) {
+                        $this->result->addError("“{$title}”: " . $e->getMessage());
+                    }
                 } else {
                     $this->result->skipped++;
                 }
@@ -467,7 +471,7 @@ class WordpressXmlImporter
             return null;
         }
 
-        if (preg_match('#/storage/(blog/posts/[^?#]+)#', $absolute, $local)) {
+        if (preg_match('~/storage/(blog/posts/[^?#]+)~', $absolute, $local)) {
             return $local[1];
         }
 
