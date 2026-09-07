@@ -195,36 +195,60 @@
                         xhr.send(new FormData(form));
                     });
                 },
+                async requestBatch(token, skip) {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 18000);
+                    try {
+                        const response = await fetch(this.processUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': this.csrf(),
+                            },
+                            body: JSON.stringify({ token, skip: skip ? 1 : 0 }),
+                            signal: controller.signal,
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (! response.ok || ! data.ok) {
+                            throw new Error(data.message || 'lote falhou');
+                        }
+                        return data;
+                    } finally {
+                        clearTimeout(timer);
+                    }
+                },
                 async runBatches(token) {
+                    let fails = 0;
                     try {
                         while (true) {
-                            const response = await fetch(this.processUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'X-CSRF-TOKEN': this.csrf(),
-                                },
-                                body: JSON.stringify({ token }),
-                            });
-                            const data = await response.json().catch(() => ({}));
-                            if (! response.ok || ! data.ok) {
-                                this.stage = 'idle';
-                                this.error = data.message || 'Falha ao importar os posts.';
-                                return;
-                            }
-                            this.processed = data.processed || 0;
-                            this.total = data.total || this.total;
-                            this.label = this.total
-                                ? ('Importando posts ' + this.processed + ' / ' + this.total)
-                                : 'Importando…';
-                            this.errors = data.errors || [];
-                            if (data.done) {
-                                this.stage = 'done';
-                                this.summary = data.summary || 'Importação concluída.';
-                                this.label = 'Concluído';
-                                return;
+                            try {
+                                const data = await this.requestBatch(token, fails >= 2);
+                                fails = 0;
+                                this.processed = data.processed || 0;
+                                this.total = data.total || this.total;
+                                this.label = this.total
+                                    ? ('Importando posts ' + this.processed + ' / ' + this.total)
+                                    : 'Importando…';
+                                this.errors = data.errors || [];
+                                if (data.done) {
+                                    this.stage = 'done';
+                                    this.summary = data.summary || 'Importação concluída.';
+                                    this.label = 'Concluído';
+                                    return;
+                                }
+                            } catch (e) {
+                                fails++;
+                                if (fails >= 6) {
+                                    this.stage = 'idle';
+                                    this.error = 'A importação parou neste ponto. Envie o mesmo XML de novo — os posts já feitos não duplicam.';
+                                    return;
+                                }
+                                this.label = fails >= 2
+                                    ? ('Post lento — pulando e seguindo… ' + this.processed + ' / ' + this.total)
+                                    : ('Post lento, tentando de novo… ' + this.processed + ' / ' + this.total);
+                                await new Promise((resolve) => setTimeout(resolve, 400));
                             }
                         }
                     } catch (e) {
@@ -242,7 +266,7 @@
                     <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Arquivo XML (WXR)</label>
                     <input type="file" name="wordpress_xml" accept=".xml,text/xml,application/xml" required :disabled="busy()" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
                     @error('wordpress_xml') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
-                    <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. A barra mostra o envio e a importação em lotes — assim o servidor não estoura o tempo.</p>
+                    <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. A importação segue em lotes; se um post travar, ele é pulado e a barra continua. Deixe esta aba aberta.</p>
                 </div>
 
                 <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">
