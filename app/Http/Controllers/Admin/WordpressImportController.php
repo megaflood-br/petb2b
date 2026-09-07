@@ -3,22 +3,28 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Wordpress\WordpressImportResult;
 use App\Services\Wordpress\WordpressXmlImporter;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 
 class WordpressImportController extends Controller
 {
-    public function __invoke(Request $request, WordpressXmlImporter $importer): RedirectResponse
+    private const BATCH_SIZE = 20;
+    private const BATCH_SIZE_WITH_IMAGES = 8;
+
+    public function store(Request $request, WordpressXmlImporter $importer): JsonResponse|RedirectResponse
     {
         if (! $request->hasFile('wordpress_xml')) {
             $phpMax = ini_get('upload_max_filesize') ?: '2M';
+            $message = "O arquivo não chegou ao servidor. O XML do WordPress costuma ser grande — o limite atual do PHP é {$phpMax}. Aumente upload_max_filesize e post_max_size para pelo menos 64M.";
 
-            return back()->with(
-                'wordpress_import_error',
-                "O arquivo não chegou ao servidor. O XML do WordPress costuma ser grande — o limite atual do PHP é {$phpMax}. Aumente upload_max_filesize e post_max_size para pelo menos 64M."
-            );
+            return $this->fail($request, $message);
         }
 
         $request->validate([
@@ -33,24 +39,142 @@ class WordpressImportController extends Controller
         $file = $request->file('wordpress_xml');
         $original = strtolower((string) $file->getClientOriginalName());
         if (! str_ends_with($original, '.xml')) {
-            return back()->with('wordpress_import_error', 'O arquivo precisa ser um XML (.xml) exportado pelo WordPress.');
+            return $this->fail($request, 'O arquivo precisa ser um XML (.xml) exportado pelo WordPress.');
         }
 
         @set_time_limit(300);
         ini_set('memory_limit', '512M');
 
+        $downloadImages = $request->boolean('download_images');
+
+        if (! $request->wantsJson()) {
+            return $this->importAllAtOnce($request, $importer, $file->getRealPath(), $downloadImages);
+        }
+
         try {
-            $result = $importer->import(
-                $file->getRealPath(),
-                $request->boolean('download_images')
-            );
+            $extracted = $importer->extract($file->getRealPath());
         } catch (Throwable $e) {
             report($e);
 
-            return back()->with(
-                'wordpress_import_error',
-                'Falha ao ler o XML: ' . $e->getMessage()
-            );
+            return $this->fail($request, 'Falha ao ler o XML: ' . $e->getMessage());
+        }
+
+        if ($extracted['posts'] === [] && $extracted['skipped'] === 0) {
+            return $this->fail($request, 'Nenhum post publicado foi encontrado no XML. Exporte em Ferramentas → Exportar → Posts (não só páginas).');
+        }
+
+        $token = (string) Str::uuid();
+        $path = "wxr/{$token}.json";
+        $encoded = json_encode(
+            ['posts' => $extracted['posts']],
+            JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+        );
+
+        if ($encoded === false) {
+            return $this->fail($request, 'Não foi possível preparar os posts para importação. Tente um XML menor.');
+        }
+
+        Storage::disk('local')->put($path, $encoded);
+
+        Cache::put($this->cacheKey($token), [
+            'user_id' => $request->user()->id,
+            'file' => $path,
+            'cursor' => 0,
+            'total' => count($extracted['posts']),
+            'skipped' => $extracted['skipped'],
+            'created' => 0,
+            'failed' => 0,
+            'categories_created' => 0,
+            'errors' => [],
+            'download_images' => $downloadImages,
+        ], now()->addHours(2));
+
+        return response()->json([
+            'ok' => true,
+            'token' => $token,
+            'total' => count($extracted['posts']),
+            'skipped' => $extracted['skipped'],
+        ]);
+    }
+
+    public function process(Request $request, WordpressXmlImporter $importer): JsonResponse
+    {
+        $validated = $request->validate([
+            'token' => 'required|uuid',
+        ]);
+
+        @set_time_limit(120);
+        ini_set('memory_limit', '512M');
+
+        $key = $this->cacheKey($validated['token']);
+        $state = Cache::get($key);
+
+        if (! is_array($state) || ($state['user_id'] ?? null) !== $request->user()->id) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Importação expirada. Envie o XML novamente.',
+            ], 422);
+        }
+
+        $raw = Storage::disk('local')->get($state['file']);
+        $payload = is_string($raw) ? json_decode($raw, true) : null;
+        $posts = is_array($payload['posts'] ?? null) ? $payload['posts'] : [];
+        $total = count($posts);
+        $cursor = (int) $state['cursor'];
+
+        $result = new WordpressImportResult();
+        $result->created = (int) $state['created'];
+        $result->skipped = (int) $state['skipped'];
+        $result->failed = (int) $state['failed'];
+        $result->categoriesCreated = (int) $state['categories_created'];
+        $result->errors = $state['errors'] ?? [];
+
+        $batchSize = $state['download_images'] ? self::BATCH_SIZE_WITH_IMAGES : self::BATCH_SIZE;
+        $slice = array_slice($posts, $cursor, $batchSize);
+
+        foreach ($slice as $post) {
+            $importer->importPayload($post, $result, (bool) $state['download_images']);
+        }
+
+        $cursor += count($slice);
+        $done = $cursor >= $total;
+
+        if ($done) {
+            Storage::disk('local')->delete($state['file']);
+            Cache::forget($key);
+        } else {
+            Cache::put($key, array_merge($state, [
+                'cursor' => $cursor,
+                'created' => $result->created,
+                'skipped' => $result->skipped,
+                'failed' => $result->failed,
+                'categories_created' => $result->categoriesCreated,
+                'errors' => $result->errors,
+            ]), now()->addHours(2));
+        }
+
+        return response()->json([
+            'ok' => true,
+            'done' => $done,
+            'processed' => $cursor,
+            'total' => $total,
+            'percent' => $total === 0 ? 100 : (int) round(($cursor / $total) * 100),
+            'created' => $result->created,
+            'skipped' => $result->skipped,
+            'failed' => $result->failed,
+            'summary' => $done ? $result->summary() : null,
+            'errors' => $result->errors,
+        ]);
+    }
+
+    private function importAllAtOnce(Request $request, WordpressXmlImporter $importer, string $path, bool $downloadImages): RedirectResponse
+    {
+        try {
+            $result = $importer->import($path, $downloadImages);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->with('wordpress_import_error', 'Falha ao ler o XML: ' . $e->getMessage());
         }
 
         if ($result->created === 0 && $result->skipped === 0 && $result->failed === 0) {
@@ -63,5 +187,19 @@ class WordpressImportController extends Controller
         return back()
             ->with('message', $result->summary())
             ->with('wordpress_import_errors', $result->errors);
+    }
+
+    private function fail(Request $request, string $message): JsonResponse|RedirectResponse
+    {
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => false, 'message' => $message], 422);
+        }
+
+        return back()->with('wordpress_import_error', $message);
+    }
+
+    private function cacheKey(string $token): string
+    {
+        return 'wxr-import.' . $token;
     }
 }

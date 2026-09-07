@@ -161,6 +161,60 @@ class WordpressXmlImportTest extends TestCase
         ])->assertRedirect(route('login'));
     }
 
+    public function test_admin_importa_xml_em_lotes_com_barra_de_progresso(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->admin());
+
+        $upload = UploadedFile::fake()->createWithContent(
+            'wordpress.xml',
+            file_get_contents($this->fixturePath())
+        );
+
+        $start = $this->withHeaders([
+            'Accept' => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])->post(route('admin.wordpress-import'), [
+            'wordpress_xml' => $upload,
+            'download_images' => '0',
+        ]);
+
+        $start->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('total', 2)
+            ->assertJsonPath('skipped', 1);
+
+        $this->assertSame(0, Post::count());
+
+        $token = $start->json('token');
+        $this->assertNotEmpty($token);
+        Storage::disk('local')->assertExists("wxr/{$token}.json");
+
+        $batch = $this->postJson(route('admin.wordpress-import.process'), [
+            'token' => $token,
+        ]);
+
+        $batch->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', true)
+            ->assertJsonPath('processed', 2)
+            ->assertJsonPath('percent', 100)
+            ->assertJsonPath('created', 2);
+
+        $this->assertSame(2, Post::count());
+        $this->assertDatabaseHas('posts', ['slug' => 'mercado-pet-cresce-no-brasil']);
+        Storage::disk('local')->assertMissing("wxr/{$token}.json");
+    }
+
+    public function test_lote_exige_token_valido(): void
+    {
+        $this->actingAs($this->admin());
+
+        $this->postJson(route('admin.wordpress-import.process'), [
+            'token' => '11111111-1111-4111-8111-111111111111',
+        ])->assertStatus(422)->assertJsonPath('ok', false);
+    }
+
     private function admin(): User
     {
         $user = User::create([
