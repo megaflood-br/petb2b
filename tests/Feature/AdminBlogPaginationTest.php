@@ -29,8 +29,7 @@ class AdminBlogPaginationTest extends TestCase
                 'slug' => 'post-paginacao-'.$i,
                 'content' => '<p>Conteúdo.</p>',
                 'is_active' => true,
-                'created_at' => now()->subMinutes(16 - $i),
-            ]);
+            ])->forceFill(['created_at' => now()->subMinutes(16 - $i)])->save();
         }
 
         $admin = $this->admin();

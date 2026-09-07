@@ -52,7 +52,7 @@ class InfiniteScrollTest extends TestCase
                 'slug' => 'noticia-infinita-'.$i,
                 'content' => '<p>Conteúdo da notícia '.$i.'.</p>',
                 'is_active' => true,
-            ]);
+            ])->forceFill(['created_at' => now()->subMinutes(9 - $i)])->save();
         }
 
         $this->get('/noticias')
@@ -112,22 +112,22 @@ class InfiniteScrollTest extends TestCase
         for ($i = 1; $i <= 14; $i++) {
             JobPosting::create([
                 'supplier_id' => $supplier->id,
-                'title' => 'Vaga infinita '.$i,
+                'title' => sprintf('Vaga infinita %02d', $i),
                 'description' => 'Descrição completa da vaga '.$i.'.',
                 'type' => 'CLT',
                 'city' => 'Atibaia',
                 'state' => 'SP',
                 'how_to_apply' => 'rh@empresa.com',
                 'is_active' => true,
-            ]);
+            ])->forceFill(['created_at' => now()->subMinutes(15 - $i)])->save();
         }
 
         Livewire::test(JobList::class)
             ->assertSee('Vaga infinita 14')
-            ->assertDontSee('Vaga infinita 1')
+            ->assertDontSee('Vaga infinita 01')
             ->call('loadMore')
             ->assertSee('Vaga infinita 14')
-            ->assertSee('Vaga infinita 1');
+            ->assertSee('Vaga infinita 01');
     }
 
     public function test_filtro_reseta_o_carregamento_infinito(): void
