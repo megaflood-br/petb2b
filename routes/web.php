@@ -202,23 +202,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
 
-        if ($user->role === 'admin') {
+        if ($user->isAdmin()) {
             return redirect()->route('admin.dashboard');
         }
 
-        if ($user->role === 'supplier') {
+        if ($user->isSupplier()) {
             return redirect()->route('supplier.dashboard');
         }
 
-        if ($user->role === 'breeder') {
+        if ($user->isBreeder()) {
             $hasKennel = Kennel::where('user_id', $user->id)->exists();
-            if (!$hasKennel) {
+            if (! $hasKennel) {
                 return redirect()->route('breeder.setup');
             }
+
             return redirect()->route('breeder.dashboard');
         }
 
-        return redirect()->route('home');
+        return redirect()->route('profile');
     })->name('dashboard');
 
     // 2.1 PAINEL DO CRIADOR DE CANIL (BREEDER)
