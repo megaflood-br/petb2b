@@ -473,6 +473,54 @@ XML);
         Http::assertNothingSent();
     }
 
+    public function test_capa_usa_primeira_imagem_do_conteudo_quando_nao_ha_arquivo(): void
+    {
+        $post = new Post([
+            'title' => 'Sem capa',
+            'slug' => 'sem-capa-' . uniqid(),
+            'content' => '<p><img src="https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg" alt="Capa"></p>',
+            'is_active' => true,
+        ]);
+        $post->save();
+
+        $this->assertNull($post->image);
+        $this->assertTrue($post->hasCover());
+        $this->assertSame(
+            'https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg',
+            $post->coverUrl()
+        );
+    }
+
+    public function test_backfill_completa_capa_de_post_ja_importado(): void
+    {
+        Storage::fake('public');
+
+        $root = sys_get_temp_dir() . '/wp-uploads-' . uniqid();
+        mkdir($root . '/2024/01', 0755, true);
+        file_put_contents($root . '/2024/01/capa.jpg', "\xFF\xD8\xFF" . str_repeat('J', 64));
+
+        $post = new Post([
+            'title' => 'Já existia',
+            'slug' => 'ja-existia-' . uniqid(),
+            'content' => '<p><img src="https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg" alt="Capa"></p>',
+            'is_active' => true,
+        ]);
+        $post->save();
+
+        $result = (new WordpressXmlImporter())
+            ->setUploadRoots([$root])
+            ->setSiteBaseUrl('https://rnpet.com.br')
+            ->backfillExistingPosts($root);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertGreaterThanOrEqual(1, $result['images']);
+
+        $post->refresh();
+        $this->assertNotEmpty($post->image);
+        Storage::disk('public')->assertExists($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+    }
+
     public function test_resumo_explica_quando_nenhuma_imagem_baixou(): void
     {
         $result = new WordpressImportResult();

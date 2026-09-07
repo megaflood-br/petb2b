@@ -273,6 +273,59 @@ class WordpressXmlImporter
         return $this->downloaded;
     }
 
+    /**
+     * Completa capa e fotos de posts já importados a partir da pasta uploads local.
+     *
+     * @return array{updated: int, scanned: int, images: int}
+     */
+    public function backfillExistingPosts(?string $uploadsPath = null): array
+    {
+        if ($this->uploadRoots === []) {
+            $this->setUploadRoots(self::resolveUploadRoots($uploadsPath));
+        }
+
+        $this->imageBudget = PHP_INT_MAX;
+        $this->deadlineAt = null;
+        $this->downloaded = [];
+        $this->result = new WordpressImportResult();
+
+        if ($this->siteBaseUrl === '') {
+            $appUrl = rtrim((string) config('app.url'), '/');
+            $this->siteBaseUrl = ($appUrl === '' || str_contains($appUrl, 'localhost'))
+                ? 'https://rnpet.com.br'
+                : $appUrl;
+        }
+
+        $updated = 0;
+        $scanned = 0;
+
+        Post::query()
+            ->where(function ($query) {
+                $query->whereNull('image')
+                    ->orWhere('image', '')
+                    ->orWhere('content', 'like', '%wp-content/uploads%');
+            })
+            ->orderBy('id')
+            ->chunkById(50, function ($posts) use (&$updated, &$scanned) {
+                foreach ($posts as $post) {
+                    $scanned++;
+                    $payload = [
+                        'content' => $post->content,
+                        'image_url' => $this->firstContentImageUrl((string) $post->content),
+                    ];
+                    if ($this->applyImagesToPost($post, $payload)) {
+                        $updated++;
+                    }
+                }
+            });
+
+        return [
+            'updated' => $updated,
+            'scanned' => $scanned,
+            'images' => $this->result->imagesDownloaded,
+        ];
+    }
+
     private function loadXml(string $path): SimpleXMLElement
     {
         if (! is_readable($path)) {
