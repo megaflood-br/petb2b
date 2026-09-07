@@ -75,11 +75,128 @@ class WordpressXmlImportTest extends TestCase
             ]),
         ]);
 
-        (new WordpressXmlImporter())->import($this->fixturePath(), downloadImages: true);
+        $result = (new WordpressXmlImporter())->import($this->fixturePath(), downloadImages: true);
 
         $post = Post::where('slug', 'mercado-pet-cresce-no-brasil')->first();
         $this->assertNotEmpty($post->image);
         Storage::disk('public')->assertExists($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+        $this->assertStringNotContainsString('cdn.example.com/wp-content', $post->content);
+        $this->assertGreaterThanOrEqual(2, $result->imagesDownloaded);
+    }
+
+    public function test_segunda_importacao_completa_imagens_que_faltaram(): void
+    {
+        Storage::fake('public');
+        Http::fake([
+            'cdn.example.com/*' => Http::response(str_repeat('JPEGDATA', 16), 200, [
+                'Content-Type' => 'image/jpeg',
+            ]),
+        ]);
+
+        (new WordpressXmlImporter())->import($this->fixturePath(), downloadImages: false);
+
+        $post = Post::where('slug', 'mercado-pet-cresce-no-brasil')->first();
+        $this->assertNull($post->image);
+        $this->assertStringContainsString('cdn.example.com/wp-content', $post->content);
+
+        $second = (new WordpressXmlImporter())->import($this->fixturePath(), downloadImages: true);
+
+        $this->assertSame(0, $second->created);
+        $this->assertSame(1, $second->updated);
+        $this->assertSame(2, Post::count());
+
+        $post->refresh();
+        $this->assertNotEmpty($post->image);
+        Storage::disk('public')->assertExists($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+        $this->assertStringNotContainsString('cdn.example.com/wp-content', $post->content);
+    }
+
+    public function test_usa_guid_do_anexo_quando_nao_ha_attachment_url(): void
+    {
+        Storage::fake('public');
+        Http::fake([
+            'cdn.example.com/*' => Http::response(str_repeat('JPEGDATA', 16), 200, [
+                'Content-Type' => 'image/jpeg',
+            ]),
+        ]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'wxr');
+        file_put_contents($tmp, <<<'XML'
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+    <wp:base_blog_url>https://cdn.example.com</wp:base_blog_url>
+    <item>
+        <title>Post só com guid</title>
+        <content:encoded><![CDATA[<p>Texto.</p>]]></content:encoded>
+        <wp:post_id>21</wp:post_id>
+        <wp:post_name>post-so-com-guid</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>post</wp:post_type>
+        <wp:postmeta>
+            <wp:meta_key><![CDATA[_thumbnail_id]]></wp:meta_key>
+            <wp:meta_value><![CDATA[88]]></wp:meta_value>
+        </wp:postmeta>
+    </item>
+    <item>
+        <title>capa-guid.jpg</title>
+        <guid isPermaLink="false">https://cdn.example.com/wp-content/uploads/2024/01/guid-capa.jpg</guid>
+        <wp:post_id>88</wp:post_id>
+        <wp:post_type>attachment</wp:post_type>
+        <wp:status>inherit</wp:status>
+    </item>
+</channel>
+</rss>
+XML);
+
+        (new WordpressXmlImporter())->import($tmp, downloadImages: true);
+
+        $post = Post::where('slug', 'post-so-com-guid')->first();
+        $this->assertNotNull($post);
+        $this->assertNotEmpty($post->image);
+        Storage::disk('public')->assertExists($post->image);
+    }
+
+    public function test_baixa_imagem_relativa_usando_url_do_site(): void
+    {
+        Storage::fake('public');
+        Http::fake([
+            'cdn.example.com/*' => Http::response(str_repeat('PNGDATA', 16), 200, [
+                'Content-Type' => 'image/png',
+            ]),
+        ]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'wxr');
+        file_put_contents($tmp, <<<'XML'
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+    <wp:base_blog_url>https://cdn.example.com</wp:base_blog_url>
+    <item>
+        <title>Post com imagem relativa</title>
+        <content:encoded><![CDATA[<p><img src="/wp-content/uploads/2024/01/relativa.png" alt="Foto" /></p>]]></content:encoded>
+        <wp:post_id>22</wp:post_id>
+        <wp:post_name>post-com-imagem-relativa</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>post</wp:post_type>
+    </item>
+</channel>
+</rss>
+XML);
+
+        (new WordpressXmlImporter())->import($tmp, downloadImages: true);
+
+        $post = Post::where('slug', 'post-com-imagem-relativa')->first();
+        $this->assertNotNull($post);
+        $this->assertNotEmpty($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+        $this->assertStringNotContainsString('/wp-content/uploads/', $post->content);
     }
 
     public function test_xml_invalido_lanca_excecao(): void
