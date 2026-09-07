@@ -106,8 +106,10 @@ class WordpressImportController extends Controller
             'images_failed' => 0,
             'errors' => [],
             'download_images' => $downloadImages,
+            'phase' => 'posts',
             'site_base_url' => $extracted['site_base_url'],
             'new_slugs' => [],
+            'cursor_attempts' => 0,
         ], now()->addHours(2));
 
         return response()->json([
@@ -125,65 +127,73 @@ class WordpressImportController extends Controller
             'skip' => 'sometimes|boolean',
         ]);
 
-        @set_time_limit(20);
+        @set_time_limit(12);
         ini_set('memory_limit', '256M');
 
+        $userId = $request->user()?->id;
         if ($request->hasSession()) {
             $request->session()->save();
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
         }
 
         $key = $this->cacheKey($validated['token']);
         $state = Cache::get($key);
 
-        if (! is_array($state) || ($state['user_id'] ?? null) !== $request->user()->id) {
+        if (! is_array($state) || ($state['user_id'] ?? null) !== $userId) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Importação expirada. Envie o XML novamente.',
             ], 422);
         }
 
+        $startedCursor = (int) $state['cursor'];
         $total = (int) $state['total'];
-        $cursor = (int) $state['cursor'];
+        $cursor = $startedCursor;
+        $phase = (string) ($state['phase'] ?? 'posts');
+        $wantImages = (bool) $state['download_images'];
         $newSlugs = $state['new_slugs'] ?? [];
+        $attempts = (int) ($state['cursor_attempts'] ?? 0);
 
-        $result = new WordpressImportResult();
-        $result->created = (int) $state['created'];
-        $result->updated = (int) $state['updated'];
-        $result->skipped = (int) $state['skipped'];
-        $result->failed = (int) $state['failed'];
-        $result->categoriesCreated = (int) $state['categories_created'];
-        $result->imagesDownloaded = (int) $state['images_downloaded'];
-        $result->imagesFailed = (int) $state['images_failed'];
-        $result->errors = $state['errors'] ?? [];
+        $result = $this->resultFromState($state);
 
-        if ($request->boolean('skip') && $cursor < $total) {
+        $shouldSkip = $request->boolean('skip') || $attempts >= 2;
+
+        if ($shouldSkip && $cursor < $total) {
             $stuck = $this->readPosts($state['file'], $cursor, 1)[0] ?? [];
             $title = (string) ($stuck['title'] ?? 'Post');
             $result->addError("“{$title}”: pulado (demorou demais).");
             $cursor++;
+            $state['cursor_attempts'] = 0;
 
-            return $this->persistProgress($key, $state, $result, $cursor, $total, $newSlugs, [], $validated['token']);
+            return $this->persistProgress($key, $state, $result, $cursor, $total, $newSlugs, [], $validated['token'], $startedCursor);
         }
 
+        $downloadNow = $wantImages && $phase === 'images';
         $importer
             ->setSiteBaseUrl((string) ($state['site_base_url'] ?? ''))
-            ->hydrateDownloads($this->loadDownloads($validated['token']));
+            ->setDeadline(microtime(true) + 8);
 
-        if ($state['download_images']) {
-            $importer->setImageBudget(self::IMAGES_PER_BATCH);
+        if ($downloadNow) {
+            $importer
+                ->hydrateDownloads($this->loadDownloads($validated['token']))
+                ->setImageBudget(self::IMAGES_PER_BATCH);
         }
 
-        $batchSize = $state['download_images'] ? self::BATCH_SIZE_WITH_IMAGES : self::BATCH_SIZE;
+        $batchSize = $downloadNow ? self::BATCH_SIZE_WITH_IMAGES : self::BATCH_SIZE;
         $posts = $this->readPosts($state['file'], $cursor, $batchSize);
+        $state['cursor_attempts'] = $attempts + 1;
 
         foreach ($posts as $post) {
             $slug = (string) ($post['slug'] ?? '');
 
             try {
-                $outcome = $importer->importPayload($post, $result, (bool) $state['download_images']);
+                $outcome = $importer->importPayload($post, $result, $downloadNow);
             } catch (Throwable $e) {
                 $result->addError('“' . ($post['title'] ?? 'Post') . '”: ' . $e->getMessage());
                 $cursor++;
+                $state['cursor_attempts'] = 0;
                 continue;
             }
 
@@ -192,7 +202,9 @@ class WordpressImportController extends Controller
                 $newSlugs[] = $slug;
             }
 
-            if (! $outcome['done']) {
+            // Na fase de imagens, avança sempre após uma tentativa — senão um
+            // post com dezenas de fotos segura a barra no mesmo número.
+            if (! $outcome['done'] && ! $downloadNow) {
                 break;
             }
 
@@ -205,6 +217,11 @@ class WordpressImportController extends Controller
             }
 
             $cursor++;
+            $state['cursor_attempts'] = 0;
+
+            if ($importer->pastDeadline()) {
+                break;
+            }
         }
 
         return $this->persistProgress(
@@ -214,9 +231,28 @@ class WordpressImportController extends Controller
             $cursor,
             $total,
             $newSlugs,
-            $importer->downloadCache(),
-            $validated['token']
+            $downloadNow ? $importer->downloadCache() : [],
+            $validated['token'],
+            $startedCursor
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $state
+     */
+    private function resultFromState(array $state): WordpressImportResult
+    {
+        $result = new WordpressImportResult();
+        $result->created = (int) $state['created'];
+        $result->updated = (int) $state['updated'];
+        $result->skipped = (int) $state['skipped'];
+        $result->failed = (int) $state['failed'];
+        $result->categoriesCreated = (int) $state['categories_created'];
+        $result->imagesDownloaded = (int) $state['images_downloaded'];
+        $result->imagesFailed = (int) $state['images_failed'];
+        $result->errors = $state['errors'] ?? [];
+
+        return $result;
     }
 
     /**
@@ -232,9 +268,29 @@ class WordpressImportController extends Controller
         int $total,
         array $newSlugs,
         array $downloads,
-        ?string $token = null
+        ?string $token = null,
+        ?int $startedCursor = null
     ): JsonResponse {
-        $done = $cursor >= $total;
+        $fresh = Cache::get($key);
+        if (is_array($fresh) && $startedCursor !== null && (int) $fresh['cursor'] > $cursor) {
+            $state = $fresh;
+            $cursor = (int) $fresh['cursor'];
+            $result = $this->resultFromState($fresh);
+        }
+
+        $phase = (string) ($state['phase'] ?? 'posts');
+        $wantImages = (bool) ($state['download_images'] ?? false);
+        $switchedToImages = false;
+
+        if ($cursor >= $total && $phase === 'posts' && $wantImages) {
+            $phase = 'images';
+            $cursor = 0;
+            $state['phase'] = 'images';
+            $state['cursor_attempts'] = 0;
+            $switchedToImages = true;
+        }
+
+        $done = $cursor >= $total && ! $switchedToImages;
 
         if ($done) {
             Storage::disk('local')->delete($state['file']);
@@ -249,6 +305,7 @@ class WordpressImportController extends Controller
 
             Cache::put($key, array_merge($state, [
                 'cursor' => $cursor,
+                'phase' => $phase,
                 'created' => $result->created,
                 'updated' => $result->updated,
                 'skipped' => $result->skipped,
@@ -264,6 +321,8 @@ class WordpressImportController extends Controller
         return response()->json([
             'ok' => true,
             'done' => $done,
+            'busy' => false,
+            'phase' => $phase,
             'processed' => $cursor,
             'total' => $total,
             'percent' => $total === 0 ? 100 : (int) round(($cursor / $total) * 100),

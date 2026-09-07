@@ -123,7 +123,8 @@
                     if (this.stage === 'done') return 100;
                     if (this.stage === 'upload') return Math.max(2, Math.round(this.uploadRatio * 25));
                     if (this.stage === 'parse') return 28;
-                    if (this.stage === 'import' && this.total > 0) return 30 + Math.round((this.processed / this.total) * 70);
+                    if (this.stage === 'import' && this.phase === 'images' && this.total > 0) return 55 + Math.round((this.processed / this.total) * 45);
+                    if (this.stage === 'import' && this.total > 0) return 30 + Math.round((this.processed / this.total) * 25);
                     if (this.stage === 'import') return 30;
                     return 0;
                 },
@@ -195,9 +196,10 @@
                         xhr.send(new FormData(form));
                     });
                 },
+                phase: 'posts',
                 async requestBatch(token, skip) {
                     const controller = new AbortController();
-                    const timer = setTimeout(() => controller.abort(), 18000);
+                    const timer = setTimeout(() => controller.abort(), 10000);
                     try {
                         const response = await fetch(this.processUrl, {
                             method: 'POST',
@@ -225,11 +227,17 @@
                         while (true) {
                             try {
                                 const data = await this.requestBatch(token, fails >= 2);
+                                if (data.busy) {
+                                    await new Promise((resolve) => setTimeout(resolve, 300));
+                                    continue;
+                                }
                                 fails = 0;
                                 this.processed = data.processed || 0;
                                 this.total = data.total || this.total;
+                                this.phase = data.phase || this.phase;
+                                const verb = this.phase === 'images' ? 'Baixando imagens' : 'Criando posts';
                                 this.label = this.total
-                                    ? ('Importando posts ' + this.processed + ' / ' + this.total)
+                                    ? (verb + ' ' + this.processed + ' / ' + this.total)
                                     : 'Importando…';
                                 this.errors = data.errors || [];
                                 if (data.done) {
@@ -266,7 +274,7 @@
                     <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Arquivo XML (WXR)</label>
                     <input type="file" name="wordpress_xml" accept=".xml,text/xml,application/xml" required :disabled="busy()" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
                     @error('wordpress_xml') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
-                    <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. A importação segue em lotes; se um post travar, ele é pulado e a barra continua. Deixe esta aba aberta.</p>
+                    <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. Primeiro entram os textos (rápido); depois as fotos. Se um post travar, ele é pulado. Deixe esta aba aberta.</p>
                 </div>
 
                 <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">

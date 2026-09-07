@@ -349,18 +349,26 @@ XML);
             'download_images' => '1',
         ])->assertOk()->json('token');
 
-        $first = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
-        $first->assertOk()
+        $postsPhase = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
+        $postsPhase->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', false)
+            ->assertJsonPath('phase', 'images')
+            ->assertJsonPath('created', 2);
+
+        $this->assertSame(2, Post::count());
+
+        $firstImages = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
+        $firstImages->assertOk()
             ->assertJsonPath('ok', true)
             ->assertJsonPath('done', false)
             ->assertJsonPath('processed', 1);
 
-        $second = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
-        $second->assertOk()
+        $secondImages = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
+        $secondImages->assertOk()
             ->assertJsonPath('ok', true)
             ->assertJsonPath('done', true)
-            ->assertJsonPath('processed', 2)
-            ->assertJsonPath('created', 2);
+            ->assertJsonPath('processed', 2);
 
         $post = Post::where('slug', 'mercado-pet-cresce-no-brasil')->first();
         $this->assertNotEmpty($post->image);
