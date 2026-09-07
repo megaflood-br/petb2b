@@ -88,7 +88,37 @@ class WordpressXmlImportTest extends TestCase
         file_put_contents($tmp, '<html>não é wordpress</html>');
 
         $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('parece HTML');
         (new WordpressXmlImporter())->import($tmp, downloadImages: false);
+    }
+
+    public function test_importa_wxr_realista_com_ampersand_e_cdata(): void
+    {
+        $path = base_path('tests/Fixtures/wordpress-wxr-realista.xml');
+        $result = (new WordpressXmlImporter())->import($path, downloadImages: false);
+
+        $this->assertSame(1, $result->created);
+        $this->assertSame(0, $result->failed);
+        $this->assertDatabaseHas('posts', [
+            'slug' => 'lojas-pet-apostam-em-servicos',
+            'title' => 'Lojas pet apostam em serviços',
+            'is_active' => true,
+        ]);
+        $post = Post::where('slug', 'lojas-pet-apostam-em-servicos')->first();
+        $this->assertTrue($post->blogCategories->contains('slug', 'mercado'));
+    }
+
+    public function test_xml_cortado_explica_upload_incompleto(): void
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'wxr');
+        file_put_contents($tmp, "<?xml version=\"1.0\"?><rss version=\"2.0\"><channel><title>Site</title><item><title>Post");
+
+        try {
+            (new WordpressXmlImporter())->import($tmp, downloadImages: false);
+            $this->fail('Deveria recusar XML incompleto.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('incompleto', $e->getMessage());
+        }
     }
 
     public function test_admin_importa_xml_pela_tela_de_configuracoes(): void

@@ -19,15 +19,16 @@ class WordpressXmlImporter
     {
         $result = new WordpressImportResult();
         $xml = $this->loadXml($path);
+        $channel = $this->findChannel($xml);
 
-        $namespaces = $xml->getDocNamespaces(true);
+        $namespaces = $xml->getDocNamespaces(true) + $channel->getDocNamespaces(true);
         $wpNs = $this->namespaceUri($namespaces, 'wp', 'http://wordpress.org/export/1.2/');
         $contentNs = $this->namespaceUri($namespaces, 'content', 'http://purl.org/rss/1.0/modules/content/');
         $excerptNs = $this->namespaceUri($namespaces, 'excerpt', 'http://wordpress.org/export/1.2/excerpt/');
 
-        $attachments = $this->attachmentMap($xml->channel, $wpNs);
+        $attachments = $this->attachmentMap($channel, $wpNs);
 
-        foreach ($xml->channel->item as $item) {
+        foreach ($this->items($channel) as $item) {
             $postType = $this->nsValue($item, $wpNs, 'post_type') ?: 'post';
             if ($postType !== 'post') {
                 continue;
@@ -109,20 +110,126 @@ class WordpressXmlImporter
             throw new \InvalidArgumentException('O arquivo XML está vazio.');
         }
 
+        $raw = $this->normalizeWxr($raw);
+
+        $xml = $this->parseRss($raw);
+        if (! $this->findChannel($xml)) {
+            throw new \InvalidArgumentException($this->invalidXmlMessage($raw, 'sem a tag <channel> do WordPress'));
+        }
+
+        return $xml;
+    }
+
+    private function normalizeWxr(string $raw): string
+    {
+        if (str_starts_with($raw, "\x1f\x8b")) {
+            $decoded = @gzdecode($raw);
+            if (is_string($decoded) && $decoded !== '') {
+                $raw = $decoded;
+            }
+        }
+
         if (str_starts_with($raw, "\xEF\xBB\xBF")) {
             $raw = substr($raw, 3);
         }
 
+        if (str_starts_with($raw, "\xFF\xFE") || str_starts_with($raw, "\xFE\xFF")) {
+            $converted = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16');
+            if (is_string($converted) && $converted !== '') {
+                $raw = $converted;
+            }
+        }
+
+        if (! mb_check_encoding($raw, 'UTF-8')) {
+            $converted = @iconv('UTF-8', 'UTF-8//IGNORE', $raw);
+            if (! is_string($converted) || $converted === '') {
+                $converted = @mb_convert_encoding($raw, 'UTF-8', 'Windows-1252');
+            }
+            if (is_string($converted) && $converted !== '') {
+                $raw = $converted;
+            }
+        }
+
+        // Remove caracteres de controle inválidos em XML 1.0 (mantém tab/LF/CR).
+        $raw = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $raw) ?? $raw;
+
+        // WXR real costuma ter & solto em URLs e HTML fora de CDATA.
+        return preg_replace('/&(?!#\d+;|#x[0-9a-fA-F]+;|[a-zA-Z][a-zA-Z0-9]+;)/', '&amp;', $raw) ?? $raw;
+    }
+
+    private function parseRss(string $raw): SimpleXMLElement
+    {
+        $flags = LIBXML_NONET | LIBXML_NOCDATA | LIBXML_COMPACT | LIBXML_PARSEHUGE;
+
         $previous = libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($raw, SimpleXMLElement::class, LIBXML_NONET | LIBXML_NOCDATA);
+        $xml = simplexml_load_string($raw, SimpleXMLElement::class, $flags);
+        $errors = libxml_get_errors();
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
-        if (! $xml instanceof SimpleXMLElement || ! isset($xml->channel)) {
-            throw new \InvalidArgumentException('XML inválido. Use a exportação do WordPress (Ferramentas → Exportar).');
+        if ($xml instanceof SimpleXMLElement) {
+            return $xml;
         }
 
-        return $xml;
+        $detail = isset($errors[0]) ? trim($errors[0]->message) : 'não foi possível interpretar o arquivo';
+
+        throw new \InvalidArgumentException($this->invalidXmlMessage($raw, $detail));
+    }
+
+    private function findChannel(SimpleXMLElement $xml): ?SimpleXMLElement
+    {
+        if (isset($xml->channel) && $xml->channel instanceof SimpleXMLElement) {
+            return $xml->channel;
+        }
+
+        if (strtolower($xml->getName()) === 'channel') {
+            return $xml;
+        }
+
+        $matches = $xml->xpath('//*[local-name()="channel"]');
+
+        return ($matches[0] ?? null) instanceof SimpleXMLElement ? $matches[0] : null;
+    }
+
+    /**
+     * @return list<SimpleXMLElement>
+     */
+    private function items(SimpleXMLElement $channel): array
+    {
+        $list = [];
+
+        if (isset($channel->item)) {
+            foreach ($channel->item as $item) {
+                $list[] = $item;
+            }
+        }
+
+        if ($list !== []) {
+            return $list;
+        }
+
+        $matches = $channel->xpath('.//*[local-name()="item"]') ?: [];
+
+        return array_values(array_filter(
+            $matches,
+            fn ($item) => $item instanceof SimpleXMLElement
+        ));
+    }
+
+    private function invalidXmlMessage(string $raw, string $detail): string
+    {
+        $start = ltrim($raw);
+        $hint = 'Exporte em Ferramentas → Exportar → Posts.';
+
+        if (preg_match('/^<(?:!DOCTYPE\s+)?html/i', $start) === 1) {
+            $hint = 'O arquivo recebido parece HTML, não um XML do WordPress.';
+        } elseif (! str_contains($raw, '<rss') && ! str_contains($raw, '<channel')) {
+            $hint = 'Não encontramos as tags <rss>/<channel> de uma exportação WXR.';
+        } elseif (! str_contains($raw, '</rss>') && ! str_contains($raw, '</channel>')) {
+            $hint = 'O arquivo parece incompleto (cortado no upload). Aumente upload_max_filesize e post_max_size para 64M ou mais.';
+        }
+
+        return "XML inválido ({$detail}). {$hint}";
     }
 
     /**
@@ -132,7 +239,7 @@ class WordpressXmlImporter
     {
         $map = [];
 
-        foreach ($channel->item as $item) {
+        foreach ($this->items($channel) as $item) {
             if ($this->nsValue($item, $wpNs, 'post_type') !== 'attachment') {
                 continue;
             }
