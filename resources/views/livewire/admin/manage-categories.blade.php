@@ -89,6 +89,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-4 max-w-3xl">{{ $categories->links() }}</div>
+        <x-infinite-scroll :paginator="$categories" class="mt-4" />
     @endif
 </div>

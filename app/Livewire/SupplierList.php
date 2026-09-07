@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Supplier;
 use App\Models\Category; // Importamos o modelo de Categorias real
 use Livewire\Component;
@@ -11,6 +12,7 @@ use Livewire\Attributes\Layout;
 class SupplierList extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
 
     public $search = '';
     public $category = '';
@@ -18,10 +20,15 @@ class SupplierList extends Component
     public $city = '';
 
     // Reseta a paginação ao digitar ou mudar filtros para não "sumir" com os resultados
-    public function updatingSearch() { $this->resetPage(); }
-    public function updatingCategory() { $this->resetPage(); }
-    public function updatingState() { $this->resetPage(); $this->city = ''; }
-    public function updatingCity() { $this->resetPage(); }
+    protected function infiniteIncrement(): int
+    {
+        return 9;
+    }
+
+    public function updatingSearch() { $this->resetInfiniteScroll(); }
+    public function updatingCategory() { $this->resetInfiniteScroll(); }
+    public function updatingState() { $this->resetInfiniteScroll(); $this->city = ''; }
+    public function updatingCity() { $this->resetInfiniteScroll(); }
 
     public function mount()
     {
@@ -47,7 +54,7 @@ class SupplierList extends Component
             })
             ->orderBy('is_verified', 'desc') // Fornecedores VIP aparecem primeiro
             ->latest()
-            ->paginate(9);
+            ->paginate($this->perPage);
 
         // Busca dados dinâmicos para preencher os selects do filtro na View
         return view('livewire.supplier-list', [

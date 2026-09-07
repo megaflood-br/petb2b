@@ -156,5 +156,5 @@
         </div>
     @endif
 
-    <div class="mt-10"> {{ $suppliers->links() }} </div>
+    <x-infinite-scroll :paginator="$suppliers" class="mt-10" />
 </div>

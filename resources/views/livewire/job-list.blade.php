@@ -53,8 +53,6 @@
             @endforelse
         </div>
 
-        <div class="mt-10">
-            {{ $jobs->links() }}
-        </div>
+        <x-infinite-scroll :paginator="$jobs" class="mt-10" />
     </div>
 </div>

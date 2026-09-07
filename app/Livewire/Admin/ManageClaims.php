@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Mail\ClaimApprovedMail;
 use App\Models\CompanyClaim;
 use App\Models\Supplier;
@@ -14,6 +15,12 @@ use Livewire\Attributes\Layout;
 class ManageClaims extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     #[Layout('layouts.admin')]
     public function render()
@@ -22,7 +29,7 @@ class ManageClaims extends Component
         $claims = CompanyClaim::with(['supplier', 'user'])
             ->where('status', 'pending')
             ->latest()
-            ->paginate(10);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.manage-claims', [
             'claims' => $claims

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\ContactMessage;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,6 +13,12 @@ use App\Mail\ContactResponseMail;
 class ManageContacts extends Component
 {
     use WithPagination;
+    use WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     public $replyingTo = null; // Armazena ID da mensagem sendo respondida
     public $replyText = '';
@@ -20,7 +27,7 @@ class ManageContacts extends Component
     public function render()
     {
         return view('livewire.admin.manage-contacts', [
-            'messages' => ContactMessage::latest()->paginate(10)
+            'messages' => ContactMessage::latest()->paginate($this->perPage)
         ]);
     }
 

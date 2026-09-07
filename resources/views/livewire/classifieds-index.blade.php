@@ -78,11 +78,6 @@
             @endforelse
         </div>
 
-        {{-- Paginação Dinâmica Inteligente --}}
-        @if($ads && method_exists($ads, 'hasPages') && $ads->hasPages())
-            <div class="mt-12 border-t border-gray-100 pt-8">
-                {{ $ads->links() }}
-            </div>
-        @endif
+        <x-infinite-scroll :paginator="$ads" class="mt-12" />
     </div>
 </div> 

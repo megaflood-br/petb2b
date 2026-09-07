@@ -93,9 +93,7 @@
                         @endforelse
                     </div>
 
-                    <div class="mt-12">
-                        {{ $suppliers->links() }}
-                    </div>
+                    <x-infinite-scroll :paginator="$suppliers" class="mt-12" />
                 </div>
 
                 {{-- Sidebar de Anúncios Dinâmicos Premium --}}

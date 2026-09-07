@@ -174,6 +174,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">{{ $kennels->links() }}</div>
+        <x-infinite-scroll :paginator="$kennels" class="mt-4" />
     @endif
 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Advertisement;
 use App\Models\Supplier;
 use App\Support\Settings;
@@ -11,7 +12,12 @@ use Livewire\WithPagination;
 
 class ManageAds extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination, WithFileUploads, WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     // Modal de Edição Comercial (ajuste de taxas)
     public $isModalOpen = false;
@@ -35,7 +41,7 @@ class ManageAds extends Component
     {
         $ads = Advertisement::with('supplier')
             ->latest()
-            ->paginate(10);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.manage-ads', [
             'ads' => $ads,

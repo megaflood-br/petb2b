@@ -94,7 +94,5 @@
         @endforeach
     </div>
 
-    <div class="mt-12">
-        {{ $magazines->links() }}
-    </div>
+    <x-infinite-scroll :paginator="$magazines" class="mt-12" />
 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Breed;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
@@ -11,7 +12,12 @@ use Livewire\WithPagination;
 
 class ManageBreeds extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination, WithFileUploads, WithInfiniteScroll;
+
+    protected function infiniteIncrement(): int
+    {
+        return 10;
+    }
 
     public $breedId;
     public $name, $species = 'Cão', $origin, $size, $temperament, $description;
@@ -22,7 +28,7 @@ class ManageBreeds extends Component
 
     public function updatingSearch()
     {
-        $this->resetPage();
+        $this->resetInfiniteScroll();
     }
 
     protected function rules(): array
@@ -101,7 +107,7 @@ class ManageBreeds extends Component
         $breeds = Breed::query()
             ->when($this->search, fn ($q) => $q->where('name', 'like', '%' . $this->search . '%'))
             ->orderBy('name')
-            ->paginate(10);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.manage-breeds', [
             'breeds' => $breeds,

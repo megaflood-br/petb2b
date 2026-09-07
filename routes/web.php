@@ -150,18 +150,9 @@ Route::get('/noticias', function (Request $request) {
     SEOTools::setDescription('Fique por dentro das últimas notícias do mercado pet em Atibaia.');
 
     $blogCategories = \App\Models\BlogCategory::orderBy('name', 'asc')->get();
-    $query = Post::where('is_active', true)->with('blogCategories');
+    $categorySlug = $request->filled('categoria') ? $request->string('categoria')->toString() : null;
 
-    if ($request->has('categoria') && !empty($request->categoria)) {
-        $query->whereHas('blogCategories', function ($q) use ($request) {
-            $q->where('slug', $request->categoria);
-        });
-    }
-
-    $posts = $query->orderBy('is_featured', 'desc')->latest()->paginate(6);
-    $posts->appends(['categoria' => $request->categoria]);
-
-    return view('blog.index', compact('posts', 'blogCategories'));
+    return view('blog.index', compact('blogCategories', 'categorySlug'));
 })->name('blog.index');
 
 // Rota de Listagem de Categorias do WordPress: /categoria/{slug}
@@ -172,18 +163,9 @@ Route::get('/categoria/{slug}', function (Request $request, $slug) {
     SEOTools::setDescription('Confira matérias e conteúdos estratégicos sobre ' . $category->name);
 
     $blogCategories = \App\Models\BlogCategory::orderBy('name', 'asc')->get();
+    $categorySlug = $slug;
 
-    $posts = Post::where('is_active', true)
-        ->whereHas('blogCategories', function ($q) use ($slug) {
-            $q->where('slug', $slug);
-        })
-        ->orderBy('is_featured', 'desc')
-        ->latest()
-        ->paginate(6);
-
-    $request->merge(['categoria' => $slug]);
-
-    return view('blog.index', compact('posts', 'blogCategories'));
+    return view('blog.index', compact('blogCategories', 'categorySlug'));
 })->name('blog.category');
 
 // Páginas Institucionais
