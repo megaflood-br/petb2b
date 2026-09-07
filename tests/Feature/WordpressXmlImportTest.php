@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\BlogCategory;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\Wordpress\WordpressImportResult;
 use App\Services\Wordpress\WordpressXmlImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -276,6 +277,161 @@ XML);
         $this->post(route('admin.wordpress-import'), [
             'wordpress_xml' => $upload,
         ])->assertRedirect(route('login'));
+    }
+
+    public function test_admin_importa_xml_em_lotes_com_barra_de_progresso(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->admin());
+
+        $upload = UploadedFile::fake()->createWithContent(
+            'wordpress.xml',
+            file_get_contents($this->fixturePath())
+        );
+
+        $start = $this->withHeaders([
+            'Accept' => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])->post(route('admin.wordpress-import'), [
+            'wordpress_xml' => $upload,
+            'download_images' => '0',
+        ]);
+
+        $start->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('total', 2)
+            ->assertJsonPath('skipped', 1);
+
+        $this->assertSame(0, Post::count());
+
+        $token = $start->json('token');
+        $this->assertNotEmpty($token);
+        Storage::disk('local')->assertExists("wxr/{$token}.json");
+
+        $batch = $this->postJson(route('admin.wordpress-import.process'), [
+            'token' => $token,
+        ]);
+
+        $batch->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', true)
+            ->assertJsonPath('processed', 2)
+            ->assertJsonPath('percent', 100)
+            ->assertJsonPath('created', 2);
+
+        $this->assertSame(2, Post::count());
+        $this->assertDatabaseHas('posts', ['slug' => 'mercado-pet-cresce-no-brasil']);
+        Storage::disk('local')->assertMissing("wxr/{$token}.json");
+    }
+
+    public function test_lote_com_imagens_processa_um_post_por_vez(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+        Http::fake([
+            'cdn.example.com/*' => Http::response(str_repeat('JPEGDATA', 16), 200, [
+                'Content-Type' => 'image/jpeg',
+            ]),
+        ]);
+
+        $this->actingAs($this->admin());
+
+        $upload = UploadedFile::fake()->createWithContent(
+            'wordpress.xml',
+            file_get_contents($this->fixturePath())
+        );
+
+        $token = $this->withHeaders([
+            'Accept' => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ])->post(route('admin.wordpress-import'), [
+            'wordpress_xml' => $upload,
+            'download_images' => '1',
+        ])->assertOk()->json('token');
+
+        $first = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
+        $first->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', false)
+            ->assertJsonPath('processed', 1);
+
+        $second = $this->postJson(route('admin.wordpress-import.process'), ['token' => $token]);
+        $second->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('done', true)
+            ->assertJsonPath('processed', 2)
+            ->assertJsonPath('created', 2);
+
+        $post = Post::where('slug', 'mercado-pet-cresce-no-brasil')->first();
+        $this->assertNotEmpty($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+    }
+
+    public function test_lote_exige_token_valido(): void
+    {
+        $this->actingAs($this->admin());
+
+        $this->postJson(route('admin.wordpress-import.process'), [
+            'token' => '11111111-1111-4111-8111-111111111111',
+        ])->assertStatus(422)->assertJsonPath('ok', false);
+    }
+
+    public function test_orcamento_de_imagens_continua_no_mesmo_post(): void
+    {
+        Storage::fake('public');
+        Http::fake([
+            'cdn.example.com/*' => Http::response(str_repeat('JPEGDATA', 16), 200, [
+                'Content-Type' => 'image/jpeg',
+            ]),
+        ]);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'wxr');
+        file_put_contents($tmp, <<<'XML'
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+    <wp:base_blog_url>https://cdn.example.com</wp:base_blog_url>
+    <item>
+        <title>Post com várias fotos</title>
+        <content:encoded><![CDATA[
+            <p><img src="https://cdn.example.com/wp-content/uploads/2024/01/a.jpg" /></p>
+            <p><img src="https://cdn.example.com/wp-content/uploads/2024/01/b.jpg" /></p>
+            <p><img src="https://cdn.example.com/wp-content/uploads/2024/01/c.jpg" /></p>
+            <p><img src="https://cdn.example.com/wp-content/uploads/2024/01/d.jpg" /></p>
+        ]]></content:encoded>
+        <wp:post_id>31</wp:post_id>
+        <wp:post_name>post-com-varias-fotos</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>post</wp:post_type>
+    </item>
+</channel>
+</rss>
+XML);
+
+        $importer = new WordpressXmlImporter();
+        $extracted = $importer->extract($tmp);
+        $result = new WordpressImportResult();
+
+        $first = $importer
+            ->setImageBudget(2)
+            ->setSiteBaseUrl('https://cdn.example.com')
+            ->importPayload($extracted['posts'][0], $result, true);
+
+        $this->assertTrue($first['inserted']);
+        $this->assertFalse($first['done']);
+
+        $second = $importer
+            ->setImageBudget(2)
+            ->importPayload($extracted['posts'][0], $result, true);
+
+        $this->assertTrue($second['done']);
+        $this->assertFalse($second['inserted']);
+
+        $post = Post::where('slug', 'post-com-varias-fotos')->first();
+        $this->assertNotNull($post);
+        $this->assertStringNotContainsString('cdn.example.com/wp-content', $post->content);
     }
 
     private function admin(): User

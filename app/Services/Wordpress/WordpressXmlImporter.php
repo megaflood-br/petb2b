@@ -22,11 +22,38 @@ class WordpressXmlImporter
     /** @var array<string, string|null> url canônica => caminho no disco public */
     private array $downloaded = [];
 
+    private int $imageBudget = PHP_INT_MAX;
+
     public function import(string $path, bool $downloadImages = true): WordpressImportResult
     {
+        $extracted = $this->extract($path);
         $this->result = new WordpressImportResult();
+        $this->result->skipped = $extracted['skipped'];
+        $this->siteBaseUrl = $extracted['site_base_url'];
         $this->downloaded = [];
+        $this->imageBudget = PHP_INT_MAX;
 
+        foreach ($extracted['posts'] as $payload) {
+            $outcome = $this->importPayload($payload, $this->result, $downloadImages);
+            if ($outcome['inserted']) {
+                $this->result->created++;
+            } elseif ($outcome['done'] && $outcome['changed']) {
+                $this->result->updated++;
+            } elseif ($outcome['done']) {
+                $this->result->skipped++;
+            }
+        }
+
+        return $this->result;
+    }
+
+    /**
+     * Lê o WXR e devolve posts publicáveis (sem gravar no banco).
+     *
+     * @return array{posts: list<array<string, mixed>>, skipped: int, site_base_url: string}
+     */
+    public function extract(string $path): array
+    {
         $xml = $this->loadXml($path);
         $channel = $this->findChannel($xml);
 
@@ -37,6 +64,8 @@ class WordpressXmlImporter
 
         $this->siteBaseUrl = $this->channelBaseUrl($channel, $wpNs);
         $attachments = $this->attachmentMap($channel, $wpNs);
+        $posts = [];
+        $skipped = 0;
 
         foreach ($this->items($channel) as $item) {
             $postType = $this->nsValue($item, $wpNs, 'post_type') ?: 'post';
@@ -46,13 +75,13 @@ class WordpressXmlImporter
 
             $status = $this->nsValue($item, $wpNs, 'status');
             if ($status !== 'publish') {
-                $this->result->skipped++;
+                $skipped++;
                 continue;
             }
 
             $title = html_entity_decode(trim((string) $item->title), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             if ($title === '') {
-                $this->result->skipped++;
+                $skipped++;
                 continue;
             }
 
@@ -63,59 +92,124 @@ class WordpressXmlImporter
                 $slug = 'wp-post-' . ($wpId ?: Str::lower(Str::random(8)));
             }
 
-            $existing = Post::where('slug', $slug)->first();
-            if ($existing) {
-                if ($downloadImages) {
-                    try {
-                        $this->refreshPostImages($existing, $item, $wpNs, $contentNs, $attachments);
-                    } catch (Throwable $e) {
-                        $this->result->addError("“{$title}”: " . $e->getMessage());
-                    }
-                } else {
-                    $this->result->skipped++;
-                }
-                continue;
-            }
+            $content = $this->encoded($item, $contentNs, 'content');
 
-            try {
-                $originalContent = $this->encoded($item, $contentNs, 'content');
-                $content = $originalContent;
-                $excerpt = trim(strip_tags($this->encoded($item, $excerptNs, 'excerpt')));
-                $cover = null;
-
-                if ($downloadImages) {
-                    $content = $this->rewriteContentImages($originalContent);
-                    $coverUrl = $this->featuredImageUrl($item, $wpNs, $attachments)
-                        ?: $this->firstContentImageUrl($originalContent);
-                    $cover = $coverUrl ? $this->localizeImageUrl($coverUrl) : null;
-                }
-
-                $post = new Post([
-                    'title' => Str::limit($title, 250, ''),
-                    'slug' => $slug,
-                    'content' => $content !== '' ? $content : '<p></p>',
-                    'image' => $cover,
-                    'is_active' => true,
-                    'is_featured' => $this->nsValue($item, $wpNs, 'is_sticky') === '1',
-                    'meta_description' => $excerpt !== '' ? Str::limit($excerpt, 160, '') : null,
-                    'meta_keywords' => $this->keywordsFromTags($item),
-                ]);
-
-                $published = $this->publishedAt($item, $wpNs);
-                $post->created_at = $published;
-                $post->updated_at = $published;
-                $post->save();
-
-                $categoryIds = $this->syncCategories($item, $this->result);
-                $post->blogCategories()->sync($categoryIds);
-
-                $this->result->created++;
-            } catch (Throwable $e) {
-                $this->result->addError("“{$title}”: " . $e->getMessage());
-            }
+            $posts[] = [
+                'title' => Str::limit($title, 250, ''),
+                'slug' => $slug,
+                'content' => $content !== '' ? $content : '<p></p>',
+                'excerpt' => trim(strip_tags($this->encoded($item, $excerptNs, 'excerpt'))),
+                'keywords' => $this->keywordsFromTags($item),
+                'is_featured' => $this->nsValue($item, $wpNs, 'is_sticky') === '1',
+                'published_at' => $this->publishedAt($item, $wpNs)->format('Y-m-d H:i:s'),
+                'image_url' => $this->featuredImageUrl($item, $wpNs, $attachments)
+                    ?: $this->firstContentImageUrl($content),
+                'categories' => $this->categoryPayload($item),
+            ];
         }
 
-        return $this->result;
+        return [
+            'posts' => $posts,
+            'skipped' => $skipped,
+            'site_base_url' => $this->siteBaseUrl,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array{done: bool, inserted: bool, changed: bool}
+     */
+    public function importPayload(array $payload, WordpressImportResult $result, bool $downloadImages = true): array
+    {
+        $this->result = $result;
+
+        $slug = (string) ($payload['slug'] ?? '');
+        $title = (string) ($payload['title'] ?? 'Post');
+        $existing = Post::where('slug', $slug)->first();
+
+        try {
+            if ($existing) {
+                if (! $downloadImages) {
+                    return ['done' => true, 'inserted' => false, 'changed' => false];
+                }
+
+                $changed = $this->applyImagesToPost($existing, $payload);
+
+                return [
+                    'done' => ! $this->contentHasPendingImages((string) $existing->content),
+                    'inserted' => false,
+                    'changed' => $changed,
+                ];
+            }
+
+            $originalContent = (string) ($payload['content'] ?? '<p></p>');
+            $content = $downloadImages ? $this->rewriteContentImages($originalContent) : $originalContent;
+            $cover = null;
+
+            if ($downloadImages) {
+                $coverUrl = $payload['image_url'] ?: $this->firstContentImageUrl($originalContent);
+                $cover = $coverUrl ? $this->localizeImageUrl((string) $coverUrl) : null;
+            }
+
+            $post = new Post([
+                'title' => $title,
+                'slug' => $slug,
+                'content' => $content !== '' ? $content : '<p></p>',
+                'image' => $cover,
+                'is_active' => true,
+                'is_featured' => (bool) ($payload['is_featured'] ?? false),
+                'meta_description' => filled($payload['excerpt'] ?? null) ? Str::limit((string) $payload['excerpt'], 160, '') : null,
+                'meta_keywords' => $payload['keywords'] ?? null,
+            ]);
+
+            $published = Carbon::parse($payload['published_at'] ?? now());
+            $post->created_at = $published;
+            $post->updated_at = $published;
+            $post->save();
+            $post->blogCategories()->sync($this->syncCategoriesFromPayload($payload['categories'] ?? [], $result));
+
+            return [
+                'done' => ! $downloadImages || ! $this->contentHasPendingImages((string) $post->content),
+                'inserted' => true,
+                'changed' => true,
+            ];
+        } catch (Throwable $e) {
+            $result->addError("“{$title}”: " . $e->getMessage());
+
+            return ['done' => true, 'inserted' => false, 'changed' => false];
+        }
+    }
+
+    public function setImageBudget(int $budget): self
+    {
+        $this->imageBudget = $budget;
+
+        return $this;
+    }
+
+    public function setSiteBaseUrl(string $url): self
+    {
+        $this->siteBaseUrl = $url;
+
+        return $this;
+    }
+
+    /**
+     * @param  array<string, string|null>  $map
+     */
+    public function hydrateDownloads(array $map): self
+    {
+        $this->downloaded = $map;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public function downloadCache(): array
+    {
+        return $this->downloaded;
     }
 
     private function loadXml(string $path): SimpleXMLElement
@@ -275,9 +369,9 @@ class WordpressXmlImporter
     }
 
     /**
-     * @return list<int>
+     * @return list<array{name: string, slug: string}>
      */
-    private function syncCategories(SimpleXMLElement $item, WordpressImportResult $result): array
+    private function categoryPayload(SimpleXMLElement $item): array
     {
         $ids = [];
 
@@ -304,11 +398,38 @@ class WordpressXmlImporter
                 $name = Str::title(str_replace('-', ' ', $slug));
             }
 
+            $ids[] = [
+                'name' => Str::limit($name, 120, ''),
+                'slug' => $slug ?: Str::slug($name),
+            ];
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param  list<array{name?: string, slug?: string}>  $categories
+     * @return list<int>
+     */
+    private function syncCategoriesFromPayload(array $categories, WordpressImportResult $result): array
+    {
+        $ids = [];
+
+        foreach ($categories as $category) {
+            $slug = (string) ($category['slug'] ?? '');
+            $name = (string) ($category['name'] ?? '');
+            if ($slug === '' && $name === '') {
+                continue;
+            }
+            if ($slug === '') {
+                $slug = Str::slug($name);
+            }
+
             $existing = BlogCategory::query()->where('slug', $slug)->first();
             if (! $existing) {
                 $existing = BlogCategory::create([
-                    'name' => Str::limit($name, 120, ''),
-                    'slug' => $slug ?: Str::slug($name),
+                    'name' => Str::limit($name !== '' ? $name : Str::title(str_replace('-', ' ', $slug)), 120, ''),
+                    'slug' => $slug,
                 ]);
                 $result->categoriesCreated++;
             }
@@ -373,38 +494,57 @@ class WordpressXmlImporter
     }
 
     /**
-     * @param  array<string, string>  $attachments
+     * @param  array<string, mixed>  $payload
      */
-    private function refreshPostImages(
-        Post $post,
-        SimpleXMLElement $item,
-        string $wpNs,
-        string $contentNs,
-        array $attachments
-    ): void {
-        $originalContent = $post->content ?: $this->encoded($item, $contentNs, 'content');
+    private function applyImagesToPost(Post $post, array $payload): bool
+    {
+        $originalContent = $post->content ?: (string) ($payload['content'] ?? '');
         $rewritten = $this->rewriteContentImages($originalContent);
         $changed = $rewritten !== $originalContent;
 
         if (! $post->image) {
-            $coverUrl = $this->featuredImageUrl($item, $wpNs, $attachments)
-                ?: $this->firstContentImageUrl($originalContent);
-            $stored = $coverUrl ? $this->localizeImageUrl($coverUrl) : null;
+            $coverUrl = $payload['image_url'] ?: $this->firstContentImageUrl($originalContent);
+            $stored = $coverUrl ? $this->localizeImageUrl((string) $coverUrl) : null;
             if ($stored) {
                 $post->image = $stored;
                 $changed = true;
             }
         }
 
-        if (! $changed) {
-            $this->result->skipped++;
-
-            return;
+        if ($changed) {
+            $post->content = $rewritten;
+            $post->save();
         }
 
-        $post->content = $rewritten;
-        $post->save();
-        $this->result->updated++;
+        return $changed;
+    }
+
+    private function contentHasPendingImages(string $html): bool
+    {
+        if (preg_match_all('/\b(?:src|data-src|data-orig-file|data-large-file)=[\'"]([^\'"]+)/i', $html, $matches) < 1) {
+            return false;
+        }
+
+        foreach ($matches[1] as $rawUrl) {
+            $url = html_entity_decode((string) $rawUrl, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if (str_contains($url, '/storage/blog/posts/')) {
+                continue;
+            }
+
+            $absolute = $this->absoluteUrl($url);
+            if ($absolute === null) {
+                continue;
+            }
+
+            $canonical = $this->canonicalImageUrl($absolute);
+            if (array_key_exists($canonical, $this->downloaded)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private function rewriteContentImages(string $html): string
@@ -480,6 +620,11 @@ class WordpressXmlImporter
             return $this->downloaded[$canonical];
         }
 
+        if ($this->imageBudget <= 0) {
+            return null;
+        }
+
+        $this->imageBudget--;
         $stored = $this->downloadImage($canonical);
         $this->downloaded[$canonical] = $stored;
         $this->downloaded[$absolute] = $stored;
@@ -566,7 +711,8 @@ class WordpressXmlImporter
         }
 
         try {
-            $response = Http::timeout(30)
+            $response = Http::timeout(12)
+                ->connectTimeout(4)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (compatible; RevistaNegociosPet/1.0; +https://rnpet.com.br)',
                     'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',

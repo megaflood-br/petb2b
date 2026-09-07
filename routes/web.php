@@ -262,7 +262,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/canis', ManageKennels::class)->name('admin.kennels');
         Route::get('/racas', ManageBreeds::class)->name('admin.breeds');
         Route::get('/configuracoes', ManageSettings::class)->name('admin.settings');
-        Route::post('/configuracoes/importar-wordpress', WordpressImportController::class)->name('admin.wordpress-import');
+        Route::post('/configuracoes/importar-wordpress', [WordpressImportController::class, 'store'])->name('admin.wordpress-import');
+        Route::post('/configuracoes/importar-wordpress/lote', [WordpressImportController::class, 'process'])->name('admin.wordpress-import.process');
 
         Route::get('/eventos', function () { return view('admin.events.index'); })->name('admin.events');
         Route::get('/analises', function() { return view('admin.reviews.index'); })->name('admin.reviews');
