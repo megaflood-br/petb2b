@@ -90,8 +90,9 @@
             <h2 class="text-sm font-black text-gray-900 uppercase tracking-wide">Importar posts do WordPress</h2>
             <p class="text-[10px] text-gray-400 font-medium normal-case leading-relaxed mt-2">
                 No WordPress: <span class="font-bold text-gray-500">Ferramentas → Exportar → Posts</span>
-                (de preferência com mídia). Envie o XML gerado. Posts já existentes (mesmo slug) não são duplicados;
-                uma nova importação com download de imagens completa a capa e as fotos do texto que faltaram.
+                (de preferência com mídia). O XML <span class="font-bold text-gray-500">não traz os arquivos de foto</span> —
+                só os links. Se o WordPress saiu do ar neste domínio, copie a pasta
+                <span class="font-bold text-gray-500">wp-content/uploads</span> para o servidor e informe o caminho abaixo.
             </p>
         </div>
 
@@ -279,8 +280,14 @@
 
                 <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">
                     <input type="checkbox" name="download_images" value="1" checked class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
-                    Baixar imagens (capa e fotos do texto) para o armazenamento do portal
+                    Trazer imagens (capa e fotos do texto) para o armazenamento do portal
                 </label>
+
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Pasta wp-content/uploads no servidor</label>
+                    <input type="text" name="wordpress_uploads_path" value="{{ \App\Support\Settings::get('wordpress_uploads_path', '') }}" placeholder="/var/www/rnpet.com.br/wp-content/uploads" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500">
+                    <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Obrigatório se o WordPress não estiver mais no ar neste domínio. Ex.: copie a pasta uploads antiga e cole o caminho aqui.</p>
+                </div>
 
                 <div x-show="stage !== 'idle' || summary" x-cloak class="space-y-2">
                     <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">

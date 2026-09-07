@@ -26,9 +26,15 @@ class WordpressXmlImporter
 
     private ?float $deadlineAt = null;
 
+    /** @var list<string> */
+    private array $uploadRoots = [];
+
     public function import(string $path, bool $downloadImages = true): WordpressImportResult
     {
         $extracted = $this->extract($path);
+        if ($this->uploadRoots === []) {
+            $this->setUploadRoots(self::resolveUploadRoots());
+        }
         $this->result = new WordpressImportResult();
         $this->result->skipped = $extracted['skipped'];
         $this->siteBaseUrl = $extracted['site_base_url'];
@@ -194,6 +200,47 @@ class WordpressXmlImporter
         $this->deadlineAt = $timestamp;
 
         return $this;
+    }
+
+    /**
+     * @param  list<string>  $roots
+     */
+    public function setUploadRoots(array $roots): self
+    {
+        $this->uploadRoots = array_values(array_filter($roots, fn ($root) => is_string($root) && $root !== '' && is_dir($root)));
+
+        return $this;
+    }
+
+    /**
+     * Pastas locais onde pode estar o wp-content/uploads do WordPress.
+     *
+     * @return list<string>
+     */
+    public static function resolveUploadRoots(?string $custom = null): array
+    {
+        $candidates = array_filter([
+            $custom,
+            storage_path('app/wp-uploads'),
+            public_path('wp-content/uploads'),
+            base_path('wp-content/uploads'),
+            base_path('../wp-content/uploads'),
+            base_path('../public/wp-content/uploads'),
+            '/var/www/rnpet.com.br/wp-content/uploads',
+            '/var/www/rnpet.com.br/public/wp-content/uploads',
+            '/var/www/rnpet.com.br/petb2b/public/wp-content/uploads',
+            '/var/www/rnpet.com.br/petb2b/wp-content/uploads',
+        ]);
+
+        $roots = [];
+        foreach ($candidates as $candidate) {
+            $real = realpath((string) $candidate);
+            if ($real !== false && is_dir($real) && ! in_array($real, $roots, true)) {
+                $roots[] = $real;
+            }
+        }
+
+        return $roots;
     }
 
     public function pastDeadline(): bool
@@ -643,7 +690,7 @@ class WordpressXmlImporter
         }
 
         $this->imageBudget--;
-        $stored = $this->downloadImage($canonical);
+        $stored = $this->copyLocalUpload($canonical) ?? $this->downloadImage($canonical);
         $this->downloaded[$canonical] = $stored;
         $this->downloaded[$absolute] = $stored;
 
@@ -722,10 +769,76 @@ class WordpressXmlImporter
             || (bool) preg_match('/\.(jpe?g|png|gif|webp)$/', $path);
     }
 
+    private function copyLocalUpload(string $url): ?string
+    {
+        if ($this->uploadRoots === []) {
+            return null;
+        }
+
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        if (preg_match('#/wp-content/uploads/(.+)$#i', $path, $match) !== 1) {
+            return null;
+        }
+
+        $relative = ltrim(urldecode($match[1]), '/');
+        $original = preg_replace('/-\d+x\d+(?=\.[a-zA-Z0-9]+$)/', '', $relative) ?? $relative;
+
+        foreach ($this->uploadRoots as $root) {
+            foreach (array_unique([$original, $relative]) as $file) {
+                $absolute = $root . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file);
+                if (! is_file($absolute) || ! is_readable($absolute)) {
+                    continue;
+                }
+
+                $body = file_get_contents($absolute);
+                if (! is_string($body) || $body === '') {
+                    continue;
+                }
+
+                $ext = $this->imageExtension($body, '', $absolute);
+                if ($ext === null) {
+                    continue;
+                }
+
+                $stored = 'blog/posts/' . Str::uuid() . '.' . $ext;
+                Storage::disk('public')->put($stored, $body);
+
+                return $stored;
+            }
+        }
+
+        return null;
+    }
+
+    private function isSelfHost(string $url): bool
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        if ($host === '') {
+            return false;
+        }
+
+        $appHost = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+        $hosts = array_filter([
+            $appHost,
+            $appHost !== '' && str_starts_with($appHost, 'www.') ? substr($appHost, 4) : null,
+            $appHost !== '' && ! str_starts_with($appHost, 'www.') ? 'www.'.$appHost : null,
+            'rnpet.com.br',
+            'www.rnpet.com.br',
+        ]);
+
+        return in_array($host, $hosts, true);
+    }
+
     private function downloadImage(string $url): ?string
     {
         if (! $this->isSafePublicUrl($url) || $this->pastDeadline()) {
             return null;
+        }
+
+        // O site novo é o mesmo domínio do WP: pedir a URL por HTTP
+        // devolve 404 (ou trava o PHP-FPM). Só serve arquivo local.
+        if ($this->isSelfHost($url)) {
+            return $this->copyLocalUpload($url);
         }
 
         try {
