@@ -2,15 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\Admin\ManageSettings;
 use App\Models\BlogCategory;
 use App\Models\Post;
+use App\Models\User;
 use App\Services\Wordpress\WordpressXmlImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 class WordpressXmlImportTest extends TestCase
@@ -94,17 +93,16 @@ class WordpressXmlImportTest extends TestCase
 
     public function test_admin_importa_xml_pela_tela_de_configuracoes(): void
     {
+        $this->actingAs($this->admin());
+
         $upload = UploadedFile::fake()->createWithContent(
             'wordpress.xml',
             file_get_contents($this->fixturePath())
         );
 
-        Livewire::test(ManageSettings::class)
-            ->set('wordpressDownloadImages', false)
-            ->set('wordpressXml', $upload)
-            ->call('importWordpress')
-            ->assertHasNoErrors()
-            ->assertSee('Importação concluída');
+        $this->post(route('admin.wordpress-import'), [
+            'wordpress_xml' => $upload,
+        ])->assertRedirect()->assertSessionHas('message');
 
         $this->assertSame(2, Post::count());
         $this->assertTrue(BlogCategory::where('slug', 'noticias')->exists());
@@ -112,10 +110,39 @@ class WordpressXmlImportTest extends TestCase
 
     public function test_admin_exige_arquivo_xml(): void
     {
-        Livewire::test(ManageSettings::class)
-            ->call('importWordpress')
-            ->assertHasErrors(['wordpressXml']);
+        $this->actingAs($this->admin());
+
+        $this->from(route('admin.settings'))
+            ->post(route('admin.wordpress-import'))
+            ->assertRedirect(route('admin.settings'));
 
         $this->assertSame(0, Post::count());
+    }
+
+    public function test_convidado_nao_importa(): void
+    {
+        $upload = UploadedFile::fake()->createWithContent(
+            'wordpress.xml',
+            file_get_contents($this->fixturePath())
+        );
+
+        $this->post(route('admin.wordpress-import'), [
+            'wordpress_xml' => $upload,
+        ])->assertRedirect(route('login'));
+    }
+
+    private function admin(): User
+    {
+        $user = User::create([
+            'name' => 'Admin',
+            'email' => 'admin_' . uniqid() . '@t.com',
+            'password' => 'secret',
+        ]);
+        $user->forceFill([
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ])->save();
+
+        return $user;
     }
 }

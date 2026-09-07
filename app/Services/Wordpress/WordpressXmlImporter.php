@@ -21,9 +21,9 @@ class WordpressXmlImporter
         $xml = $this->loadXml($path);
 
         $namespaces = $xml->getDocNamespaces(true);
-        $wpNs = $namespaces['wp'] ?? 'http://wordpress.org/export/1.2/';
-        $contentNs = $namespaces['content'] ?? 'http://purl.org/rss/1.0/modules/content/';
-        $excerptNs = $namespaces['excerpt'] ?? 'http://wordpress.org/export/1.2/excerpt/';
+        $wpNs = $this->namespaceUri($namespaces, 'wp', 'http://wordpress.org/export/1.2/');
+        $contentNs = $this->namespaceUri($namespaces, 'content', 'http://purl.org/rss/1.0/modules/content/');
+        $excerptNs = $this->namespaceUri($namespaces, 'excerpt', 'http://wordpress.org/export/1.2/excerpt/');
 
         $attachments = $this->attachmentMap($xml->channel, $wpNs);
 
@@ -58,8 +58,8 @@ class WordpressXmlImporter
             }
 
             try {
-                $content = (string) $item->children($contentNs)->encoded;
-                $excerpt = trim(strip_tags((string) $item->children($excerptNs)->encoded));
+                $content = $this->encoded($item, $contentNs, 'content');
+                $excerpt = trim(strip_tags($this->encoded($item, $excerptNs, 'excerpt')));
 
                 $post = new Post([
                     'title' => Str::limit($title, 250, ''),
@@ -228,9 +228,14 @@ class WordpressXmlImporter
      */
     private function featuredImageUrl(SimpleXMLElement $item, string $wpNs, array $attachments): ?string
     {
-        foreach ($item->children($wpNs)->postmeta as $meta) {
-            $key = trim((string) $meta->children($wpNs)->meta_key);
-            $value = trim((string) $meta->children($wpNs)->meta_value);
+        $metas = $item->children($wpNs)->postmeta;
+        if (! $metas || count($metas) === 0) {
+            $metas = $item->children('wp', true)->postmeta;
+        }
+
+        foreach ($metas as $meta) {
+            $key = $this->nsValue($meta, $wpNs, 'meta_key');
+            $value = $this->nsValue($meta, $wpNs, 'meta_value');
 
             if ($key === '_thumbnail_id' && $value !== '' && isset($attachments[$value])) {
                 return $attachments[$value];
@@ -322,7 +327,46 @@ class WordpressXmlImporter
     private function nsValue(SimpleXMLElement $el, string $namespace, string $name): string
     {
         $value = $el->children($namespace)->{$name} ?? null;
+        if ($value !== null && trim((string) $value) !== '') {
+            return trim((string) $value);
+        }
 
-        return $value === null ? '' : trim((string) $value);
+        $prefixed = $el->children('wp', true)->{$name} ?? null;
+
+        return $prefixed === null ? '' : trim((string) $prefixed);
+    }
+
+    private function encoded(SimpleXMLElement $item, string $namespace, string $prefix): string
+    {
+        $value = (string) $item->children($namespace)->encoded;
+        if ($value !== '') {
+            return $value;
+        }
+
+        return (string) $item->children($prefix, true)->encoded;
+    }
+
+    /**
+     * @param  array<string, string>  $namespaces
+     */
+    private function namespaceUri(array $namespaces, string $prefix, string $fallback): string
+    {
+        if (isset($namespaces[$prefix]) && $namespaces[$prefix] !== '') {
+            return $namespaces[$prefix];
+        }
+
+        foreach ($namespaces as $uri) {
+            if ($prefix === 'wp' && str_contains($uri, 'wordpress.org/export') && ! str_contains($uri, 'excerpt')) {
+                return $uri;
+            }
+            if ($prefix === 'excerpt' && str_contains($uri, 'excerpt')) {
+                return $uri;
+            }
+            if ($prefix === 'content' && str_contains($uri, 'modules/content')) {
+                return $uri;
+            }
+        }
+
+        return $fallback;
     }
 }

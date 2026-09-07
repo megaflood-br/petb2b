@@ -56,6 +56,7 @@ use App\Livewire\Admin\ManageCategories;
 use App\Livewire\Admin\ManageKennels;
 use App\Livewire\Admin\ManageBreeds;
 use App\Livewire\Admin\ManageSettings;
+use App\Http\Controllers\Admin\WordpressImportController;
 
 // -------------------------------------------------------------------
 // 1. ÁREA PÚBLICA DO PORTAL
@@ -255,6 +256,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/canis', ManageKennels::class)->name('admin.kennels');
         Route::get('/racas', ManageBreeds::class)->name('admin.breeds');
         Route::get('/configuracoes', ManageSettings::class)->name('admin.settings');
+        Route::post('/configuracoes/importar-wordpress', WordpressImportController::class)->name('admin.wordpress-import');
 
         Route::get('/eventos', function () { return view('admin.events.index'); })->name('admin.events');
         Route::get('/analises', function() { return view('admin.reviews.index'); })->name('admin.reviews');

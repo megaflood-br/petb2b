@@ -4,6 +4,10 @@
         <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-green-600 uppercase text-[10px] font-black">{{ session('message') }}</div>
     @endif
 
+    @if (session()->has('wordpress_import_error'))
+        <div class="bg-red-50 p-4 rounded-xl border border-red-100 text-red-600 text-[11px] font-bold normal-case">{{ session('wordpress_import_error') }}</div>
+    @endif
+
     <div class="border-b pb-6">
         <h1 class="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Configurações</h1>
         <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Custos de anúncios, PIX/Asaas e importação de posts do WordPress</p>
@@ -90,36 +94,30 @@
             </p>
         </div>
 
-        @if($wordpressImportSummary)
-            <div class="bg-green-50 p-4 rounded-xl border border-green-100 text-green-700 text-[11px] font-bold normal-case">
-                {{ $wordpressImportSummary }}
-            </div>
-        @endif
-
-        @if($wordpressImportErrors)
+        @if(session('wordpress_import_errors'))
             <ul class="bg-red-50 p-4 rounded-xl border border-red-100 text-red-600 text-[11px] font-medium normal-case space-y-1">
-                @foreach($wordpressImportErrors as $error)
+                @foreach(session('wordpress_import_errors') as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         @endif
 
-        <form wire:submit.prevent="importWordpress" class="space-y-4">
+        <form action="{{ route('admin.wordpress-import') }}" method="POST" enctype="multipart/form-data" class="space-y-4" wire:ignore>
+            @csrf
             <div>
                 <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Arquivo XML (WXR)</label>
-                <input type="file" wire:model="wordpressXml" accept=".xml,text/xml,application/xml" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
-                <div wire:loading wire:target="wordpressXml" class="text-[10px] text-gray-400 font-bold uppercase mt-2">Enviando arquivo…</div>
-                @error('wordpressXml') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                <input type="file" name="wordpress_xml" accept=".xml,text/xml,application/xml" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
+                @error('wordpress_xml') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                <p class="text-[10px] text-gray-400 font-medium normal-case mt-2">Limite 100 MB. A importação pode levar alguns minutos se houver muitos posts.</p>
             </div>
 
             <label class="flex items-center gap-3 text-[11px] font-bold text-gray-600 normal-case">
-                <input type="checkbox" wire:model="wordpressDownloadImages" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+                <input type="checkbox" name="download_images" value="1" checked class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
                 Baixar imagem destacada (capa) para o armazenamento do portal
             </label>
 
-            <button type="submit" wire:loading.attr="disabled" wire:target="importWordpress,wordpressXml" class="bg-gray-900 hover:bg-brand-500 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition disabled:opacity-50">
-                <span wire:loading.remove wire:target="importWordpress">Importar XML</span>
-                <span wire:loading wire:target="importWordpress">Importando…</span>
+            <button type="submit" class="bg-gray-900 hover:bg-brand-500 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition">
+                Importar XML
             </button>
         </form>
     </div>
