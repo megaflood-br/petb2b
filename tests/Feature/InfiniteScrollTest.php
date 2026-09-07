@@ -32,7 +32,8 @@ class InfiniteScrollTest extends TestCase
         $this->get('/racas')
             ->assertOk()
             ->assertSee('Raca Infinita 01')
-            ->assertSee('Role para ver mais')
+            ->assertSee('Carregar mais')
+            ->assertSee('x-intersect.margin.400px="$wire.loadMore()"', false)
             ->assertDontSee('?page=2')
             ->assertDontSee('Raca Infinita 15');
 
@@ -58,7 +59,8 @@ class InfiniteScrollTest extends TestCase
         $this->get('/noticias')
             ->assertOk()
             ->assertSee('Noticia infinita 8')
-            ->assertSee('Role para ver mais')
+            ->assertSee('Carregar mais')
+            ->assertSee('x-intersect.margin.400px="$wire.loadMore()"', false)
             ->assertDontSee('?page=2');
 
         Livewire::test(BlogPostGrid::class)

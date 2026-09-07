@@ -38,7 +38,8 @@ class AdminBlogPaginationTest extends TestCase
             ->assertOk()
             ->assertSee('Post paginacao n15x')
             ->assertDontSee('Post paginacao n1x')
-            ->assertSee('Role para ver mais')
+            ->assertSee('Carregar mais')
+            ->assertSee('x-intersect.margin.400px="$wire.loadMore()"', false)
             ->assertDontSee('/admin/blog?page=2', false);
 
         Livewire::actingAs($admin)
