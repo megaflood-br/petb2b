@@ -425,6 +425,111 @@ XML);
         $this->assertDatabaseMissing('posts', ['slug' => 'mercado-pet-cresce-no-brasil']);
     }
 
+    public function test_copia_imagem_da_pasta_uploads_local_quando_a_url_e_deste_site(): void
+    {
+        Storage::fake('public');
+        Http::fake([
+            '*' => Http::response('not-an-image', 404),
+        ]);
+
+        $root = sys_get_temp_dir() . '/wp-uploads-' . uniqid();
+        mkdir($root . '/2024/01', 0755, true);
+        $jpeg = "\xFF\xD8\xFF" . str_repeat('J', 64);
+        file_put_contents($root . '/2024/01/capa.jpg', $jpeg);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'wxr');
+        file_put_contents($tmp, <<<XML
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+    <wp:base_blog_url>https://rnpet.com.br</wp:base_blog_url>
+    <item>
+        <title>Post com foto local</title>
+        <content:encoded><![CDATA[<p><img src="https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg" alt="Capa" /></p>]]></content:encoded>
+        <wp:post_id>41</wp:post_id>
+        <wp:post_name>post-com-foto-local</wp:post_name>
+        <wp:status>publish</wp:status>
+        <wp:post_type>post</wp:post_type>
+    </item>
+</channel>
+</rss>
+XML);
+
+        $result = (new WordpressXmlImporter())
+            ->setUploadRoots([$root])
+            ->import($tmp, downloadImages: true);
+
+        $this->assertSame(1, $result->imagesDownloaded);
+        $this->assertSame(0, $result->imagesFailed);
+
+        $post = Post::where('slug', 'post-com-foto-local')->first();
+        $this->assertNotNull($post);
+        $this->assertNotEmpty($post->image);
+        Storage::disk('public')->assertExists($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+        $this->assertStringNotContainsString('/wp-content/uploads/', $post->content);
+        Http::assertNothingSent();
+    }
+
+    public function test_capa_usa_primeira_imagem_do_conteudo_quando_nao_ha_arquivo(): void
+    {
+        $post = new Post([
+            'title' => 'Sem capa',
+            'slug' => 'sem-capa-' . uniqid(),
+            'content' => '<p><img src="https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg" alt="Capa"></p>',
+            'is_active' => true,
+        ]);
+        $post->save();
+
+        $this->assertNull($post->image);
+        $this->assertTrue($post->hasCover());
+        $this->assertSame(
+            'https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg',
+            $post->coverUrl()
+        );
+    }
+
+    public function test_backfill_completa_capa_de_post_ja_importado(): void
+    {
+        Storage::fake('public');
+
+        $root = sys_get_temp_dir() . '/wp-uploads-' . uniqid();
+        mkdir($root . '/2024/01', 0755, true);
+        file_put_contents($root . '/2024/01/capa.jpg', "\xFF\xD8\xFF" . str_repeat('J', 64));
+
+        $post = new Post([
+            'title' => 'Já existia',
+            'slug' => 'ja-existia-' . uniqid(),
+            'content' => '<p><img src="https://rnpet.com.br/wp-content/uploads/2024/01/capa.jpg" alt="Capa"></p>',
+            'is_active' => true,
+        ]);
+        $post->save();
+
+        $result = (new WordpressXmlImporter())
+            ->setUploadRoots([$root])
+            ->setSiteBaseUrl('https://rnpet.com.br')
+            ->backfillExistingPosts($root);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertGreaterThanOrEqual(1, $result['images']);
+
+        $post->refresh();
+        $this->assertNotEmpty($post->image);
+        Storage::disk('public')->assertExists($post->image);
+        $this->assertStringContainsString('/storage/blog/posts/', $post->content);
+    }
+
+    public function test_resumo_explica_quando_nenhuma_imagem_baixou(): void
+    {
+        $result = new WordpressImportResult();
+        $result->skipped = 2;
+        $result->imagesFailed = 5;
+
+        $this->assertStringContainsString('wp-content/uploads', $result->summary());
+    }
+
     public function test_orcamento_de_imagens_continua_no_mesmo_post(): void
     {
         Storage::fake('public');

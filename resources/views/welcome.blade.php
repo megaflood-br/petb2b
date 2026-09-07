@@ -68,8 +68,8 @@
 
                             {{-- Container da Imagem --}}
                             <div class="aspect-[16/9] sm:aspect-[16/10] rounded-[2rem] overflow-hidden mb-4 relative shadow-md bg-brand-600 shrink-0">
-                                @if($featured->image)
-                                    <img src="{{ asset('storage/' . $featured->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                @if($featured->hasCover())
+                                    <img src="{{ $featured->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                                 @else
                                     <div class="w-full h-full bg-brand-600 flex items-center justify-center text-white/20 font-black italic text-2xl">NP</div>
                                 @endif
@@ -184,8 +184,8 @@
                         @endphp
                         <article class="flex flex-col group">
                             <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="relative w-full aspect-[16/9] mb-5 overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-sm border border-gray-100 block">
-                                @if($post->image)
-                                    <img src="{{ asset('storage/' . $post->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @if($post->hasCover())
+                                    <img src="{{ $post->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 @else
                                     <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-bold text-xs">Sem Imagem</div>
                                 @endif
@@ -271,8 +271,8 @@
                         @foreach($racePosts as $racePost)
                             <article class="flex flex-col group bg-white p-5 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition">
                                 <a href="{{ route('blog.show', ['prefixCategory' => 'racas', 'slug' => $racePost->slug]) }}" class="relative w-full aspect-[16/10] mb-5 overflow-hidden rounded-[2rem] bg-gray-100 block">
-                                    @if($racePost->image)
-                                        <img src="{{ asset('storage/' . $racePost->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    @if($racePost->hasCover())
+                                        <img src="{{ $racePost->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     @else
                                         <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-bold text-xs">Sem Imagem</div>
                                     @endif

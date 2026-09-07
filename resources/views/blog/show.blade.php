@@ -51,10 +51,10 @@
             </div>
 
             {{-- Imagem de Capa --}}
-            @if($post->image)
+            @if($post->hasCover())
                 <div class="max-w-3xl mx-auto px-6 mt-12 mb-12">
                     <div class="aspect-video rounded-[2.5rem] overflow-hidden shadow-xl shadow-gray-100 bg-gray-100 border border-gray-50">
-                        <img src="{{ asset('storage/' . $post->image) }}" class="w-full h-full object-cover">
+                        <img src="{{ $post->coverUrl() }}" class="w-full h-full object-cover">
                     </div>
                 </div>
             @endif
@@ -129,8 +129,8 @@
                             <article class="flex flex-col group">
                                 {{-- Imagem com link dinâmico corrigido para dois parâmetros --}}
                                 <a href="{{ route('blog.show', ['prefixCategory' => 'materias-' . $relatedCatSlug, 'slug' => $related->slug]) }}" class="relative w-full aspect-[16/9] mb-4 overflow-hidden rounded-[2rem] bg-white shadow-sm block border border-gray-100">
-                                    @if($related->image)
-                                        <img src="{{ asset('storage/' . $related->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    @if($related->hasCover())
+                                        <img src="{{ $related->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     @else
                                         <div class="w-full h-full bg-slate-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center text-gray-400">
                                             <i class="fas fa-newspaper text-xl"></i>

@@ -46,6 +46,9 @@ class WordpressImportResult
 
         if ($this->imagesFailed > 0) {
             $parts[] = "{$this->imagesFailed} " . ($this->imagesFailed === 1 ? 'imagem não baixada' : 'imagens não baixadas');
+            if ($this->imagesDownloaded === 0) {
+                $parts[] = 'as URLs do WordPress não existem mais neste site — copie a pasta wp-content/uploads para o servidor e informe o caminho na importação';
+            }
         }
 
         if ($this->failed > 0) {

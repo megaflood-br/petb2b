@@ -91,8 +91,8 @@
                             {{-- CORREÇÃO CRÍTICA: Passando explicitamente o array associativo com prefixCategory e slug --}}
                             <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition group block">
                                 <div class="w-32 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 relative">
-                                    @if($post->image)
-                                        <img src="{{ asset('storage/' . $post->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                    @if($post->hasCover())
+                                        <img src="{{ $post->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center bg-brand-50 text-brand-300 font-black italic text-xs">NP</div>
                                     @endif

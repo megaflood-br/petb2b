@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\Wordpress\WordpressImportResult;
 use App\Services\Wordpress\WordpressXmlImporter;
+use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,8 @@ class WordpressImportController extends Controller
     private const BATCH_SIZE_WITH_IMAGES = 1;
 
     private const IMAGES_PER_BATCH = 2;
+
+    private const IMAGES_PER_BATCH_LOCAL = 12;
 
     public function store(Request $request, WordpressXmlImporter $importer): JsonResponse|RedirectResponse
     {
@@ -50,6 +53,8 @@ class WordpressImportController extends Controller
         ini_set('memory_limit', '512M');
 
         $downloadImages = $request->boolean('download_images');
+        $uploadRoots = $this->resolveUploadRoots($request);
+        $importer->setUploadRoots($uploadRoots);
 
         if (! $request->wantsJson()) {
             return $this->importAllAtOnce($request, $importer, $file->getRealPath(), $downloadImages);
@@ -110,6 +115,7 @@ class WordpressImportController extends Controller
             'site_base_url' => $extracted['site_base_url'],
             'new_slugs' => [],
             'cursor_attempts' => 0,
+            'upload_roots' => $uploadRoots,
         ], now()->addHours(2));
 
         return response()->json([
@@ -171,14 +177,18 @@ class WordpressImportController extends Controller
         }
 
         $downloadNow = $wantImages && $phase === 'images';
+        $uploadRoots = is_array($state['upload_roots'] ?? null)
+            ? $state['upload_roots']
+            : WordpressXmlImporter::resolveUploadRoots();
         $importer
             ->setSiteBaseUrl((string) ($state['site_base_url'] ?? ''))
+            ->setUploadRoots($uploadRoots)
             ->setDeadline(microtime(true) + 8);
 
         if ($downloadNow) {
             $importer
                 ->hydrateDownloads($this->loadDownloads($validated['token']))
-                ->setImageBudget(self::IMAGES_PER_BATCH);
+                ->setImageBudget($uploadRoots !== [] ? self::IMAGES_PER_BATCH_LOCAL : self::IMAGES_PER_BATCH);
         }
 
         $batchSize = $downloadNow ? self::BATCH_SIZE_WITH_IMAGES : self::BATCH_SIZE;
@@ -419,6 +429,25 @@ class WordpressImportController extends Controller
             "wxr/{$token}-dl.json",
             (string) json_encode($map, JSON_UNESCAPED_UNICODE)
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function resolveUploadRoots(Request $request): array
+    {
+        $custom = trim((string) $request->input('wordpress_uploads_path', ''));
+        if ($custom === '') {
+            $custom = (string) Settings::get('wordpress_uploads_path', '');
+        }
+
+        if ($custom !== '' && is_dir($custom)) {
+            Settings::set('wordpress_uploads_path', $custom);
+
+            return WordpressXmlImporter::resolveUploadRoots($custom);
+        }
+
+        return WordpressXmlImporter::resolveUploadRoots();
     }
 
     private function importAllAtOnce(Request $request, WordpressXmlImporter $importer, string $path, bool $downloadImages): RedirectResponse

@@ -74,8 +74,8 @@
                         <div>
                             {{-- Container da Imagem de Capa --}}
                             <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="relative w-full aspect-[16/9] mb-6 overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-sm block border border-gray-100">
-                                @if($post->image)
-                                    <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @if($post->hasCover())
+                                    <img src="{{ $post->coverUrl() }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 @else
                                     <div class="w-full h-full bg-slate-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center text-brand-300 font-black italic">
                                         RN PET

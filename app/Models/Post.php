@@ -103,4 +103,45 @@ class Post extends Model
             $q->where('hide_from_home', true);
         });
     }
+
+    public function hasCover(): bool
+    {
+        return $this->coverUrl() !== null;
+    }
+
+    /**
+     * Capa gravada no storage ou, se vazia, a primeira imagem do HTML do post
+     * (ainda aponta para /wp-content/uploads quando o import não baixou).
+     */
+    public function coverUrl(): ?string
+    {
+        if (filled($this->image)) {
+            $image = ltrim((string) $this->image, '/');
+            if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+                return (string) $this->image;
+            }
+
+            return asset('storage/' . $image);
+        }
+
+        return $this->firstContentImageUrl();
+    }
+
+    public function firstContentImageUrl(): ?string
+    {
+        if (! is_string($this->content) || $this->content === '') {
+            return null;
+        }
+
+        if (preg_match('/<img\b[^>]*\bsrc=["\']([^"\']+)/i', $this->content, $match) !== 1) {
+            return null;
+        }
+
+        $src = html_entity_decode($match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (str_starts_with($src, '//')) {
+            $src = 'https:' . $src;
+        }
+
+        return $src !== '' ? $src : null;
+    }
 }

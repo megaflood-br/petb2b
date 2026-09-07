@@ -51,9 +51,9 @@ class BlogController extends Controller
         SEOTools::twitter()->setTitle($post->title);
         SEOTools::twitter()->setDescription($description);
 
-        if ($post->image) {
-            SEOTools::opengraph()->addImage(asset('storage/' . $post->image));
-            SEOTools::twitter()->setImage(asset('storage/' . $post->image));
+        if ($post->hasCover()) {
+            SEOTools::opengraph()->addImage($post->coverUrl());
+            SEOTools::twitter()->setImage($post->coverUrl());
         }
 
         $relatedPosts = Post::where('is_active', true)
