@@ -303,46 +303,152 @@
             </div>
         </section>
 
-        {{-- SEÇÃO 6: OPORTUNIDADES (CLASSIFICADOS) --}}
-        @if($featuredClassifieds->count() > 0)
-            <section class="py-24 bg-white border-t border-b border-gray-100">
-                <div class="max-w-7xl mx-auto px-6 lg:px-8">
-                    <div class="flex justify-between items-end mb-12">
-                        <div>
-                            <h2 class="text-3xl font-black text-gray-900 uppercase tracking-tight">Oportunidades</h2>
-                            <p class="mt-2 text-gray-500 font-medium">Equipamentos usados e seminovos com preços especiais.</p>
-                        </div>
-                        <a href="{{ route('classifieds.index') }}" class="text-xs font-black text-brand-500 uppercase tracking-[0.2em] hover:text-brand-800 transition">
-                            Ver todos os anúncios →
-                        </a>
+        {{-- SEÇÃO 6: CLASSIFICADOS --}}
+        @php $homeClassifieds = $featuredClassifieds ?? collect(); @endphp
+        <section class="py-24 bg-white border-t border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Mercado B2B</p>
+                        <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tight">
+                            Classificados
+                        </h2>
+                        <p class="mt-2 text-gray-500 font-medium">Equipamentos novos, usados e seminovos com preços especiais.</p>
                     </div>
+                    <a href="{{ route('classifieds.index') }}" class="bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-sm">
+                        Ver todos os anúncios →
+                    </a>
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        @foreach($featuredClassifieds as $ad)
-                            <div class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden group">
-                                <div class="aspect-square bg-white relative overflow-hidden flex items-center justify-center p-4">
-                                    @if($ad->image)
-                                        <img src="{{ asset('storage/' . $ad->image) }}" alt="{{ $ad->title }}" class="max-w-full max-h-full object-contain transition duration-500 group-hover:scale-105">
-                                    @else
-                                        <div class="w-full h-full flex items-center justify-center text-gray-200 font-black italic">SEM FOTO</div>
-                                    @endif
-                                    <div class="absolute top-4 left-4">
-                                        <span class="bg-brand-500 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm">{{ $ad->condition }}</span>
-                                    </div>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="font-black text-gray-900 uppercase tracking-tight line-clamp-1">{{ $ad->title }}</h3>
-                                    <div class="mt-4 flex items-center justify-between">
-                                        <span class="text-xl font-black text-gray-900">R$ {{ number_format($ad->price, 2, ',', '.') }}</span>
-                                        <a href="{{ route('classifieds.show', $ad->slug) }}" class="text-[10px] font-black uppercase text-brand-500 tracking-widest hover:underline">Saiba Mais</a>
-                                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @forelse($homeClassifieds as $ad)
+                        <a href="{{ route('classifieds.show', $ad->slug) }}" class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl transition">
+                            <div class="aspect-square bg-white relative overflow-hidden flex items-center justify-center p-4">
+                                @if($ad->image)
+                                    <img src="{{ asset('storage/' . $ad->image) }}" alt="{{ $ad->title }}" class="max-w-full max-h-full object-contain transition duration-500 group-hover:scale-105">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-gray-200 font-black italic">SEM FOTO</div>
+                                @endif
+                                <div class="absolute top-4 left-4">
+                                    <span class="bg-brand-500 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm">{{ $ad->condition }}</span>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="p-6">
+                                <h3 class="font-black text-gray-900 uppercase tracking-tight line-clamp-1 group-hover:text-brand-500 transition">{{ $ad->title }}</h3>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <span class="text-xl font-black text-gray-900">R$ {{ number_format($ad->price, 2, ',', '.') }}</span>
+                                    <span class="text-[10px] font-black uppercase text-brand-500 tracking-widest">Saiba Mais</span>
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="col-span-full py-12 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Nenhum classificado publicado no momento.</p>
+                        </div>
+                    @endforelse
                 </div>
-            </section>
-        @endif
+            </div>
+        </section>
+
+        {{-- SEÇÃO 6.1: VAGAS --}}
+        @php $homeJobs = $featuredJobs ?? collect(); @endphp
+        <section class="py-24 bg-gray-50 border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Guia de Empregos</p>
+                        <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tight">
+                            Vagas no Mercado <span class="text-brand-500">Pet</span>
+                        </h2>
+                        <p class="mt-2 text-gray-500 font-medium">Oportunidades de carreira publicadas pelas empresas do portal.</p>
+                    </div>
+                    <a href="{{ route('jobs.index') }}" class="bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-sm">
+                        Ver todas as vagas →
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    @forelse($homeJobs as $job)
+                        <a href="{{ route('jobs.show', $job->slug) }}" class="block bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <h3 class="text-lg font-black text-gray-900 uppercase group-hover:text-brand-500 transition truncate">{{ $job->title }}</h3>
+                                    <p class="text-xs text-gray-500 font-medium mt-1">
+                                        {{ $job->supplier->name ?? 'Empresa' }} · {{ $job->city ?: 'Local a combinar' }}{{ $job->state ? '/' . $job->state : '' }}
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $job->type }}</span>
+                                    @if($job->salary)
+                                        <span class="text-[9px] font-black uppercase tracking-wider bg-green-50 text-green-600 px-3 py-1.5 rounded-full">{{ $job->salary }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="py-12 text-center border-2 border-dashed border-gray-200 rounded-[2rem] bg-white">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Nenhuma vaga publicada no momento.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </section>
+
+        {{-- SEÇÃO 6.2: CANIS --}}
+        @php $homeKennels = $featuredKennels ?? collect(); @endphp
+        <section class="py-24 bg-white">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Criação Selecionada</p>
+                        <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tight">
+                            Guia de <span class="text-brand-500">Canis</span>
+                        </h2>
+                        <p class="mt-2 text-gray-500 font-medium">Criadores profissionais comprometidos com saúde e bem-estar animal.</p>
+                    </div>
+                    <a href="{{ route('kennels.index') }}" class="bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-sm">
+                        Ver todos os canis →
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @forelse($homeKennels as $kennel)
+                        <a href="{{ route('kennels.show', $kennel->slug) }}" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition group flex flex-col">
+                            <div class="w-full aspect-[16/7] bg-gray-100 relative overflow-hidden">
+                                @if($kennel->cover_image)
+                                    <img src="{{ asset('storage/' . $kennel->cover_image) }}" alt="{{ $kennel->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @else
+                                    <div class="w-full h-full bg-brand-500/10"></div>
+                                @endif
+                                @if($kennel->is_verified)
+                                    <div class="absolute top-4 left-4 z-10">
+                                        <span class="bg-amber-400 text-black font-black text-[8px] uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">★ Verificado</span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="p-8 flex-1 flex flex-col">
+                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">{{ $kennel->city }} / {{ $kennel->state }}</span>
+                                <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight mt-1 mb-2 group-hover:text-brand-500 transition-colors">{{ $kennel->name }}</h3>
+                                <p class="text-gray-500 text-xs font-medium line-clamp-2 leading-relaxed">
+                                    {{ $kennel->description ?? 'Criador profissional do mercado pet.' }}
+                                </p>
+                                @if($kennel->breeds->isNotEmpty())
+                                    <div class="flex flex-wrap gap-1.5 mt-4">
+                                        @foreach($kennel->breeds->take(3) as $breed)
+                                            <span class="bg-brand-50 text-brand-700 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase">{{ $breed->breed_name }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </a>
+                    @empty
+                        <div class="col-span-full py-12 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Nenhum canil cadastrado no momento.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </section>
 
         {{-- SEÇÃO 7: ANÁLISES DE PRODUTOS --}}
         @if($featuredReviews->count() > 0)
