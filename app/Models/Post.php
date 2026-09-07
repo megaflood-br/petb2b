@@ -93,4 +93,14 @@ class Post extends Model
                 ->orWhereHas('blogCategories', fn ($c) => $c->productAnalysis());
         });
     }
+
+    /**
+     * Exclui posts cuja categoria está marcada para não aparecer na home.
+     */
+    public function scopeVisibleOnHome($query)
+    {
+        return $query->whereDoesntHave('blogCategories', function ($q) {
+            $q->where('hide_from_home', true);
+        });
+    }
 }

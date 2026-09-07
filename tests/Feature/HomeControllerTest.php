@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\HomeController;
+use App\Models\BlogCategory;
 use App\Models\Classified;
 use App\Models\JobPosting;
 use App\Models\Kennel;
@@ -217,6 +218,52 @@ class HomeControllerTest extends TestCase
             'slug' => 'canil-cache-' . uniqid(),
             'is_active' => true,
         ]);
+        $this->assertFalse(Cache::has(HomeController::CACHE_KEY));
+    }
+
+    public function test_posts_de_categoria_oculta_nao_aparecem_nos_destaques_da_home(): void
+    {
+        Cache::forget(HomeController::CACHE_KEY);
+
+        $visible = BlogCategory::create([
+            'name' => 'Mercado',
+            'slug' => 'mercado',
+            'hide_from_home' => false,
+        ]);
+        $hidden = BlogCategory::create([
+            'name' => 'Edição',
+            'slug' => 'edicao',
+            'hide_from_home' => true,
+        ]);
+
+        $shown = $this->makePost('Matéria de Mercado');
+        $shown->blogCategories()->sync([$visible->id]);
+
+        $omitted = $this->makePost('Matéria Só da Edição');
+        $omitted->blogCategories()->sync([$hidden->id]);
+
+        $mixed = $this->makePost('Matéria Mista Edição');
+        $mixed->blogCategories()->sync([$visible->id, $hidden->id]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Matéria de Mercado')
+            ->assertDontSee('Matéria Só da Edição')
+            ->assertDontSee('Matéria Mista Edição');
+    }
+
+    public function test_ocultar_categoria_na_home_invalida_o_cache(): void
+    {
+        $this->makePost('Post Cache Categoria');
+        $this->get('/')->assertOk();
+        $this->assertTrue(Cache::has(HomeController::CACHE_KEY));
+
+        BlogCategory::create([
+            'name' => 'Interna',
+            'slug' => 'interna',
+            'hide_from_home' => true,
+        ]);
+
         $this->assertFalse(Cache::has(HomeController::CACHE_KEY));
     }
 }

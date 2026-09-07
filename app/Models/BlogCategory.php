@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\HomeController;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -12,13 +13,22 @@ class BlogCategory extends Model
     /** Chave de cache do menu de categorias (usado no view composer). */
     public const NAV_CACHE_KEY = 'nav.blog_categories';
 
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'hide_from_home'];
+
+    protected $casts = [
+        'hide_from_home' => 'boolean',
+    ];
 
     protected static function booted(): void
     {
-        // Invalida o cache do menu sempre que uma categoria muda.
-        static::saved(fn () => Cache::forget(self::NAV_CACHE_KEY));
-        static::deleted(fn () => Cache::forget(self::NAV_CACHE_KEY));
+        static::saved(function () {
+            Cache::forget(self::NAV_CACHE_KEY);
+            Cache::forget(HomeController::CACHE_KEY);
+        });
+        static::deleted(function () {
+            Cache::forget(self::NAV_CACHE_KEY);
+            Cache::forget(HomeController::CACHE_KEY);
+        });
     }
 
     // Relacionamento: Uma categoria tem muitos posts

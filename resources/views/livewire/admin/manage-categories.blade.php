@@ -37,6 +37,14 @@
                     @error('name') <span class="text-red-500 text-[10px] font-bold mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
+                <label class="flex items-start gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 cursor-pointer">
+                    <input type="checkbox" wire:model="hide_from_home" class="mt-0.5 w-5 h-5 text-brand-600 rounded-lg border-gray-300 focus:ring-brand-500">
+                    <span>
+                        <span class="block text-[10px] font-black uppercase text-gray-700 tracking-widest">Não exibir posts na home</span>
+                        <span class="block text-[10px] font-medium text-gray-400 normal-case mt-1 leading-relaxed">Os posts continuam no blog e na página da categoria. Não entram no carrossel nem nos destaques da página inicial.</span>
+                    </span>
+                </label>
+
                 <button type="submit" class="w-full bg-gray-900 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-brand-600 transition shadow-lg">
                     Salvar Categoria
                 </button>
@@ -50,6 +58,7 @@
                     <tr>
                         <th class="py-4 px-6 font-black text-gray-400 uppercase tracking-widest">Nome</th>
                         <th class="py-4 px-6 font-black text-gray-400 uppercase tracking-widest">Slug (URL)</th>
+                        <th class="py-4 px-6 font-black text-gray-400 uppercase tracking-widest">Home</th>
                         <th class="py-4 px-6 font-black text-gray-400 uppercase tracking-widest text-right">Ações</th>
                     </tr>
                 </thead>
@@ -58,6 +67,13 @@
                         <tr class="hover:bg-gray-50/50 transition font-bold">
                             <td class="py-6 px-6 text-gray-900 uppercase tracking-wider">{{ $category->name }}</td>
                             <td class="py-6 px-6 text-gray-400 font-mono">{{ $category->slug }}</td>
+                            <td class="py-6 px-6">
+                                @if($category->hide_from_home)
+                                    <span class="inline-flex bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Oculta</span>
+                                @else
+                                    <span class="inline-flex bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Visível</span>
+                                @endif
+                            </td>
                             <td class="py-6 px-6 text-right space-x-3">
                                 <button wire:click="edit({{ $category->id }})" class="text-brand-600 uppercase">Editar</button>
                                 <button onclick="confirm('Tem certeza? Isso pode afetar posts antigos.') || event.stopImmediatePropagation()" wire:click="delete({{ $category->id }})" class="text-red-400 uppercase">Excluir</button>
@@ -65,7 +81,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="py-8 text-center text-gray-400 italic">
+                            <td colspan="4" class="py-8 text-center text-gray-400 italic">
                                 Nenhuma categoria cadastrada ainda. Clique em "Nova Categoria" para começar!
                             </td>
                         </tr>
