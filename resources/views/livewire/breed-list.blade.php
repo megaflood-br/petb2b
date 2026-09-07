@@ -11,31 +11,43 @@
         <x-ad-space position="setor_racas" />
 
         {{-- Filtros --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <div class="grid grid-cols-1 {{ $usingPosts ? '' : 'md:grid-cols-2' }} gap-4 mb-10">
             <input type="text" wire:model.live.debounce.400ms="search" placeholder="Buscar raça..." class="bg-white border border-gray-100 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500">
-            <select wire:model.live="species" class="bg-white border border-gray-100 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500">
-                <option value="">Todas as espécies</option>
-                @foreach($speciesList as $sp)
-                    <option value="{{ $sp }}">{{ $sp }}</option>
-                @endforeach
-            </select>
+            @if (! $usingPosts)
+                <select wire:model.live="species" class="bg-white border border-gray-100 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500">
+                    <option value="">Todas as espécies</option>
+                    @foreach($speciesList as $sp)
+                        <option value="{{ $sp }}">{{ $sp }}</option>
+                    @endforeach
+                </select>
+            @endif
         </div>
 
         {{-- Grid --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($breeds as $breed)
-                <a href="{{ route('breeds.show', $breed->slug) }}" class="block bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+            @forelse($breeds as $item)
+                @php
+                    $isPost = $item instanceof \App\Models\Post;
+                    $title = $isPost ? $item->title : $item->name;
+                    $hasImage = $isPost ? $item->hasCover() : filled($item->image);
+                    $imageUrl = $isPost ? $item->coverUrl() : ($item->image ? asset('storage/'.$item->image) : null);
+                    $badge = $isPost ? ($item->category ?: 'Raças') : $item->species;
+                    $meta = $isPost ? '' : trim(($item->size ? 'Porte '.$item->size : '').($item->origin ? ' · '.$item->origin : ''));
+                @endphp
+                <a href="{{ route('breeds.show', $item->slug) }}" class="block bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
                     <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
-                        @if($breed->image)
-                            <img src="{{ asset('storage/' . $breed->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        @if($hasImage)
+                            <img src="{{ $imageUrl }}" alt="{{ $title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         @else
-                            <div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl font-black italic">{{ Str::substr($breed->name, 0, 1) }}</div>
+                            <div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl font-black italic">{{ \Illuminate\Support\Str::substr($title, 0, 1) }}</div>
                         @endif
                     </div>
                     <div class="p-5">
-                        <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1 rounded-full">{{ $breed->species }}</span>
-                        <h2 class="text-lg font-black text-gray-900 uppercase mt-2 group-hover:text-brand-500 transition">{{ $breed->name }}</h2>
-                        <p class="text-xs text-gray-500 font-medium mt-1">{{ $breed->size ? 'Porte ' . $breed->size : '' }}{{ $breed->origin ? ' · ' . $breed->origin : '' }}</p>
+                        <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1 rounded-full">{{ $badge }}</span>
+                        <h2 class="text-lg font-black text-gray-900 uppercase mt-2 group-hover:text-brand-500 transition">{{ $title }}</h2>
+                        @if($meta !== '')
+                            <p class="text-xs text-gray-500 font-medium mt-1">{{ $meta }}</p>
+                        @endif
                     </div>
                 </a>
             @empty
