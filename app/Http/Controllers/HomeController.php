@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Classified;
 use App\Models\Event;
+use App\Models\JobPosting;
+use App\Models\Kennel;
 use App\Models\Magazine;
 use App\Models\Post;
 use App\Models\ProductReview;
@@ -59,6 +61,20 @@ class HomeController extends Controller
 
                 'featuredClassifieds' => Classified::where('is_active', true)
                     ->with('supplier')
+                    ->latest()
+                    ->take(3)
+                    ->get(),
+
+                'featuredJobs' => JobPosting::where('is_active', true)
+                    ->whereHas('supplier', fn ($q) => $q->where('is_active', true))
+                    ->with('supplier')
+                    ->latest()
+                    ->take(3)
+                    ->get(),
+
+                'featuredKennels' => Kennel::where('is_active', true)
+                    ->with('breeds')
+                    ->orderByDesc('is_verified')
                     ->latest()
                     ->take(3)
                     ->get(),
