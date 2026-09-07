@@ -256,7 +256,7 @@ class WordpressXmlImporter
             }
 
             $body = $response->body();
-            if (strlen($body) < 32 || strlen($body) > 8_000_000) {
+            if ($body === '' || strlen($body) > 8_000_000) {
                 return null;
             }
 

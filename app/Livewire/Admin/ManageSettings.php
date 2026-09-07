@@ -11,6 +11,7 @@ use Livewire\WithFileUploads;
 class ManageSettings extends Component
 {
     use WithFileUploads;
+
     // Custos de anúncios
     public $ads_cost_per_click;
     public $ads_cost_per_impression;

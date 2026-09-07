@@ -71,7 +71,7 @@ class WordpressXmlImportTest extends TestCase
     {
         Storage::fake('public');
         Http::fake([
-            'cdn.example.com/*' => Http::response('fake-jpeg-bytes-for-cover-image', 200, [
+            'cdn.example.com/*' => Http::response(str_repeat('JPEGDATA', 16), 200, [
                 'Content-Type' => 'image/jpeg',
             ]),
         ]);
