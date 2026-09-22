@@ -56,6 +56,7 @@ use App\Livewire\Admin\ManageCategories;
 use App\Livewire\Admin\ManageKennels;
 use App\Livewire\Admin\ManageBreeds;
 use App\Livewire\Admin\ManageSettings;
+use App\Livewire\Admin\ManageUsers;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\WordpressImportController;
 
@@ -223,6 +224,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'total_leads'       => Lead::count(),
                 'total_posts'       => Post::count(),
                 'unread_messages'   => ContactMessage::where('is_read', false)->count(),
+                'total_users'       => \App\Models\User::where('role', '!=', 'admin')->count(),
                 'latest_magazines'  => Magazine::latest()->take(3)->get(),
                 'upcoming_events'   => Event::where('start_date', '>=', now())->orderBy('start_date', 'asc')->take(3)->get(),
             ];
@@ -230,6 +232,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('admin.dashboard');
 
         Route::get('/anuncios', AdminManageAds::class)->name('admin.ads');
+        Route::get('/usuarios', ManageUsers::class)->name('admin.users');
         Route::get('/fornecedores', ApproveSuppliers::class)->name('admin.suppliers');
         Route::get('/blog', ManageBlog::class)->name('admin.blog');
         Route::get('/blog/criar', [BlogPostController::class, 'create'])->name('admin.blog.create');
