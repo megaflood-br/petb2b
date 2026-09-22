@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\HomeController;
 use App\Models\Concerns\FlushesHomeCache;
 use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Supplier extends Model
@@ -106,5 +109,33 @@ class Supplier extends Model
     public function jobPostings()
     {
         return $this->hasMany(JobPosting::class);
+    }
+
+    /**
+     * Apaga todas as empresas do guia e o conteúdo comercial ligado a elas.
+     * Contas de usuário, canis, categorias e matérias editoriais permanecem.
+     * Matérias patrocinadas só perdem o vínculo com a empresa.
+     */
+    public static function wipeDirectory(): int
+    {
+        $count = static::query()->count();
+
+        DB::transaction(function () {
+            Post::query()->whereNotNull('supplier_id')->update(['supplier_id' => null]);
+
+            SupplierCreditTransaction::query()->delete();
+            Advertisement::query()->whereNotNull('supplier_id')->delete();
+            PixCharge::query()->delete();
+            CompanyClaim::query()->delete();
+            Lead::query()->delete();
+            Classified::query()->delete();
+            JobApplication::query()->delete();
+            JobPosting::query()->delete();
+            static::query()->delete();
+        });
+
+        Cache::forget(HomeController::CACHE_KEY);
+
+        return $count;
     }
 }

@@ -157,4 +157,38 @@
     @endif
 
     <x-infinite-scroll :paginator="$suppliers" class="mt-10" />
+
+    <div class="mt-12 bg-red-50 border border-red-100 rounded-[2.5rem] p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <h2 class="text-sm font-black uppercase tracking-widest text-red-700">Zerar banco de fornecedores</h2>
+            <p class="text-[11px] text-red-600/80 font-medium normal-case leading-relaxed mt-2 max-w-xl">
+                Apaga as {{ $supplierCount }} empresa(s) do guia e o conteúdo comercial ligado a elas (classificados, vagas, anúncios, leads e créditos).
+                Contas de usuário, canis e matérias do blog permanecem.
+            </p>
+        </div>
+        <button type="button" wire:click="openWipeModal" class="shrink-0 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-red-200 transition">
+            Zerar banco
+        </button>
+    </div>
+
+    @if($confirmingWipe)
+        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-red-950/50 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-10">
+                <h2 class="text-xl font-black uppercase italic text-gray-900 mb-3">Confirmar exclusão</h2>
+                <p class="text-[12px] text-gray-500 font-medium normal-case leading-relaxed mb-6">
+                    Esta ação não tem volta. Para zerar o banco de fornecedores, digite
+                    <span class="font-black text-red-600">excluir</span> no campo abaixo.
+                </p>
+                <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Digite excluir</label>
+                <input type="text" wire:model.live="wipeConfirmation" wire:keydown.enter="wipeSuppliers" autocomplete="off" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-4 focus:ring-red-500/20" placeholder="excluir">
+                @error('wipeConfirmation') <span class="text-red-500 text-[10px] font-black uppercase mt-2 block">{{ $message }}</span> @enderror
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" wire:click="cancelWipe" class="text-[10px] font-black uppercase text-gray-400">Cancelar</button>
+                    <button type="button" wire:click="wipeSuppliers" @disabled(mb_strtolower(trim($wipeConfirmation)) !== 'excluir') class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-red-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                        Confirmar e zerar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

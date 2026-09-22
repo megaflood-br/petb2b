@@ -38,6 +38,12 @@ class ApproveSuppliers extends Component
     public $selectAll = false;
     public $fileXls;
 
+    public bool $confirmingWipe = false;
+
+    public string $wipeConfirmation = '';
+
+    public const WIPE_CONFIRMATION_WORD = 'excluir';
+
     // Resetar página ao alterar filtros
     public function updatedSearch() { $this->resetInfiniteScroll(); }
     public function updatedFilterCategory() { $this->resetInfiniteScroll(); }
@@ -60,7 +66,41 @@ class ApproveSuppliers extends Component
             'categories' => Category::orderBy('name')->get(),
             'states' => $states,
             'cities' => $cities,
+            'supplierCount' => Supplier::query()->count(),
         ]);
+    }
+
+    public function openWipeModal(): void
+    {
+        $this->wipeConfirmation = '';
+        $this->confirmingWipe = true;
+        $this->resetErrorBag('wipeConfirmation');
+    }
+
+    public function cancelWipe(): void
+    {
+        $this->confirmingWipe = false;
+        $this->wipeConfirmation = '';
+        $this->resetErrorBag('wipeConfirmation');
+    }
+
+    public function wipeSuppliers(): void
+    {
+        if (mb_strtolower(trim($this->wipeConfirmation)) !== self::WIPE_CONFIRMATION_WORD) {
+            $this->addError('wipeConfirmation', 'Digite a palavra excluir para confirmar.');
+
+            return;
+        }
+
+        $count = Supplier::wipeDirectory();
+
+        $this->cancelWipe();
+        $this->reset(['selectedSuppliers', 'selectAll']);
+        $this->resetInfiniteScroll();
+
+        session()->flash('message', $count === 0
+            ? 'Nenhum fornecedor para excluir.'
+            : $count.' fornecedor(es) excluído(s). O banco de empresas foi zerado.');
     }
 
     public function getSuppliersProperty()
