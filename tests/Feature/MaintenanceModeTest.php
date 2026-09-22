@@ -74,6 +74,9 @@ class MaintenanceModeTest extends TestCase
 
         $this->assertTrue(Settings::maintenanceEnabled());
 
+        auth()->logout();
+        $this->flushSession();
+
         $this->get('/')->assertStatus(503)->assertSee('Voltaremos em breve');
 
         Livewire::actingAs($this->admin())
