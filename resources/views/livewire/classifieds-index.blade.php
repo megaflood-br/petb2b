@@ -5,6 +5,22 @@
         {{-- Barra Superior de Filtros Dinâmicos --}}
         <x-ad-space position="setor_classificados" />
 
+        @php
+            $isSupplier = auth()->check() && auth()->user()->role === 'supplier';
+            $announceHref = $isSupplier ? route('supplier.classifieds') : route('register.select');
+            $announceLabel = $isSupplier ? 'Publicar anúncio' : 'Criar conta e anunciar';
+        @endphp
+        <div class="mb-8 rounded-[2rem] bg-gray-950 px-6 py-8 md:px-10 md:py-9 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="max-w-xl">
+                <p class="text-[10px] font-black uppercase tracking-[0.25em] text-brand-400 mb-2">Anuncie no portal</p>
+                <h2 class="text-2xl md:text-3xl font-black text-white uppercase italic tracking-tight">Quer anunciar nos classificados?</h2>
+                <p class="mt-2 text-sm text-gray-400 font-medium">Crie sua conta e publique equipamentos, produtos e oportunidades B2B para o mercado pet.</p>
+            </div>
+            <a href="{{ $announceHref }}" class="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] tracking-widest transition shadow-lg shadow-brand-500/20 shrink-0">
+                {{ $announceLabel }}
+            </a>
+        </div>
+
         <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto flex-wrap justify-end">
             <input type="text" wire:model.live="search" placeholder="O que você procura?"
                    class="border-gray-100 bg-white rounded-2xl py-3 px-6 font-bold text-sm shadow-sm focus:ring-brand-500 focus:border-brand-500 w-full md:w-64">
