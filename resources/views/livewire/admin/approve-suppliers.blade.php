@@ -96,7 +96,7 @@
                             <p class="font-black text-gray-900 uppercase text-sm">{{ $supplier->name }}</p>
                             <div class="flex gap-2 mt-1">
                                 <span class="text-[8px] font-black px-2 py-0.5 rounded bg-indigo-50 text-indigo-500 uppercase">{{ str_replace('-', ' ', $supplier->category) }}</span>
-                                <span class="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">{{ $supplier->city }} - {{ $supplier->state }}</span>
+                                <span class="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">{{ trim(implode(' - ', array_filter([$supplier->city, $supplier->state]))) ?: 'Local a completar' }}</span>
                                 <span class="text-[8px] font-bold text-green-600 uppercase tracking-tighter border-l border-gray-200 pl-2">
                                     {{ $supplier->phone ?? 'Sem Telefone' }}
                                 </span>

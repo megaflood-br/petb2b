@@ -45,8 +45,8 @@ class EditProfile extends Component
                 'email' => Auth::user()->email ?? 'contacto@empresa.com',
                 'description' => 'Preencha a descrição da sua empresa aqui.',
                 'address' => 'Preencha o seu endereço comercial.',
-                'city' => 'Atibaia',
-                'state' => 'SP',
+                'city' => null,
+                'state' => null,
                 'category' => '',
                 'is_active' => true,
                 'is_approved' => true

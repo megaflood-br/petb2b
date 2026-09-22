@@ -64,7 +64,7 @@ class SupplierList extends Component
             'states' => Supplier::where('is_approved', true)->select('state')->distinct()->whereNotNull('state')->orderBy('state')->pluck('state'),
             'cities' => Supplier::where('is_approved', true)->when($this->state, function($q) {
                             $q->where('state', $this->state);
-                        })->select('city')->distinct()->whereNotNull('city')->orderBy('city')->pluck('city')
+                        })->select('city')->distinct()->whereNotNull('city')->where('city', '!=', '')->orderBy('city')->pluck('city')
         ]);
     }
 }

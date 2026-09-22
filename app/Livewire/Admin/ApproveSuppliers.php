@@ -58,7 +58,7 @@ class ApproveSuppliers extends Component
         // Dados para os Selects de Filtro
         $states = Supplier::select('state')->distinct()->whereNotNull('state')->orderBy('state')->pluck('state');
         $cities = $this->filterState
-            ? Supplier::where('state', $this->filterState)->select('city')->distinct()->whereNotNull('city')->orderBy('city')->pluck('city')
+            ? Supplier::where('state', $this->filterState)->select('city')->distinct()->whereNotNull('city')->where('city', '!=', '')->orderBy('city')->pluck('city')
             : [];
 
         return view('livewire.admin.approve-suppliers', [
