@@ -12,6 +12,19 @@
 
         <x-ad-space position="setor_canis" />
 
+        @php
+            $isBreeder = auth()->check() && auth()->user()->role === 'breeder';
+            $breederHref = $isBreeder
+                ? (\App\Models\Kennel::where('user_id', auth()->id())->exists() ? route('breeder.dashboard') : route('breeder.setup'))
+                : route('register.select');
+        @endphp
+        <x-announce-cta
+            title="Quer cadastrar o seu canil?"
+            description="Crie sua conta e mostre o afixo, as raças e a estrutura do seu canil no guia oficial."
+            :href="$breederHref"
+            :label="$isBreeder ? 'Gerenciar meu canil' : 'Criar conta e cadastrar'"
+        />
+
         {{-- Barra de Filtros Rápidos --}}
         <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm mb-12 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
