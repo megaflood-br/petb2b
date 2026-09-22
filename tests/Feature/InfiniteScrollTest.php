@@ -61,6 +61,7 @@ class InfiniteScrollTest extends TestCase
             ->assertSee('Noticia infinita 8')
             ->assertSee('Carregar mais')
             ->assertSee('x-intersect.margin.400px="$wire.loadMore()"', false)
+            ->assertSee('grid grid-cols-2 lg:grid-cols-3', false)
             ->assertDontSee('?page=2');
 
         Livewire::test(BlogPostGrid::class)
