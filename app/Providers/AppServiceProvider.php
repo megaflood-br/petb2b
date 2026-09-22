@@ -45,15 +45,15 @@ class AppServiceProvider extends ServiceProvider
         // -----------------------------------------------------------------
 
         Gate::define('access-admin', function (User $user) {
-            return $user->role === 'admin';
+            return $user->isAdmin();
         });
 
         Gate::define('access-supplier', function (User $user) {
-            return $user->role === 'supplier';
+            return $user->isSupplier();
         });
 
         Gate::define('access-breeder', function (User $user) {
-            return $user->role === 'breeder';
+            return $user->isBreeder();
         });
 
 
