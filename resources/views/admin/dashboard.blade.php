@@ -19,6 +19,18 @@
     {{-- Grid Principal de Estatísticas --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
+        {{-- Card: Usuários --}}
+        <a href="{{ route('admin.users') }}" class="group bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition duration-500">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-3 bg-slate-50 rounded-2xl text-slate-600 group-hover:bg-slate-900 group-hover:text-white transition duration-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest italic">Contas</span>
+            </div>
+            <h3 class="text-3xl font-black text-gray-900 leading-none tracking-tighter">{{ $stats['total_users'] }}</h3>
+            <p class="text-[10px] font-bold text-gray-400 uppercase mt-2">Usuários do Portal</p>
+        </a>
+
         {{-- Card: Empresas Pendentes --}}
         <a href="{{ route('admin.suppliers') }}" class="group bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition duration-500">
             <div class="flex justify-between items-start mb-4">
