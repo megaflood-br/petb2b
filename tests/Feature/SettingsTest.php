@@ -66,5 +66,6 @@ class SettingsTest extends TestCase
         $this->assertEquals(0.99, Settings::adsCostPerClick());
         $this->assertEquals(200.0, Settings::sponsoredPostCost());
         $this->assertEquals('nova-chave-abc', Settings::asaasKey());
+        $this->assertFalse(Settings::maintenanceEnabled());
     }
 }
