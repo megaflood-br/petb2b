@@ -180,11 +180,11 @@
                     <span class="font-black text-red-600">excluir</span> no campo abaixo.
                 </p>
                 <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Digite excluir</label>
-                <input type="text" wire:model="wipeConfirmation" wire:keydown.enter="wipeSuppliers" autocomplete="off" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-4 focus:ring-red-500/20" placeholder="excluir">
+                <input type="text" wire:model.live="wipeConfirmation" wire:keydown.enter="wipeSuppliers" autocomplete="off" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm focus:ring-4 focus:ring-red-500/20" placeholder="excluir">
                 @error('wipeConfirmation') <span class="text-red-500 text-[10px] font-black uppercase mt-2 block">{{ $message }}</span> @enderror
                 <div class="flex justify-end gap-4 mt-8">
                     <button type="button" wire:click="cancelWipe" class="text-[10px] font-black uppercase text-gray-400">Cancelar</button>
-                    <button type="button" wire:click="wipeSuppliers" class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-red-100">
+                    <button type="button" wire:click="wipeSuppliers" @disabled(mb_strtolower(trim($wipeConfirmation)) !== 'excluir') class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-red-100 disabled:opacity-40 disabled:cursor-not-allowed">
                         Confirmar e zerar
                     </button>
                 </div>
