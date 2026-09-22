@@ -10,6 +10,16 @@
 
         <x-ad-space position="setor_vagas" />
 
+        @php
+            $isSupplier = auth()->check() && auth()->user()->role === 'supplier';
+        @endphp
+        <x-announce-cta
+            title="Quer publicar uma vaga?"
+            description="Crie sua conta e anuncie oportunidades de carreira para o mercado pet."
+            :href="$isSupplier ? route('supplier.jobs') : route('register.select')"
+            :label="$isSupplier ? 'Publicar vaga' : 'Criar conta e anunciar'"
+        />
+
         {{-- Filtros --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             <input type="text" wire:model.live.debounce.400ms="search" placeholder="Buscar cargo ou palavra-chave..." class="bg-white border border-gray-100 rounded-xl p-4 text-sm focus:ring-2 focus:ring-brand-500">
