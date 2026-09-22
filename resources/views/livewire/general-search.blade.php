@@ -94,7 +94,7 @@
                                     @if($post->hasCover())
                                         <img src="{{ $post->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                     @else
-                                        <div class="w-full h-full flex items-center justify-center bg-brand-50 text-brand-300 font-black italic text-xs">NP</div>
+                                        <div class="w-full h-full flex items-center justify-center bg-brand-50 text-brand-300 font-black italic text-xs tracking-tighter">RNPET</div>
                                     @endif
                                 </div>
                                 <div class="flex-1 min-w-0">

@@ -12,7 +12,7 @@
                             <img src="{{ $post->coverUrl() }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         @else
                             <div class="w-full h-full bg-slate-200 group-hover:scale-105 transition-transform duration-500 flex items-center justify-center text-brand-300 font-black italic">
-                                RN PET
+                                RNPET
                             </div>
                         @endif
 

@@ -57,7 +57,7 @@
                                             @if($supplier->logo)
                                                 <img src="{{ asset('storage/' . $supplier->logo) }}" alt="{{ $supplier->name }}" class="w-full h-full object-contain">
                                             @else
-                                                <span class="text-brand-200 font-black italic text-xl">PBP</span>
+                                                <span class="text-brand-200 font-black italic text-sm tracking-tighter">RNPET</span>
                                             @endif
                                         </div>
 
