@@ -71,7 +71,7 @@
                                 @if($featured->hasCover())
                                     <img src="{{ $featured->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                                 @else
-                                    <div class="w-full h-full bg-brand-600 flex items-center justify-center text-white/20 font-black italic text-2xl">NP</div>
+                                    <div class="w-full h-full bg-brand-600 flex items-center justify-center text-white/20 font-black italic text-2xl tracking-tighter">RNPET</div>
                                 @endif
                                 <div class="absolute top-4 left-4">
                                     <span class="bg-amber-400 text-black text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1">
@@ -300,7 +300,7 @@
                                 @if($supplier->logo)
                                     <img src="{{ asset('storage/' . $supplier->logo) }}" alt="{{ $supplier->name }}" class="w-full h-full object-contain">
                                 @else
-                                    <span class="text-gray-200 font-black italic text-xl">PBP</span>
+                                    <span class="text-gray-200 font-black italic text-sm tracking-tighter">RNPET</span>
                                 @endif
                             </div>
                             <h3 class="text-xl font-black text-gray-900 uppercase tracking-tighter mb-2">{{ $supplier->name }}</h3>
