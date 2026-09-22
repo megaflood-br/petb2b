@@ -177,31 +177,31 @@
                     </a>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
                     @forelse($latestPosts as $post)
                         @php
                             $postCatSlug = $post->blogCategories->first()->slug ?? 'geral';
                         @endphp
                         <article class="flex flex-col group">
-                            <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="relative w-full aspect-[16/9] mb-5 overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-sm border border-gray-100 block">
+                            <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="relative w-full aspect-[16/9] mb-3 md:mb-5 overflow-hidden rounded-2xl md:rounded-[2.5rem] bg-gray-100 shadow-sm border border-gray-100 block">
                                 @if($post->hasCover())
                                     <img src="{{ $post->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 @else
-                                    <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-bold text-xs">Sem Imagem</div>
+                                    <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-bold text-[10px] md:text-xs">Sem Imagem</div>
                                 @endif
-                                <div class="absolute top-4 left-4 z-10">
-                                    <span class="bg-white/95 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-600 shadow-sm">
+                                <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-[calc(100%-1rem)]">
+                                    <span class="bg-white/95 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest text-brand-600 shadow-sm block truncate">
                                         {{ $post->blogCategories->first()->name ?? 'Geral' }}
                                     </span>
                                 </div>
                             </a>
-                            <div class="px-2">
-                                <div class="flex items-center gap-2 text-[10px] text-gray-400 font-black mb-2 uppercase">
+                            <div class="px-0.5 md:px-2">
+                                <div class="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] text-gray-400 font-black mb-1.5 md:mb-2 uppercase">
                                     <span>{{ $post->created_at->format('d \d\e M') }}</span>
                                     <span>•</span>
-                                    <span class="text-brand-500">Revista NP</span>
+                                    <span class="text-brand-500 truncate">Revista NP</span>
                                 </div>
-                                <h3 class="text-lg font-black text-gray-900 group-hover:text-brand-500 transition line-clamp-2 leading-snug uppercase italic">
+                                <h3 class="text-sm md:text-lg font-black text-gray-900 group-hover:text-brand-500 transition line-clamp-3 md:line-clamp-2 leading-snug uppercase italic">
                                     <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}">{{ $post->title }}</a>
                                 </h3>
                             </div>
@@ -267,10 +267,10 @@
                         </h2>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
                         @foreach($racePosts as $racePost)
-                            <article class="flex flex-col group bg-white p-5 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition">
-                                <a href="{{ route('blog.show', ['prefixCategory' => 'racas', 'slug' => $racePost->slug]) }}" class="relative w-full aspect-[16/10] mb-5 overflow-hidden rounded-[2rem] bg-gray-100 block">
+                            <article class="flex flex-col group bg-white p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition">
+                                <a href="{{ route('blog.show', ['prefixCategory' => 'racas', 'slug' => $racePost->slug]) }}" class="relative w-full aspect-[16/10] mb-3 md:mb-5 overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-100 block">
                                     @if($racePost->hasCover())
                                         <img src="{{ $racePost->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     @else
@@ -278,7 +278,7 @@
                                     @endif
                                 </a>
                                 <div class="px-2">
-                                    <h3 class="text-lg font-black text-gray-900 group-hover:text-brand-500 transition line-clamp-2 leading-snug uppercase italic">
+                                    <h3 class="text-sm md:text-lg font-black text-gray-900 group-hover:text-brand-500 transition line-clamp-3 md:line-clamp-2 leading-snug uppercase italic">
                                         <a href="{{ route('blog.show', ['prefixCategory' => 'racas', 'slug' => $racePost->slug]) }}">{{ $racePost->title }}</a>
                                     </h3>
                                 </div>

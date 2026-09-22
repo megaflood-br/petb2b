@@ -314,4 +314,14 @@ class HomeControllerTest extends TestCase
         $this->assertLessThan($destaques, $revista);
         $this->assertLessThan($especies, $eventos);
     }
+
+    public function test_destaques_da_edicao_usam_duas_colunas_no_mobile(): void
+    {
+        $this->makePost('Capa em duas colunas');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10', false)
+            ->assertDontSee('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10', false);
+    }
 }

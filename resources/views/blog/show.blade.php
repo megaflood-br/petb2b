@@ -120,7 +120,7 @@
                         <h3 class="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Você também pode <span class="text-brand-500">gostar</span></h3>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                         @foreach($relatedPosts as $related)
                             @php
                                 // CORREÇÃO CRÍTICA: Resgata o slug da categoria vinculada para as sugestões de leitura
@@ -128,7 +128,7 @@
                             @endphp
                             <article class="flex flex-col group">
                                 {{-- Imagem com link dinâmico corrigido para dois parâmetros --}}
-                                <a href="{{ route('blog.show', ['prefixCategory' => 'materias-' . $relatedCatSlug, 'slug' => $related->slug]) }}" class="relative w-full aspect-[16/9] mb-4 overflow-hidden rounded-[2rem] bg-white shadow-sm block border border-gray-100">
+                                <a href="{{ route('blog.show', ['prefixCategory' => 'materias-' . $relatedCatSlug, 'slug' => $related->slug]) }}" class="relative w-full aspect-[16/9] mb-3 md:mb-4 overflow-hidden rounded-2xl md:rounded-[2rem] bg-white shadow-sm block border border-gray-100">
                                     @if($related->hasCover())
                                         <img src="{{ $related->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     @else
@@ -137,16 +137,16 @@
                                         </div>
                                     @endif
 
-                                    <div class="absolute top-4 left-4 z-10">
-                                        <span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-600 shadow-sm">
+                                    <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-[calc(100%-1rem)]">
+                                        <span class="bg-white/90 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest text-brand-600 shadow-sm block truncate">
                                             {{ $related->blogCategories->first()->name ?? 'Geral' }}
                                         </span>
                                     </div>
                                 </a>
 
                                 {{-- Detalhes --}}
-                                <div class="px-2">
-                                    <h4 class="text-base font-bold text-gray-900 group-hover:text-brand-500 transition line-clamp-2 leading-snug uppercase">
+                                <div class="px-0.5 md:px-2">
+                                    <h4 class="text-sm md:text-base font-bold text-gray-900 group-hover:text-brand-500 transition line-clamp-3 md:line-clamp-2 leading-snug uppercase">
                                         <a href="{{ route('blog.show', ['prefixCategory' => 'materias-' . $relatedCatSlug, 'slug' => $related->slug]) }}">
                                             {{ $related->title }}
                                         </a>
