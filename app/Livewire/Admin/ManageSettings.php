@@ -22,6 +22,9 @@ class ManageSettings extends Component
     public bool $asaas_key_set = false;
     public bool $asaas_token_set = false;
 
+    public bool $maintenance_enabled = false;
+    public string $maintenance_message = '';
+
     public function mount(): void
     {
         $this->ads_cost_per_click = Settings::adsCostPerClick();
@@ -33,6 +36,9 @@ class ManageSettings extends Component
         $this->asaas_base_url = Settings::asaasBaseUrl();
         $this->asaas_key_set = ! empty(Settings::asaasKey());
         $this->asaas_token_set = ! empty(Settings::asaasWebhookToken());
+
+        $this->maintenance_enabled = Settings::maintenanceEnabled();
+        $this->maintenance_message = Settings::maintenanceMessage();
     }
 
     protected function rules(): array
@@ -46,12 +52,36 @@ class ManageSettings extends Component
             'asaas_base_url' => 'required|url',
             'asaas_api_key' => 'nullable|string',
             'asaas_webhook_token' => 'nullable|string|min:16',
+            'maintenance_enabled' => 'boolean',
+            'maintenance_message' => 'nullable|string|max:500',
         ];
+    }
+
+    public function updatedMaintenanceEnabled(): void
+    {
+        Settings::set('maintenance_enabled', $this->maintenance_enabled ? '1' : '0');
+        session()->flash('message', $this->maintenance_enabled
+            ? 'O site público está em manutenção.'
+            : 'O site público voltou ao ar.');
+    }
+
+    public function saveMaintenance(): void
+    {
+        $this->validate([
+            'maintenance_message' => 'nullable|string|max:500',
+        ]);
+
+        Settings::set('maintenance_enabled', $this->maintenance_enabled ? '1' : '0');
+        Settings::set('maintenance_message', $this->maintenance_message);
+        session()->flash('message', 'Aviso de manutenção atualizado.');
     }
 
     public function save(): void
     {
         $this->validate();
+
+        Settings::set('maintenance_enabled', $this->maintenance_enabled ? '1' : '0');
+        Settings::set('maintenance_message', $this->maintenance_message);
 
         Settings::set('ads_cost_per_click', $this->ads_cost_per_click);
         Settings::set('ads_cost_per_impression', $this->ads_cost_per_impression);

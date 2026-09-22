@@ -113,4 +113,17 @@ class Settings
     {
         return (string) self::get('asaas_base_url', config('services.asaas.base_url'));
     }
+
+    public static function maintenanceEnabled(): bool
+    {
+        return filter_var(self::get('maintenance_enabled', false), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    public static function maintenanceMessage(): string
+    {
+        $default = 'Estamos em manutenção para melhorar o portal. Voltaremos em breve.';
+        $custom = trim((string) self::get('maintenance_message', ''));
+
+        return $custom !== '' ? $custom : $default;
+    }
 }

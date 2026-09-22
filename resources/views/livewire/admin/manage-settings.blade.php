@@ -10,7 +10,32 @@
 
     <div class="border-b pb-6">
         <h1 class="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Configurações</h1>
-        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Custos de anúncios, PIX/Asaas e importação de posts do WordPress</p>
+        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Manutenção do site, custos de anúncios, PIX/Asaas e importação de posts do WordPress</p>
+    </div>
+
+    <div class="bg-white border {{ $maintenance_enabled ? 'border-amber-200' : 'border-gray-100' }} rounded-[2rem] p-8 shadow-sm space-y-5">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h2 class="text-sm font-black text-gray-900 uppercase tracking-wide">Modo manutenção</h2>
+                <p class="text-[11px] text-gray-500 font-medium normal-case leading-relaxed mt-2">
+                    Quando ligado, o público vê uma página de aviso. O painel admin e o login continuam acessíveis.
+                </p>
+            </div>
+            <label class="inline-flex items-center gap-3 cursor-pointer shrink-0">
+                <span class="text-[9px] font-black uppercase tracking-widest {{ $maintenance_enabled ? 'text-amber-600' : 'text-gray-400' }}">
+                    {{ $maintenance_enabled ? 'Ligado' : 'Desligado' }}
+                </span>
+                <input type="checkbox" wire:model.live="maintenance_enabled" class="rounded-full border-gray-300 text-brand-500 focus:ring-brand-500 h-5 w-5">
+            </label>
+        </div>
+        <div>
+            <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Aviso exibido na página</label>
+            <textarea wire:model="maintenance_message" rows="3" maxlength="500" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500" placeholder="Estamos em manutenção para melhorar o portal. Voltaremos em breve."></textarea>
+            @error('maintenance_message') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+        </div>
+        <button type="button" wire:click="saveMaintenance" class="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition">
+            Salvar aviso
+        </button>
     </div>
 
     <form wire:submit.prevent="save" class="space-y-8">
