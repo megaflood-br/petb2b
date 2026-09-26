@@ -339,6 +339,36 @@ class HomeControllerTest extends TestCase
             ->assertSee('Ver guia completo');
     }
 
+    public function test_home_mostra_racas_mesmo_com_cache_antigo_sem_a_chave(): void
+    {
+        $breed = Breed::create([
+            'name' => 'Yorkshire do Guia',
+            'species' => 'Cão',
+            'origin' => 'Inglaterra',
+            'size' => 'Pequeno',
+            'description' => 'Raça pequena, alerta e de pelagem longa.',
+            'is_active' => true,
+        ]);
+
+        Cache::put(HomeController::CACHE_KEY, [
+            'latestMagazine' => null,
+            'latestPosts' => collect(),
+            'raceSuppliers' => collect(),
+            'featuredSuppliers' => collect(),
+            'topCategories' => collect(),
+            'featuredClassifieds' => collect(),
+            'featuredJobs' => collect(),
+            'featuredKennels' => collect(),
+            'upcomingEvents' => collect(),
+            'featuredReviews' => collect(),
+        ], 300);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Yorkshire do Guia')
+            ->assertSee(route('breeds.show', $breed->slug, false), false);
+    }
+
     public function test_cadastro_de_raca_invalida_o_cache_da_home(): void
     {
         $this->get('/')->assertOk();

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class HomeController extends Controller
 {
     /** Chave e TTL do cache das seções da home. */
-    public const CACHE_KEY = 'home.sections';
+    public const CACHE_KEY = 'home.sections.v2';
     private const CACHE_TTL_SECONDS = 300; // 5 minutos
 
     public function __invoke()
@@ -82,11 +82,6 @@ class HomeController extends Controller
                     ->take(3)
                     ->get(),
 
-                'featuredBreeds' => Breed::where('is_active', true)
-                    ->latest()
-                    ->take(6)
-                    ->get(),
-
                 'upcomingEvents' => Event::where('is_active', true)
                     ->where('start_date', '>=', now())
                     ->orderBy('start_date', 'asc')
@@ -105,6 +100,15 @@ class HomeController extends Controller
                         ->get()),
             ];
         });
+
+        // Cache antigo (sem a chave) ou vazio não pode esconder o guia.
+        // A listagem pública de /racas não usa esse cache — a home precisa
+        // enxergar as mesmas raças ativas.
+        $sections['featuredBreeds'] = Breed::query()
+            ->where('is_active', true)
+            ->latest()
+            ->take(6)
+            ->get();
 
         // Banner do topo é sorteado no <x-ad-space> (fora do cache).
         return view('welcome', $sections);

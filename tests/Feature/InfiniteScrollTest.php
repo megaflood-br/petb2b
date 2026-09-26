@@ -31,18 +31,18 @@ class InfiniteScrollTest extends TestCase
 
         $this->get('/racas')
             ->assertOk()
-            ->assertSee('Raca Infinita 01')
+            ->assertSee('Raca Infinita 15')
             ->assertSee('Carregar mais')
             ->assertSee('x-intersect.margin.400px="$wire.loadMore()"', false)
             ->assertDontSee('?page=2')
-            ->assertDontSee('Raca Infinita 15');
+            ->assertDontSee('Raca Infinita 01');
 
         Livewire::test(BreedList::class)
-            ->assertSee('Raca Infinita 01')
-            ->assertDontSee('Raca Infinita 15')
+            ->assertSee('Raca Infinita 15')
+            ->assertDontSee('Raca Infinita 01')
             ->call('loadMore')
-            ->assertSee('Raca Infinita 01')
-            ->assertSee('Raca Infinita 15');
+            ->assertSee('Raca Infinita 15')
+            ->assertSee('Raca Infinita 01');
     }
 
     public function test_noticias_carrega_mais_ao_rolar(): void
