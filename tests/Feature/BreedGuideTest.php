@@ -57,9 +57,8 @@ class BreedGuideTest extends TestCase
 
         $this->assertNotFalse(strpos($html, 'Zzz Raca Nova'));
         $this->assertNotFalse(strpos($html, 'Aaa Raca Antiga'));
-        $this->assertLessThan(
-            strpos($html, 'Zzz Raca Nova'),
-            strpos($html, 'Aaa Raca Antiga'),
+        $this->assertTrue(
+            strpos($html, 'Zzz Raca Nova') < strpos($html, 'Aaa Raca Antiga'),
             'A raça mais nova deve aparecer antes da mais antiga.'
         );
     }

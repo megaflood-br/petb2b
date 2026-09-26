@@ -66,6 +66,7 @@ class BreedList extends Component
             })
             ->when($this->species !== '', fn (Builder $query) => $query->where('species', $this->species))
             ->latest('created_at')
+            ->orderByDesc('id')
             ->paginate($this->perPage);
     }
 
@@ -81,7 +82,8 @@ class BreedList extends Component
                         ->orWhere('content', 'like', '%'.$this->search.'%');
                 });
             })
-            ->latest()
+            ->latest('created_at')
+            ->orderByDesc('id')
             ->paginate($this->perPage);
     }
 }

@@ -85,6 +85,22 @@ class RacasFallbackTest extends TestCase
             ->assertDontSee('Artigo Bulldog Antigo');
     }
 
+    public function test_listagem_sem_guia_ordena_artigos_do_mais_novo_para_o_mais_velho(): void
+    {
+        $antigo = $this->racasPost('Aaa Artigo Antigo', 'artigo-antigo');
+        $antigo->forceFill(['created_at' => now()->subDays(10)])->save();
+
+        $novo = $this->racasPost('Zzz Artigo Novo', 'artigo-novo');
+        $novo->forceFill(['created_at' => now()->subHour()])->save();
+
+        $html = $this->get('/racas')->assertOk()->getContent();
+
+        $this->assertTrue(
+            strpos($html, 'Zzz Artigo Novo') < strpos($html, 'Aaa Artigo Antigo'),
+            'O artigo mais novo deve aparecer antes do mais antigo.'
+        );
+    }
+
     public function test_listagem_sem_guia_mostra_artigos_da_categoria_racas(): void
     {
         $this->racasPost('Guia da raça Golden Retriever', 'guia-golden');
