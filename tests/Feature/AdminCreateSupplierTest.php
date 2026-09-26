@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -179,5 +181,89 @@ class AdminCreateSupplierTest extends TestCase
             'Empresa ainda não preencheu esta informação.',
             Supplier::where('email', 'semtexto@empresa.com')->value('description')
         );
+    }
+
+    public function test_admin_cadastra_empresa_com_logo(): void
+    {
+        Storage::fake('public');
+        $this->category();
+
+        Livewire::actingAs($this->admin())
+            ->test(ApproveSuppliers::class)
+            ->call('openCreate')
+            ->assertSee('Logo da empresa')
+            ->set('editName', 'Marca Com Logo')
+            ->set('editCategory', 'clinicas')
+            ->set('editEmail', 'logo@empresa.com')
+            ->set('editLogo', UploadedFile::fake()->image('marca.png', 200, 200))
+            ->call('create')
+            ->assertHasNoErrors();
+
+        $supplier = Supplier::where('email', 'logo@empresa.com')->first();
+        $this->assertNotNull($supplier);
+        $this->assertNotEmpty($supplier->logo);
+        $this->assertStringStartsWith('suppliers/logos/', $supplier->logo);
+        Storage::disk('public')->assertExists($supplier->logo);
+    }
+
+    public function test_admin_atualiza_logo_ao_editar(): void
+    {
+        Storage::fake('public');
+        $this->category();
+        Storage::disk('public')->put('suppliers/logos/antigo.png', 'old');
+
+        $supplier = Supplier::create([
+            'name' => 'Empresa Editada',
+            'email' => 'editar-logo@empresa.com',
+            'description' => 'd',
+            'category' => 'clinicas',
+            'logo' => 'suppliers/logos/antigo.png',
+            'is_active' => true,
+            'is_approved' => true,
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(ApproveSuppliers::class)
+            ->call('setStatus', 'approved')
+            ->call('edit', $supplier->id)
+            ->assertSet('existingLogo', 'suppliers/logos/antigo.png')
+            ->assertSee('Logo da empresa')
+            ->set('editLogo', UploadedFile::fake()->image('novo.jpg', 180, 180))
+            ->call('update')
+            ->assertHasNoErrors();
+
+        $supplier->refresh();
+        $this->assertNotEquals('suppliers/logos/antigo.png', $supplier->logo);
+        $this->assertStringStartsWith('suppliers/logos/', $supplier->logo);
+        Storage::disk('public')->assertMissing('suppliers/logos/antigo.png');
+        Storage::disk('public')->assertExists($supplier->logo);
+    }
+
+    public function test_editar_sem_novo_logo_mantem_o_atual(): void
+    {
+        Storage::fake('public');
+        $this->category();
+        Storage::disk('public')->put('suppliers/logos/keep.png', 'keep');
+
+        $supplier = Supplier::create([
+            'name' => 'Empresa Mantem Logo',
+            'email' => 'mantem-logo@empresa.com',
+            'description' => 'd',
+            'category' => 'clinicas',
+            'logo' => 'suppliers/logos/keep.png',
+            'is_active' => true,
+            'is_approved' => true,
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(ApproveSuppliers::class)
+            ->call('setStatus', 'approved')
+            ->call('edit', $supplier->id)
+            ->set('editName', 'Empresa Mantem Logo Atualizada')
+            ->call('update')
+            ->assertHasNoErrors();
+
+        $this->assertEquals('suppliers/logos/keep.png', $supplier->fresh()->logo);
+        Storage::disk('public')->assertExists('suppliers/logos/keep.png');
     }
 }

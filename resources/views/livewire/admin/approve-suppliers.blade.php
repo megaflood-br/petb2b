@@ -173,6 +173,23 @@
                         <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">UF</label>
                         <input type="text" wire:model="editState" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Logo da empresa</label>
+                        <div class="flex items-center gap-4">
+                            <input type="file" wire:model="editLogo" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-indigo-50 file:text-indigo-700">
+                            @if($editLogo)
+                                <div class="w-14 h-14 rounded-xl overflow-hidden border bg-gray-100 flex-shrink-0">
+                                    <img src="{{ $editLogo->temporaryUrl() }}" alt="Prévia do logo" class="w-full h-full object-contain">
+                                </div>
+                            @elseif($existingLogo)
+                                <div class="w-14 h-14 rounded-xl overflow-hidden border bg-gray-100 flex-shrink-0">
+                                    <img src="{{ asset('storage/' . $existingLogo) }}" alt="Logo atual" class="w-full h-full object-contain">
+                                </div>
+                            @endif
+                        </div>
+                        <div wire:loading wire:target="editLogo" class="text-[9px] text-indigo-600 font-black uppercase mt-2 animate-pulse">Enviando logo...</div>
+                        @error('editLogo') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
+                    </div>
                     @if($isCreating)
                         <div class="md:col-span-2">
                             <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Descrição</label>
