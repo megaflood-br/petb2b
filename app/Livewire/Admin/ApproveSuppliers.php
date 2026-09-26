@@ -6,6 +6,7 @@ use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Supplier;
 use App\Models\Category;
 use App\Imports\SuppliersImport;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Component;
@@ -36,6 +37,8 @@ class ApproveSuppliers extends Component
     public $editName, $editCategory, $editEmail, $editPhone, $editCity, $editState, $editWhatsapp;
     public $editDescription = '';
     public bool $editApproved = true;
+    public $editLogo;
+    public $existingLogo;
 
     // Seleção e Arquivo
     public $selectedSuppliers = [];
@@ -136,20 +139,23 @@ class ApproveSuppliers extends Component
         $this->editCity = $supplier->city;
         $this->editState = $supplier->state;
         $this->editWhatsapp = $supplier->whatsapp;
+        $this->editLogo = null;
+        $this->existingLogo = $supplier->logo;
         $this->isCreating = false;
         $this->isEditing = true;
+        $this->resetErrorBag();
     }
 
     public function update()
     {
-        $this->validate([
-            'editName' => 'required|min:3',
-            'editCategory' => 'required',
+        $this->validate(array_merge($this->companyRules(), [
             'editEmail' => 'required|email',
-            'editPhone' => 'nullable',
-        ]);
+        ]));
 
-        Supplier::find($this->editingId)->update([
+        $supplier = Supplier::findOrFail($this->editingId);
+        $logo = $this->storeLogo($supplier->logo);
+
+        $supplier->update([
             'name' => $this->editName,
             'category' => $this->editCategory,
             'email' => $this->editEmail,
@@ -157,9 +163,11 @@ class ApproveSuppliers extends Component
             'whatsapp' => $this->blankToNull($this->editWhatsapp),
             'city' => $this->blankToNull($this->editCity),
             'state' => $this->blankToNull($this->editState),
+            'logo' => $logo,
         ]);
 
         $this->isEditing = false;
+        $this->reset('editLogo');
         session()->flash('message', 'DADOS ATUALIZADOS COM SUCESSO!');
     }
 
@@ -167,6 +175,7 @@ class ApproveSuppliers extends Component
     {
         $this->isEditing = false;
         $this->isCreating = false;
+        $this->reset(['editLogo', 'existingLogo']);
         $this->resetErrorBag();
     }
 
@@ -182,6 +191,8 @@ class ApproveSuppliers extends Component
             'editState',
             'editWhatsapp',
             'editDescription',
+            'editLogo',
+            'existingLogo',
         ]);
         $this->editApproved = true;
         $this->isCreating = true;
@@ -191,16 +202,9 @@ class ApproveSuppliers extends Component
 
     public function create(): void
     {
-        $this->validate([
-            'editName' => 'required|min:3',
-            'editCategory' => 'required',
+        $this->validate(array_merge($this->companyRules(), [
             'editEmail' => 'required|email|unique:suppliers,email',
-            'editPhone' => 'nullable',
-            'editWhatsapp' => 'nullable',
-            'editCity' => 'nullable|string',
-            'editState' => 'nullable|string',
-            'editDescription' => 'nullable|string',
-        ]);
+        ]));
 
         $name = trim((string) $this->editName);
         $slugBase = Str::slug($name) ?: 'empresa';
@@ -217,6 +221,7 @@ class ApproveSuppliers extends Component
             'description' => $this->blankToNull($this->editDescription)
                 ?? 'Empresa ainda não preencheu esta informação.',
             'address' => 'Endereço a completar',
+            'logo' => $this->storeLogo(),
             'is_active' => true,
             'is_approved' => $this->editApproved,
             'is_verified' => false,
@@ -224,9 +229,40 @@ class ApproveSuppliers extends Component
 
         $this->isCreating = false;
         $this->status = $this->editApproved ? 'approved' : 'pending';
+        $this->reset(['editLogo', 'existingLogo']);
         $this->resetInfiniteScroll();
 
         session()->flash('message', 'EMPRESA CADASTRADA COM SUCESSO!');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function companyRules(): array
+    {
+        return [
+            'editName' => 'required|min:3',
+            'editCategory' => 'required',
+            'editPhone' => 'nullable',
+            'editWhatsapp' => 'nullable',
+            'editCity' => 'nullable|string',
+            'editState' => 'nullable|string',
+            'editDescription' => 'nullable|string',
+            'editLogo' => 'nullable|image|max:2048',
+        ];
+    }
+
+    private function storeLogo(?string $existing = null): ?string
+    {
+        if (! $this->editLogo) {
+            return $existing;
+        }
+
+        if ($existing) {
+            Storage::disk('public')->delete($existing);
+        }
+
+        return $this->editLogo->store('suppliers/logos', 'public');
     }
 
     private function blankToNull(mixed $value): ?string
