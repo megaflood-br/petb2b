@@ -6,6 +6,7 @@ use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Supplier;
 use App\Models\Category;
 use App\Imports\SuppliersImport;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -28,10 +29,13 @@ class ApproveSuppliers extends Component
     public $filterCity = '';
     public $status = 'pending';
 
-    // Edição
+    // Edição / criação
     public $isEditing = false;
+    public bool $isCreating = false;
     public $editingId;
     public $editName, $editCategory, $editEmail, $editPhone, $editCity, $editState, $editWhatsapp;
+    public $editDescription = '';
+    public bool $editApproved = true;
 
     // Seleção e Arquivo
     public $selectedSuppliers = [];
@@ -148,17 +152,88 @@ class ApproveSuppliers extends Component
             'name' => $this->editName,
             'category' => $this->editCategory,
             'email' => $this->editEmail,
-            'phone' => $this->editPhone,
-            'whatsapp' => $this->editWhatsapp,
-            'city' => $this->editCity,
-            'state' => $this->editState,
+            'phone' => $this->blankToNull($this->editPhone),
+            'whatsapp' => $this->blankToNull($this->editWhatsapp),
+            'city' => $this->blankToNull($this->editCity),
+            'state' => $this->blankToNull($this->editState),
         ]);
 
         $this->isEditing = false;
         session()->flash('message', 'DADOS ATUALIZADOS COM SUCESSO!');
     }
 
-    public function cancelEdit() { $this->isEditing = false; }
+    public function cancelEdit()
+    {
+        $this->isEditing = false;
+        $this->isCreating = false;
+        $this->resetErrorBag();
+    }
+
+    public function openCreate(): void
+    {
+        $this->reset([
+            'editingId',
+            'editName',
+            'editCategory',
+            'editEmail',
+            'editPhone',
+            'editCity',
+            'editState',
+            'editWhatsapp',
+            'editDescription',
+        ]);
+        $this->editApproved = true;
+        $this->isCreating = true;
+        $this->isEditing = false;
+        $this->resetErrorBag();
+    }
+
+    public function create(): void
+    {
+        $this->validate([
+            'editName' => 'required|min:3',
+            'editCategory' => 'required',
+            'editEmail' => 'required|email|unique:suppliers,email',
+            'editPhone' => 'nullable',
+            'editWhatsapp' => 'nullable',
+            'editCity' => 'nullable|string',
+            'editState' => 'nullable|string',
+            'editDescription' => 'nullable|string',
+        ]);
+
+        $name = trim((string) $this->editName);
+        $slugBase = Str::slug($name) ?: 'empresa';
+
+        Supplier::create([
+            'name' => $name,
+            'slug' => $slugBase.'-'.Str::lower(Str::random(5)),
+            'category' => $this->editCategory,
+            'email' => trim((string) $this->editEmail),
+            'phone' => $this->blankToNull($this->editPhone),
+            'whatsapp' => $this->blankToNull($this->editWhatsapp),
+            'city' => $this->blankToNull($this->editCity),
+            'state' => $this->blankToNull($this->editState),
+            'description' => $this->blankToNull($this->editDescription)
+                ?? 'Empresa ainda não preencheu esta informação.',
+            'address' => 'Endereço a completar',
+            'is_active' => true,
+            'is_approved' => $this->editApproved,
+            'is_verified' => false,
+        ]);
+
+        $this->isCreating = false;
+        $this->status = $this->editApproved ? 'approved' : 'pending';
+        $this->resetInfiniteScroll();
+
+        session()->flash('message', 'EMPRESA CADASTRADA COM SUCESSO!');
+    }
+
+    private function blankToNull(mixed $value): ?string
+    {
+        $trimmed = trim((string) $value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
 
     // Ações em Massa
     public function updatedSelectAll($value)
