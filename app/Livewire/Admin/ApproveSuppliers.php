@@ -136,6 +136,7 @@ class ApproveSuppliers extends Component
         $this->editCity = $supplier->city;
         $this->editState = $supplier->state;
         $this->editWhatsapp = $supplier->whatsapp;
+        $this->isCreating = false;
         $this->isEditing = true;
     }
 
