@@ -58,6 +58,7 @@ class AdminWipeSuppliersTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.suppliers'))
             ->assertOk()
+            ->assertSee('Nova empresa')
             ->assertSee('Zerar banco de fornecedores')
             ->assertSee('Zerar banco');
     }

@@ -7,27 +7,34 @@
             </h1>
         </div>
 
-        {{-- CORRIGIDO: Envolvido em um form com submit preventivo e adicionado indicador de carregamento --}}
-        <form wire:submit.prevent="import" enctype="multipart/form-data" class="flex flex-col items-end gap-2 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <input type="file" wire:model="fileXls" id="upload_xls" class="text-[9px] font-bold text-gray-400 focus:outline-none">
-                    {{-- Exibe mensagem visual enquanto o Livewire faz o upload temporário do XLS no seu PC --}}
-                    <div wire:loading wire:target="fileXls" class="text-[9px] text-indigo-600 font-black uppercase mt-1 block animate-pulse">
-                        ⏳ Enviando arquivo para o sistema...
-                    </div>
-                </div>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+            <button type="button" wire:click="openCreate"
+                    class="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-emerald-700 transition shadow-lg shadow-emerald-100">
+                Nova empresa
+            </button>
 
-                <button type="submit"
-                        wire:loading.attr="disabled"
-                        wire:target="fileXls"
-                        class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading wire:target="import">Processando...</span>
-                    <span wire:loading.remove wire:target="import">Importar XLS</span>
-                </button>
-            </div>
-            @error('fileXls') <span class="text-red-500 text-[9px] font-black uppercase tracking-tight pr-2">{{ $message }}</span> @enderror
-        </form>
+            {{-- CORRIGIDO: Envolvido em um form com submit preventivo e adicionado indicador de carregamento --}}
+            <form wire:submit.prevent="import" enctype="multipart/form-data" class="flex flex-col items-end gap-2 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <input type="file" wire:model="fileXls" id="upload_xls" class="text-[9px] font-bold text-gray-400 focus:outline-none">
+                        {{-- Exibe mensagem visual enquanto o Livewire faz o upload temporário do XLS no seu PC --}}
+                        <div wire:loading wire:target="fileXls" class="text-[9px] text-indigo-600 font-black uppercase mt-1 block animate-pulse">
+                            ⏳ Enviando arquivo para o sistema...
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                            wire:loading.attr="disabled"
+                            wire:target="fileXls"
+                            class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading wire:target="import">Processando...</span>
+                        <span wire:loading.remove wire:target="import">Importar XLS</span>
+                    </button>
+                </div>
+                @error('fileXls') <span class="text-red-500 text-[9px] font-black uppercase tracking-tight pr-2">{{ $message }}</span> @enderror
+            </form>
+        </div>
     </div>
 
     {{-- Abas --}}
@@ -123,19 +130,32 @@
         </table>
     </div>
 
-    {{-- Modal de Edição --}}
-    @if($isEditing)
+    {{-- Modal de Edição / Criação --}}
+    @if($isEditing || $isCreating)
         <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-indigo-950/40 backdrop-blur-sm">
-            <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 animate-in zoom-in duration-300">
-                <h2 class="text-xl font-black uppercase italic text-gray-900 mb-8 border-l-4 border-indigo-600 pl-4">Editar Fornecedor</h2>
+            <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+                <h2 class="text-xl font-black uppercase italic text-gray-900 mb-8 border-l-4 border-indigo-600 pl-4">
+                    {{ $isCreating ? 'Nova Empresa' : 'Editar Fornecedor' }}
+                </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2"><label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Nome</label><input type="text" wire:model="editName" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs"></div>
-                    <div><label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Categoria</label>
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Nome</label>
+                        <input type="text" wire:model="editName" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                        @error('editName') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Categoria</label>
                         <select wire:model="editCategory" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                            <option value="">Selecione</option>
                             @foreach($categories as $cat) <option value="{{ $cat->slug }}">{{ $cat->name }}</option> @endforeach
                         </select>
+                        @error('editCategory') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
                     </div>
-                    <div><label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">E-mail</label><input type="email" wire:model="editEmail" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs"></div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">E-mail</label>
+                        <input type="email" wire:model="editEmail" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                        @error('editEmail') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
+                    </div>
 
                     <div>
                         <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">Telefone Fixo/Contato</label>
@@ -145,12 +165,32 @@
                         <label class="text-[10px] font-black uppercase mb-2 block text-green-600">WhatsApp (Apenas Números)</label>
                         <input type="text" wire:model="editWhatsapp" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs" placeholder="5511999999999">
                     </div>
-                    <div><label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Cidade</label><input type="text" wire:model="editCity" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs"></div>
-                    <div><label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">UF</label><input type="text" wire:model="editState" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs"></div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Cidade</label>
+                        <input type="text" wire:model="editCity" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">UF</label>
+                        <input type="text" wire:model="editState" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                    </div>
+                    @if($isCreating)
+                        <div class="md:col-span-2">
+                            <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Descrição</label>
+                            <textarea wire:model="editDescription" rows="3" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs" placeholder="Opcional. Pode completar depois."></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="inline-flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" wire:model="editApproved" class="w-5 h-5 rounded-lg border-gray-200 text-indigo-600">
+                                <span class="text-[10px] font-black uppercase text-gray-600">Publicar no guia agora</span>
+                            </label>
+                        </div>
+                    @endif
                 </div>
                 <div class="flex justify-end gap-4 mt-10">
-                    <button wire:click="cancelEdit" class="text-[10px] font-black uppercase text-gray-400">Cancelar</button>
-                    <button wire:click="update" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl shadow-indigo-100">Salvar</button>
+                    <button type="button" wire:click="cancelEdit" class="text-[10px] font-black uppercase text-gray-400">Cancelar</button>
+                    <button type="button" wire:click="{{ $isCreating ? 'create' : 'update' }}" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase text-[10px] shadow-xl shadow-indigo-100">
+                        {{ $isCreating ? 'Cadastrar' : 'Salvar' }}
+                    </button>
                 </div>
             </div>
         </div>
