@@ -74,7 +74,7 @@ class BlogPostController extends Controller
             'meta_description' => 'nullable|max:160',
             'meta_keywords' => 'nullable',
             'image' => 'nullable|image|max:2048',
-            'created_at' => 'nullable',
+            'created_at' => 'nullable|date',
             'is_featured' => 'sometimes|boolean',
             'is_premium' => 'sometimes|boolean',
         ], [

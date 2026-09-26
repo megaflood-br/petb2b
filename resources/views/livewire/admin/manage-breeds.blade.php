@@ -60,6 +60,11 @@
                     <input type="file" wire:model="image" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
                     @error('image') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                 </div>
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Data de criação</label>
+                    <input type="datetime-local" wire:model="created_at" class="w-full bg-gray-50 border-none rounded-xl p-3.5 focus:ring-2 focus:ring-brand-500">
+                    @error('created_at') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                </div>
                 <div class="flex items-center gap-3 mt-6">
                     <input type="checkbox" wire:model="is_active" id="is_active" class="w-5 h-5 rounded-lg border-gray-300 text-brand-600 focus:ring-brand-500">
                     <label for="is_active" class="text-[10px] font-black uppercase text-gray-700 tracking-widest cursor-pointer">Ativa (visível no guia)</label>
