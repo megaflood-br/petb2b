@@ -45,6 +45,25 @@ class BreedGuideTest extends TestCase
             ->assertDontSee('Cao Ativo Visivel');
     }
 
+    public function test_listagem_publica_ordena_do_mais_novo_para_o_mais_velho(): void
+    {
+        $antiga = $this->makeBreed(['name' => 'Aaa Raca Antiga']);
+        $antiga->forceFill(['created_at' => now()->subDays(10)])->save();
+
+        $nova = $this->makeBreed(['name' => 'Zzz Raca Nova']);
+        $nova->forceFill(['created_at' => now()->subHour()])->save();
+
+        $html = $this->get('/racas')->assertOk()->getContent();
+
+        $this->assertNotFalse(strpos($html, 'Zzz Raca Nova'));
+        $this->assertNotFalse(strpos($html, 'Aaa Raca Antiga'));
+        $this->assertLessThan(
+            strpos($html, 'Zzz Raca Nova'),
+            strpos($html, 'Aaa Raca Antiga'),
+            'A raça mais nova deve aparecer antes da mais antiga.'
+        );
+    }
+
     public function test_detalhe_ativa_carrega_inativa_404(): void
     {
         $ativa = $this->makeBreed(['name' => 'Bulldog Frances']);

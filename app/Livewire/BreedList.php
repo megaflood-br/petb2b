@@ -47,7 +47,7 @@ class BreedList extends Component
 
     /**
      * Sem raças oficiais no guia, lista os artigos importados da categoria
-     * "racas" — o mesmo conteúdo que a home já mostra em "Tudo sobre Raças".
+     * "racas", do mais novo para o mais antigo.
      */
     private function usingPosts(): bool
     {
@@ -65,7 +65,7 @@ class BreedList extends Component
                 });
             })
             ->when($this->species !== '', fn (Builder $query) => $query->where('species', $this->species))
-            ->orderBy('name')
+            ->latest('created_at')
             ->paginate($this->perPage);
     }
 
