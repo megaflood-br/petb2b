@@ -247,39 +247,36 @@
             </div>
         </div>
 
-        {{-- SEÇÃO 5: TUDO SOBRE RAÇAS --}}
-        @php
-            $racePosts = \App\Models\Post::where('is_active', true)
-                ->whereHas('blogCategories', function($q) {
-                    $q->where('slug', 'racas');
-                })
-                ->latest()
-                ->take(3)
-                ->get();
-        @endphp
-        @if($racePosts->count() > 0)
+        {{-- SEÇÃO 5: TUDO SOBRE RAÇAS (guia oficial) --}}
+        @if(($featuredBreeds ?? collect())->count() > 0)
             <section class="py-24 bg-white border-b border-gray-100">
                 <div class="max-w-7xl mx-auto px-6 lg:px-8">
-                    <div class="mb-12">
-                        <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Guia de Espécies</p>
-                        <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tight">
-                            Tudo sobre <span class="text-brand-500">Raças</span>
-                        </h2>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
+                        <div>
+                            <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Guia de Espécies</p>
+                            <h2 class="text-3xl md:text-4xl font-black text-gray-900 uppercase italic tracking-tight">
+                                Tudo sobre <span class="text-brand-500">Raças</span>
+                            </h2>
+                        </div>
+                        <a href="{{ route('breeds.index') }}" class="bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-sm">
+                            Ver guia completo →
+                        </a>
                     </div>
 
                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
-                        @foreach($racePosts as $racePost)
+                        @foreach($featuredBreeds as $breed)
                             <article class="flex flex-col group bg-white p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition">
-                                <a href="{{ route('blog.show', ['prefixCategory' => 'racas', 'slug' => $racePost->slug]) }}" class="relative w-full aspect-[16/10] mb-3 md:mb-5 overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-100 block">
-                                    @if($racePost->hasCover())
-                                        <img src="{{ $racePost->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <a href="{{ route('breeds.show', $breed->slug) }}" class="relative w-full aspect-[16/10] mb-3 md:mb-5 overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-100 block">
+                                    @if($breed->image)
+                                        <img src="{{ asset('storage/'.$breed->image) }}" alt="{{ $breed->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     @else
-                                        <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-bold text-xs">Sem Imagem</div>
+                                        <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-black italic text-2xl md:text-4xl">{{ \Illuminate\Support\Str::substr($breed->name, 0, 1) }}</div>
                                     @endif
                                 </a>
                                 <div class="px-2">
-                                    <h3 class="text-sm md:text-lg font-black text-gray-900 group-hover:text-brand-500 transition line-clamp-3 md:line-clamp-2 leading-snug uppercase italic">
-                                        <a href="{{ route('blog.show', ['prefixCategory' => 'racas', 'slug' => $racePost->slug]) }}">{{ $racePost->title }}</a>
+                                    <span class="text-[8px] md:text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full">{{ $breed->species }}</span>
+                                    <h3 class="text-sm md:text-lg font-black text-gray-900 group-hover:text-brand-500 transition line-clamp-3 md:line-clamp-2 leading-snug uppercase italic mt-1.5">
+                                        <a href="{{ route('breeds.show', $breed->slug) }}">{{ $breed->name }}</a>
                                     </h3>
                                 </div>
                             </article>

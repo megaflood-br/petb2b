@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Breed;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -22,6 +23,7 @@ class ManageBreeds extends Component
     public $breedId;
     public $name, $species = 'Cão', $origin, $size, $temperament, $description;
     public $image, $existingImage;
+    public string $created_at = '';
     public bool $is_active = true;
     public $showForm = false;
     public $search = '';
@@ -41,6 +43,7 @@ class ManageBreeds extends Component
             'temperament' => 'nullable|max:150',
             'description' => 'required|min:20',
             'image' => 'nullable|image|max:2048',
+            'created_at' => 'nullable|date',
         ];
     }
 
@@ -49,6 +52,7 @@ class ManageBreeds extends Component
         $this->reset(['breedId', 'name', 'origin', 'size', 'temperament', 'description', 'image', 'existingImage']);
         $this->species = 'Cão';
         $this->is_active = true;
+        $this->created_at = now()->format('Y-m-d\TH:i');
         $this->showForm = ! $this->showForm;
     }
 
@@ -64,13 +68,14 @@ class ManageBreeds extends Component
         $this->description = $breed->description;
         $this->existingImage = $breed->image;
         $this->is_active = $breed->is_active;
+        $this->created_at = $breed->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
         $this->showForm = true;
     }
 
     public function save()
     {
         $data = $this->validate();
-        unset($data['image']);
+        unset($data['image'], $data['created_at']);
         $data['is_active'] = $this->is_active;
 
         if ($this->image) {
@@ -80,13 +85,14 @@ class ManageBreeds extends Component
             $data['image'] = $this->image->store('breeds', 'public');
         }
 
-        if ($this->breedId) {
-            Breed::findOrFail($this->breedId)->update($data);
-            session()->flash('message', 'Raça atualizada!');
-        } else {
-            Breed::create($data);
-            session()->flash('message', 'Raça cadastrada!');
-        }
+        $breed = $this->breedId ? Breed::findOrFail($this->breedId) : new Breed();
+        $breed->fill($data);
+        $breed->created_at = $this->created_at !== ''
+            ? Carbon::parse($this->created_at)
+            : ($breed->created_at ?? now());
+        $breed->save();
+
+        session()->flash('message', $this->breedId ? 'Raça atualizada!' : 'Raça cadastrada!');
 
         $this->toggleForm();
     }

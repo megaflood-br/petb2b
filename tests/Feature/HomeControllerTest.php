@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\HomeController;
 use App\Models\BlogCategory;
+use App\Models\Breed;
 use App\Models\Classified;
 use App\Models\Event;
 use App\Models\JobPosting;
@@ -293,12 +294,12 @@ class HomeControllerTest extends TestCase
             'is_active' => true,
         ]);
 
-        $racas = BlogCategory::create([
-            'name' => 'Raças',
-            'slug' => 'racas',
+        Breed::create([
+            'name' => 'Golden Retriever',
+            'species' => 'Cão',
+            'description' => 'Raça amigável e inteligente, ótima para famílias.',
+            'is_active' => true,
         ]);
-        $racePost = $this->makePost('Guia da raça Golden Retriever');
-        $racePost->blogCategories()->sync([$racas->id]);
 
         $html = $this->get('/')->assertOk()->getContent();
 
@@ -313,6 +314,44 @@ class HomeControllerTest extends TestCase
         $this->assertNotFalse($especies);
         $this->assertLessThan($destaques, $revista);
         $this->assertLessThan($especies, $eventos);
+    }
+
+    public function test_home_mostra_racas_do_guia_oficial(): void
+    {
+        $racas = BlogCategory::create([
+            'name' => 'Raças',
+            'slug' => 'racas',
+        ]);
+        $post = $this->makePost('Artigo Categoria Racas');
+        $post->blogCategories()->sync([$racas->id]);
+
+        $breed = Breed::create([
+            'name' => 'Shih Tzu do Guia',
+            'species' => 'Cão',
+            'description' => 'Raça de companhia pequena e de pelagem longa.',
+            'is_active' => true,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Shih Tzu do Guia')
+            ->assertSee(route('breeds.show', $breed->slug, false), false)
+            ->assertSee('Ver guia completo');
+    }
+
+    public function test_cadastro_de_raca_invalida_o_cache_da_home(): void
+    {
+        $this->get('/')->assertOk();
+        $this->assertTrue(Cache::has(HomeController::CACHE_KEY));
+
+        Breed::create([
+            'name' => 'Poodle Cache',
+            'species' => 'Cão',
+            'description' => 'Raça inteligente, ativa e de fácil adestramento.',
+            'is_active' => true,
+        ]);
+
+        $this->assertFalse(Cache::has(HomeController::CACHE_KEY));
     }
 
     public function test_destaques_da_edicao_usam_duas_colunas_no_mobile(): void

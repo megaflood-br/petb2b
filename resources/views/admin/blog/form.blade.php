@@ -71,8 +71,8 @@
                     <input type="file" name="image" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
                 </div>
                 <div>
-                    <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block tracking-widest">Data de Publicação</label>
-                    <input type="datetime-local" name="created_at" value="{{ old('created_at', $post->created_at?->format('Y-m-d\TH:i')) }}" class="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-gray-900 focus:ring-2 focus:ring-brand-500">
+                    <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block tracking-widest">Data de criação</label>
+                    <input type="datetime-local" name="created_at" value="{{ old('created_at', $post->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i')) }}" class="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-gray-900 focus:ring-2 focus:ring-brand-500">
                 </div>
             </div>
 

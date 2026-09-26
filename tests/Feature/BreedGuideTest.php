@@ -67,4 +67,21 @@ class BreedGuideTest extends TestCase
         $breed = Breed::where('name', 'Poodle')->first();
         $this->assertNotEmpty($breed->slug);
     }
+
+    public function test_admin_define_data_de_criacao_da_raca(): void
+    {
+        Livewire::test(ManageBreeds::class)
+            ->call('toggleForm')
+            ->assertSee('Data de criação')
+            ->set('name', 'Beagle')
+            ->set('species', 'Cão')
+            ->set('description', 'Raça farejadora, alegre e de médio porte.')
+            ->set('created_at', '2023-08-15T14:00')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $breed = Breed::where('name', 'Beagle')->first();
+        $this->assertNotNull($breed);
+        $this->assertEquals('2023-08-15 14:00:00', $breed->created_at->format('Y-m-d H:i:s'));
+    }
 }

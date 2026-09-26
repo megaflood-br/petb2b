@@ -70,4 +70,28 @@ class AdminBlogEditTest extends TestCase
             'slug' => 'titulo-novo',
         ]);
     }
+
+    public function test_formulario_mostra_data_de_criacao_e_admin_pode_definir(): void
+    {
+        $category = BlogCategory::create(['name' => 'Mercado', 'slug' => 'mercado']);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.blog.create'))
+            ->assertOk()
+            ->assertSee('Data de criação')
+            ->assertSee('name="created_at"', false);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.blog.store'), [
+                'title' => 'Matéria com data antiga',
+                'content' => '<p>Texto com data escolhida.</p>',
+                'selected_categories' => [$category->id],
+                'created_at' => '2024-03-10T09:30',
+            ])
+            ->assertRedirect(route('admin.blog'));
+
+        $post = Post::where('title', 'Matéria com data antiga')->first();
+        $this->assertNotNull($post);
+        $this->assertEquals('2024-03-10 09:30:00', $post->created_at->format('Y-m-d H:i:s'));
+    }
 }

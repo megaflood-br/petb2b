@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Breed;
 use App\Models\Classified;
 use App\Models\Event;
 use App\Models\JobPosting;
@@ -79,6 +80,11 @@ class HomeController extends Controller
                     ->orderByDesc('is_verified')
                     ->latest()
                     ->take(3)
+                    ->get(),
+
+                'featuredBreeds' => Breed::where('is_active', true)
+                    ->latest()
+                    ->take(6)
                     ->get(),
 
                 'upcomingEvents' => Event::where('is_active', true)
