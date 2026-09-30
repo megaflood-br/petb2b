@@ -9,10 +9,4 @@
     $box = $sizes[$size] ?? $sizes['md'];
 @endphp
 
-<span {{ $attributes->class([$box, 'inline-flex items-center justify-center rounded-full overflow-hidden bg-brand-500 text-white font-black uppercase shrink-0']) }}>
-    @if($user->avatarUrl())
-        <img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
-    @else
-        {{ $user->initials() }}
-    @endif
-</span>
+<span {{ $attributes->class([$box, 'inline-flex items-center justify-center rounded-full overflow-hidden bg-brand-500 text-white font-black uppercase shrink-0']) }}>@if($user->avatarUrl())<img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="w-full h-full object-cover">@else{{ $user->initials() }}@endif</span>

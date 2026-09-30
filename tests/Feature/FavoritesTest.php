@@ -18,7 +18,7 @@ class FavoritesTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function post(array $overrides = []): Post
+    private function makePost(array $overrides = []): Post
     {
         return Post::create(array_merge([
             'title' => 'Matéria Favorita',
@@ -52,7 +52,7 @@ class FavoritesTest extends TestCase
 
     public function test_visitante_e_redirecionado_ao_favoritar(): void
     {
-        $post = $this->post();
+        $post = $this->makePost();
 
         Livewire::test(FavoriteButton::class, ['favoritable' => $post])
             ->call('toggle')
@@ -64,7 +64,7 @@ class FavoritesTest extends TestCase
     public function test_usuario_favorita_e_desfavorita_materia(): void
     {
         $user = User::factory()->create();
-        $post = $this->post();
+        $post = $this->makePost();
 
         Livewire::actingAs($user)
             ->test(FavoriteButton::class, ['favoritable' => $post])
@@ -88,7 +88,7 @@ class FavoritesTest extends TestCase
     public function test_favoritos_ficam_em_pastas_por_categoria(): void
     {
         $user = User::factory()->create();
-        $post = $this->post(['title' => 'Guia de Banho e Tosa']);
+        $post = $this->makePost(['title' => 'Guia de Banho e Tosa']);
         $ad = $this->classified();
         $supplier = $ad->supplier;
 
@@ -117,7 +117,7 @@ class FavoritesTest extends TestCase
 
     public function test_cards_publicos_tem_botao_de_favoritar(): void
     {
-        $post = $this->post(['is_featured' => true]);
+        $post = $this->makePost(['is_featured' => true]);
         $ad = $this->classified();
 
         $this->get('/')
