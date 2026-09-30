@@ -144,13 +144,27 @@ Route::get('/canis/{slug}', function ($slug) {
 // Estante de Revistas (Banca Digital)
 Route::get('/revistas', function () {
     $magazines = Magazine::where('is_active', true)->latest()->get();
-    SEOTools::setTitle('Estante de Revistas Digitais - Revista Negócios Pet');
-    SEOTools::setDescription('Acesse todas as edições da nossa revista digital sobre o mercado pet brasileiro.');
+    $latest = $magazines->first();
+    \App\Support\Seo::page(
+        'Estante de Revistas Digitais | '.\App\Support\Settings::siteName(),
+        'Acesse todas as edições da revista digital sobre o mercado pet brasileiro.',
+        $latest?->coverUrl()
+    );
+
     return view('magazines.index', compact('magazines'));
 })->name('magazines.index');
 
 // Leitor de Revista (Slug Amigável)
 Route::get('/revista/{magazine:slug}', function (Magazine $magazine) {
+    abort_unless($magazine->is_active, 404);
+
+    $period = $magazine->issue_period ? 'Edição '.$magazine->issue_period.'. ' : '';
+    \App\Support\Seo::page(
+        $magazine->title.' | '.\App\Support\Settings::siteName(),
+        $period.'Leia a edição digital da '.\App\Support\Settings::siteName().'.',
+        $magazine->coverUrl()
+    );
+
     return view('magazines.show', compact('magazine'));
 })->name('magazines.show');
 

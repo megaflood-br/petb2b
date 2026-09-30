@@ -1,4 +1,5 @@
 @php
+    \App\Support\Seo::ensureDefaultImage();
     $faviconUrl = \App\Support\Settings::faviconUrl();
     $themeColor = \App\Support\Settings::themeColor();
     $googleVerification = \App\Support\Settings::googleVerification();

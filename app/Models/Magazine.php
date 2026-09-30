@@ -24,4 +24,18 @@ class Magazine extends Model
     {
         return 'slug';
     }
+
+    public function coverUrl(): ?string
+    {
+        if (! filled($this->cover_path)) {
+            return null;
+        }
+
+        $path = ltrim((string) $this->cover_path, '/');
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return (string) $this->cover_path;
+        }
+
+        return asset('storage/'.$path);
+    }
 }
