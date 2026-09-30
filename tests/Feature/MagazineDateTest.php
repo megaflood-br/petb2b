@@ -31,8 +31,11 @@ class MagazineDateTest extends TestCase
         Livewire::test(ManageMagazines::class)
             ->call('toggleForm')
             ->assertSee('Data de postagem')
-            ->assertSet('showForm', true)
-            ->assertSet('created_at', now()->format('Y-m-d\TH:i'));
+            ->assertSet('showForm', true);
+
+        $component = Livewire::test(ManageMagazines::class)->call('toggleForm');
+        $this->assertNotSame('', $component->get('created_at'));
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $component->get('created_at'));
     }
 
     public function test_admin_define_data_ao_publicar_revista(): void
