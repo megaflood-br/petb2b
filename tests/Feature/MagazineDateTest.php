@@ -51,7 +51,7 @@ class MagazineDateTest extends TestCase
         $magazine = Magazine::where('title', 'Mercado Pet em Foco')->first();
         $this->assertNotNull($magazine);
         $this->assertEquals('2023-08-15 14:00:00', $magazine->created_at->format('Y-m-d H:i:s'));
-        $this->assertEquals('agosto-2023', $magazine->slug);
+        $this->assertEquals('agosto2023', $magazine->slug);
     }
 
     public function test_admin_altera_data_na_edicao(): void

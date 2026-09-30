@@ -38,7 +38,7 @@ class ManageMagazines extends Component
     public function render()
     {
         return view('livewire.admin.manage-magazines', [
-            'magazines' => Magazine::latest()->paginate($this->perPage)
+            'magazines' => Magazine::latest('created_at')->paginate($this->perPage)
         ]);
     }
 
