@@ -39,6 +39,9 @@
                         <td class="p-5">
                             <span class="text-gray-400 text-[9px] uppercase block font-black mb-0.5">{{ $ad->supplier->name ?? 'Fornecedor Desconhecido' }}</span>
                             <span class="text-sm font-black text-gray-900 uppercase truncate max-w-[250px] block">{{ $ad->title }}</span>
+                            @if($ad->skip_credits)
+                                <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[8px] uppercase font-black bg-amber-50 text-amber-700 border border-amber-100">Cortesia · sem créditos</span>
+                            @endif
                         </td>
 
                         {{-- COLUNA CORRIGIDA: Agora exibe o rótulo comercial do Model em vez do texto bruto do banco --}}
@@ -159,6 +162,14 @@
                         </div>
                     </div>
 
+                    <label class="flex items-start gap-3 bg-amber-50/70 p-4 rounded-2xl border border-amber-100 cursor-pointer">
+                        <input type="checkbox" wire:model="newSkipCredits" class="mt-0.5 w-5 h-5 text-brand-600 rounded-lg border-gray-300 focus:ring-brand-500">
+                        <span>
+                            <span class="block text-[10px] font-black uppercase text-amber-900 tracking-widest">Não gastar créditos</span>
+                            <span class="block text-[10px] text-amber-800/80 font-medium normal-case mt-0.5">Cortesia: views e cliques não debitam o saldo da empresa.</span>
+                        </span>
+                    </label>
+
                     <div class="flex gap-3 pt-2 border-t border-gray-100">
                         <button type="button" wire:click="closeCreateModal" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 p-3.5 rounded-xl font-black uppercase tracking-widest transition">Cancelar</button>
                         <button type="submit" wire:loading.attr="disabled" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white p-3.5 rounded-xl font-black uppercase tracking-widest transition shadow-md disabled:opacity-50">Criar Anúncio</button>
@@ -199,6 +210,14 @@
                         </select>
                         @error('is_active') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
                     </div>
+
+                    <label class="flex items-start gap-3 bg-amber-50/70 p-4 rounded-2xl border border-amber-100 cursor-pointer">
+                        <input type="checkbox" wire:model="skip_credits" class="mt-0.5 w-5 h-5 text-brand-600 rounded-lg border-gray-300 focus:ring-brand-500">
+                        <span>
+                            <span class="block text-[10px] font-black uppercase text-amber-900 tracking-widest">Não gastar créditos</span>
+                            <span class="block text-[10px] text-amber-800/80 font-medium normal-case mt-0.5">Cortesia: views e cliques não debitam o saldo da empresa.</span>
+                        </span>
+                    </label>
 
                     <div class="flex gap-3 pt-2">
                         <button type="button" wire:click="closeModal" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 p-3.5 rounded-xl font-black uppercase tracking-widest transition">

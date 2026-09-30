@@ -23,6 +23,7 @@ class ManageAds extends Component
     public $isModalOpen = false;
     public $selectedAdId;
     public $title, $cost_per_click, $cost_per_impression, $is_active;
+    public bool $skip_credits = false;
 
     // Modal de Criação Manual (admin cria anúncio para uma empresa)
     public $isCreateModalOpen = false;
@@ -30,11 +31,13 @@ class ManageAds extends Component
     public $newTitle, $newLink, $newPosition, $newImage;
     public $newCostPerClick, $newCostPerImpression;
     public bool $newIsActive = true;
+    public bool $newSkipCredits = false;
 
     protected $rules = [
         'cost_per_click' => 'required|numeric|min:0',
         'cost_per_impression' => 'required|numeric|min:0',
         'is_active' => 'boolean',
+        'skip_credits' => 'boolean',
     ];
 
     public function render()
@@ -58,6 +61,7 @@ class ManageAds extends Component
         $this->newCostPerClick = Settings::adsCostPerClick();
         $this->newCostPerImpression = Settings::adsCostPerImpression();
         $this->newIsActive = true;
+        $this->newSkipCredits = false;
         $this->isCreateModalOpen = true;
     }
 
@@ -71,6 +75,8 @@ class ManageAds extends Component
             'newImage' => 'required|image|max:2048',
             'newCostPerClick' => 'required|numeric|min:0',
             'newCostPerImpression' => 'required|numeric|min:0',
+            'newIsActive' => 'boolean',
+            'newSkipCredits' => 'boolean',
         ]);
 
         $path = $this->newImage->store('advertisements/banners', 'public');
@@ -82,6 +88,7 @@ class ManageAds extends Component
             'position' => $this->newPosition,
             'image_path' => $path,
             'is_active' => $this->newIsActive,
+            'skip_credits' => $this->newSkipCredits,
             'clicks' => 0,
             'views' => 0,
             'cost_per_click' => $this->newCostPerClick,
@@ -95,7 +102,7 @@ class ManageAds extends Component
     public function closeCreateModal()
     {
         $this->isCreateModalOpen = false;
-        $this->reset(['newSupplierId', 'newTitle', 'newLink', 'newPosition', 'newImage', 'newCostPerClick', 'newCostPerImpression', 'newIsActive']);
+        $this->reset(['newSupplierId', 'newTitle', 'newLink', 'newPosition', 'newImage', 'newCostPerClick', 'newCostPerImpression', 'newIsActive', 'newSkipCredits']);
     }
 
     // ----- Edição de taxas (existente) -----
@@ -109,6 +116,7 @@ class ManageAds extends Component
         $this->cost_per_click = $ad->cost_per_click;
         $this->cost_per_impression = $ad->cost_per_impression;
         $this->is_active = $ad->is_active;
+        $this->skip_credits = (bool) $ad->skip_credits;
 
         $this->isModalOpen = true;
     }
@@ -123,10 +131,11 @@ class ManageAds extends Component
             'cost_per_click' => $this->cost_per_click,
             'cost_per_impression' => $this->cost_per_impression,
             'is_active' => $this->is_active,
+            'skip_credits' => $this->skip_credits,
         ]);
 
         $this->isModalOpen = false;
-        $this->reset(['selectedAdId', 'title', 'cost_per_click', 'cost_per_impression', 'is_active']);
+        $this->reset(['selectedAdId', 'title', 'cost_per_click', 'cost_per_impression', 'is_active', 'skip_credits']);
 
         session()->flash('message', 'Parâmetros financeiros do anúncio atualizados com sucesso!');
     }
@@ -134,6 +143,6 @@ class ManageAds extends Component
     public function closeModal()
     {
         $this->isModalOpen = false;
-        $this->reset(['selectedAdId', 'title', 'cost_per_click', 'cost_per_impression', 'is_active']);
+        $this->reset(['selectedAdId', 'title', 'cost_per_click', 'cost_per_impression', 'is_active', 'skip_credits']);
     }
 }
