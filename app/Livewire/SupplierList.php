@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Supplier;
 use App\Models\Category; // Importamos o modelo de Categorias real
+use App\Support\Seo;
+use App\Support\Settings;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -39,6 +41,11 @@ class SupplierList extends Component
     #[Layout('layouts.app')]
     public function render()
     {
+        Seo::page(
+            'Guia de Fornecedores | '.Settings::siteName(),
+            'Encontre fornecedores, marcas e empresas do mercado pet brasileiro.'
+        );
+
         // Query principal refletindo apenas fornecedores aprovados e ativos
         $suppliers = Supplier::where('is_approved', true) // Filtro de aprovação corrigido
             ->where('is_active', true)

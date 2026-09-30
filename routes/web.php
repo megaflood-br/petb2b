@@ -25,6 +25,8 @@ use App\Models\Advertisement;
 use App\Http\Controllers\AsaasWebhookController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Livewire\JobList;
 use App\Livewire\BreedList;
@@ -64,6 +66,14 @@ use App\Http\Controllers\Admin\WordpressImportController;
 // 1. ÁREA PÚBLICA DO PORTAL
 // -------------------------------------------------------------------
 
+Route::get('/robots.txt', RobotsController::class)->name('robots');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/favicon.ico', function () {
+    $url = \App\Support\Settings::faviconUrl();
+
+    return $url ? redirect($url, 302) : abort(404);
+})->name('favicon');
+
 // Rota Pública de Redirecionamento de Anúncios (Contabiliza clique e desconta crédito)
 Route::get('/ads/redirect/{advertisement}', function (Advertisement $advertisement) {
     $advertisement->trackClick();
@@ -99,6 +109,11 @@ Route::get('/vagas/{slug}', function ($slug) {
         ->with('supplier')
         ->firstOrFail();
 
+    \App\Support\Seo::page(
+        $job->title.' | Vagas | '.\App\Support\Settings::siteName(),
+        \Illuminate\Support\Str::limit(strip_tags((string) $job->description), 160, '')
+    );
+
     return view('jobs.show', compact('job'));
 })->name('jobs.show');
 
@@ -119,6 +134,10 @@ Route::get('/canis', KennelList::class)->name('kennels.index');
 // Perfil Interno do Canil (Blade Estático)
 Route::get('/canis/{slug}', function ($slug) {
     $kennel = Kennel::where('slug', $slug)->where('is_active', true)->firstOrFail();
+    \App\Support\Seo::page(
+        $kennel->name.' | Canis | '.\App\Support\Settings::siteName(),
+        \Illuminate\Support\Str::limit(strip_tags((string) $kennel->description), 160, '') ?: 'Conheça o canil '.$kennel->name.' no guia da '.\App\Support\Settings::siteName().'.'
+    );
     return view('blog.kennel-show', compact('kennel'));
 })->name('kennels.show');
 
@@ -148,7 +167,7 @@ Route::prefix('fornecedores')->group(function () {
 // Canal de Notícias Central (Geral)
 Route::get('/noticias', function (Request $request) {
     SEOTools::setTitle('Notícias e Novidades Pet');
-    SEOTools::setDescription('Fique por dentro das últimas notícias do mercado pet em Atibaia.');
+    SEOTools::setDescription('Fique por dentro das últimas notícias do mercado pet brasileiro.');
 
     $blogCategories = \App\Models\BlogCategory::orderBy('name', 'asc')->get();
     $categorySlug = $request->filled('categoria') ? $request->string('categoria')->toString() : null;

@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Classified;
+use App\Support\Seo;
+use App\Support\Settings;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -27,6 +29,11 @@ class ClassifiedsIndex extends Component
     #[Layout('layouts.app')]
     public function render()
     {
+        Seo::page(
+            'Classificados pet | '.Settings::siteName(),
+            'Anúncios de produtos, equipamentos e oportunidades do mercado pet brasileiro.'
+        );
+
         // Busca cidades e estados únicos que possuem anúncios para preencher os selects
         $locations = DB::table('suppliers')
             ->join('classifieds', 'suppliers.id', '=', 'classifieds.supplier_id')

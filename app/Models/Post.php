@@ -144,4 +144,19 @@ class Post extends Model
 
         return $src !== '' ? $src : null;
     }
+
+    /**
+     * URL pública no padrão /{categoria}/{slug}.
+     */
+    public function publicUrl(): string
+    {
+        $category = $this->relationLoaded('blogCategories')
+            ? $this->blogCategories->first()?->slug
+            : $this->blogCategories()->value('slug');
+
+        return route('blog.show', [
+            'prefixCategory' => $category ?: 'geral',
+            'slug' => $this->slug,
+        ]);
+    }
 }

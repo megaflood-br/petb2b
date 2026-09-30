@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Post;
 use App\Models\ProductReview;
+use App\Support\Seo;
+use App\Support\Settings;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +19,11 @@ class ProductReviewsIndex extends Component
     #[Layout('layouts.app')]
     public function render()
     {
+        Seo::page(
+            'Análises de produtos pet | '.Settings::siteName(),
+            'Avaliações técnicas de rações, acessórios e produtos do mercado pet.'
+        );
+
         $reviews = Post::with('blogCategories')
             ->where('is_active', true)
             ->productAnalyses()
