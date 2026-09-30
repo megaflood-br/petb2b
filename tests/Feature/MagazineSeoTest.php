@@ -67,11 +67,14 @@ class MagazineSeoTest extends TestCase
 
         $html = $this->get(route('magazines.show', 'setembro-2026'))->assertOk()->getContent();
 
-        $cover = strpos($html, 'magazines/covers/capa-setembro.jpg');
-        $default = strpos($html, 'site/og-padrao.jpg');
-
-        $this->assertNotFalse($cover);
-        $this->assertFalse($default);
+        $this->assertMatchesRegularExpression(
+            '/property="og:image"[^>]+capa-setembro\.jpg|capa-setembro\.jpg[^>]+property="og:image"/',
+            $html
+        );
+        preg_match('/<meta[^>]+property="og:image"[^>]+content="([^"]+)"|<meta[^>]+content="([^"]+)"[^>]+property="og:image"/', $html, $match);
+        $firstImage = $match[1] ?? $match[2] ?? '';
+        $this->assertStringContainsString('capa-setembro.jpg', $firstImage);
+        $this->assertStringNotContainsString('og-padrao.jpg', $firstImage);
     }
 
     public function test_revista_inativa_nao_abre(): void
