@@ -60,6 +60,7 @@ use App\Livewire\Admin\ManageKennels;
 use App\Livewire\Admin\ManageBreeds;
 use App\Livewire\Admin\ManageSettings;
 use App\Livewire\Admin\ManageUsers;
+use App\Livewire\Admin\Reports as AdminReports;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\WordpressImportController;
 
@@ -267,6 +268,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('admin.dashboard');
 
         Route::get('/anuncios', AdminManageAds::class)->name('admin.ads');
+        Route::get('/relatorios/{type}', AdminReports::class)->name('admin.reports.show');
+        Route::get('/relatorios', AdminReports::class)->name('admin.reports');
         Route::get('/usuarios', ManageUsers::class)->name('admin.users');
         Route::get('/fornecedores', ApproveSuppliers::class)->name('admin.suppliers');
         Route::get('/blog', ManageBlog::class)->name('admin.blog');

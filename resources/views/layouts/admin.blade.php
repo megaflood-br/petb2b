@@ -37,6 +37,12 @@
                     <span>Auditar Anúncios</span>
                 </a>
 
+                <a href="{{ route('admin.reports') }}"
+                   class="flex items-center gap-3 p-4 rounded-2xl text-xs font-black uppercase tracking-wider transition {{ request()->routeIs('admin.reports*') ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Relatórios</span>
+                </a>
+
 
 
                 {{-- Usuários --}}

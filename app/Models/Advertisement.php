@@ -186,6 +186,11 @@ class Advertisement extends Model
         return $this->belongsTo(Supplier::class);
     }
 
+    public function creditTransactions()
+    {
+        return $this->hasMany(SupplierCreditTransaction::class);
+    }
+
     /**
      * Ponto de entrada de impressão chamado nas views/rotas.
      *
