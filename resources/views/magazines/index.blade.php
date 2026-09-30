@@ -41,9 +41,16 @@
                             <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-1 group-hover:text-brand-500 transition-colors line-clamp-1">
                                 {{ $mag->title }}
                             </h3>
-                            <p class="text-[9px] font-black text-brand-500/70 uppercase tracking-widest mb-4">
+                            <p class="text-[9px] font-black text-brand-500/70 uppercase tracking-widest mb-1">
                                 {{ $mag->issue_period }}
                             </p>
+                            @if($mag->created_at)
+                                <p class="text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                                    {{ $mag->created_at->format('d/m/Y') }}
+                                </p>
+                            @else
+                                <div class="mb-4"></div>
+                            @endif
 
                             <a href="{{ route('magazines.show', $mag->slug) }}"
                                class="inline-block bg-gray-950 text-white px-8 py-3.5 rounded-2xl font-black uppercase text-[9px] tracking-widest hover:bg-brand-500 transition shadow-md">

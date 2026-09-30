@@ -9,7 +9,7 @@
         </div>
 
         {{-- Botão para mostrar/esconder o formulário --}}
-        <button wire:click="$set('showForm', {{ !$showForm ? 'true' : 'false' }})"
+        <button wire:click="toggleForm"
                 class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
             {{ $showForm ? 'Voltar para Lista' : 'Nova Edição' }}
         </button>
@@ -48,6 +48,12 @@
                     <label class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 block">Mês/Ano (Para a URL)</label>
                     <input type="text" wire:model="issue_period" placeholder="Ex: Janeiro/2026"
                            class="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-indigo-500/10 transition">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2 block">Data de postagem</label>
+                    <input type="datetime-local" wire:model="created_at"
+                           class="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-indigo-500/10 transition">
+                    @error('created_at') <span class="text-red-500 text-[10px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
 
@@ -89,6 +95,9 @@
                 <div class="text-center">
                     <h3 class="font-black text-gray-900 uppercase text-[11px]">{{ $mag->title }}</h3>
                     <p class="text-gray-400 font-bold uppercase text-[9px] tracking-widest">{{ $mag->issue_period }}</p>
+                    @if($mag->created_at)
+                        <p class="text-gray-300 font-bold uppercase text-[8px] tracking-widest mt-1">{{ $mag->created_at->format('d/m/Y H:i') }}</p>
+                    @endif
                 </div>
             </div>
         @endforeach
