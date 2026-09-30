@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Kennel;
 use App\Models\RelatedBreed;
+use App\Support\Seo;
+use App\Support\Settings;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -25,6 +27,11 @@ class KennelList extends Component
     #[Layout('layouts.app')]
     public function render()
     {
+        Seo::page(
+            'Guia de Canis | '.Settings::siteName(),
+            'Canis e criadores de cães e gatos com ficha, raças e contato.'
+        );
+
         // Query base: Apenas canis ativos
         $query = Kennel::where('is_active', true);
 

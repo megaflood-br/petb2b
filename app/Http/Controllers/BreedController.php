@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Breed;
 use App\Models\Post;
+use App\Support\Seo;
+use App\Support\Settings;
+use Illuminate\Support\Str;
 
 class BreedController extends Controller
 {
@@ -21,6 +24,14 @@ class BreedController extends Controller
         $breed = Breed::where('slug', $slug)->where('is_active', true)->first();
 
         if ($breed) {
+            $image = $breed->image ? asset('storage/'.$breed->image) : null;
+            Seo::page(
+                $breed->name.' | Guia de Raças | '.Settings::siteName(),
+                Str::limit(strip_tags((string) $breed->description), 160, '')
+                    ?: 'Conheça a raça '.$breed->name.' no guia da '.Settings::siteName().'.',
+                $image
+            );
+
             return view('breeds.show', compact('breed'));
         }
 

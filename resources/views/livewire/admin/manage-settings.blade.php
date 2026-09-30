@@ -10,8 +10,115 @@
 
     <div class="border-b pb-6">
         <h1 class="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Configurações</h1>
-        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">Manutenção do site, custos de anúncios, PIX/Asaas e importação de posts do WordPress</p>
+        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">SEO, Google, favicon, manutenção, anúncios e importação WordPress</p>
     </div>
+
+    <form wire:submit.prevent="saveSeo" class="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-sm space-y-5">
+        <div>
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wide">SEO e Google</h2>
+            <p class="text-[11px] text-gray-500 font-medium normal-case leading-relaxed mt-2">
+                Título, descrição, favicon e códigos de verificação. Isso não garante o 1º lugar no Google, mas deixa o portal pronto para o Search Console, o Analytics e o compartilhamento nas redes.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Nome do site (título padrão)</label>
+                <input type="text" wire:model="seo_site_name" maxlength="70" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500">
+                @error('seo_site_name') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Descrição padrão (até 180 caracteres)</label>
+                <textarea wire:model="seo_default_description" rows="3" maxlength="180" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500"></textarea>
+                @error('seo_default_description') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Palavras-chave (separadas por vírgula)</label>
+                <input type="text" wire:model="seo_default_keywords" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500" placeholder="mercado pet, fornecedores, revista">
+                @error('seo_default_keywords') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Favicon (.ico, .png)</label>
+                <input type="file" wire:model="seo_favicon" accept=".ico,image/png,image/jpeg,image/webp,image/svg+xml" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
+                <div wire:loading wire:target="seo_favicon" class="text-[9px] text-brand-600 font-black uppercase mt-1">Enviando…</div>
+                @if($seo_favicon)
+                    <img src="{{ $seo_favicon->temporaryUrl() }}" alt="Prévia do favicon" class="mt-2 w-10 h-10 object-contain bg-gray-50 rounded">
+                @elseif($existing_favicon)
+                    <img src="{{ asset('storage/'.$existing_favicon) }}" alt="Favicon atual" class="mt-2 w-10 h-10 object-contain bg-gray-50 rounded">
+                @endif
+                @error('seo_favicon') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Imagem de compartilhamento (Open Graph)</label>
+                <input type="file" wire:model="seo_og_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-brand-50 file:text-brand-700">
+                <div wire:loading wire:target="seo_og_image" class="text-[9px] text-brand-600 font-black uppercase mt-1">Enviando…</div>
+                @if($seo_og_image)
+                    <img src="{{ $seo_og_image->temporaryUrl() }}" alt="Prévia OG" class="mt-2 h-16 w-auto object-cover rounded">
+                @elseif($existing_og_image)
+                    <img src="{{ asset('storage/'.$existing_og_image) }}" alt="Imagem OG atual" class="mt-2 h-16 w-auto object-cover rounded">
+                @endif
+                @error('seo_og_image') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+                <p class="text-[10px] text-gray-400 font-medium normal-case mt-1">Ideal 1200×630 px. Aparece no WhatsApp, Facebook e Google.</p>
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Cor do tema (navegador)</label>
+                <input type="text" wire:model="seo_theme_color" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500" placeholder="#ed258f">
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Google Analytics (GA4)</label>
+                <input type="text" wire:model="seo_ga4_id" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500" placeholder="G-XXXXXXXX">
+                @error('seo_ga4_id') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Google Tag Manager</label>
+                <input type="text" wire:model="seo_gtm_id" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500" placeholder="GTM-XXXXXXX">
+                @error('seo_gtm_id') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Verificação Search Console</label>
+                <input type="text" wire:model="seo_google_verification" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500" placeholder="conteúdo da meta google-site-verification">
+                @error('seo_google_verification') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Verificação Bing Webmaster</label>
+                <input type="text" wire:model="seo_bing_verification" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Twitter / X (sem @)</label>
+                <input type="text" wire:model="seo_twitter" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500" placeholder="rnpet">
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Facebook</label>
+                <input type="url" wire:model="seo_facebook" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500" placeholder="https://facebook.com/...">
+                @error('seo_facebook') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Instagram</label>
+                <input type="url" wire:model="seo_instagram" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500" placeholder="https://instagram.com/...">
+                @error('seo_instagram') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">LinkedIn</label>
+                <input type="url" wire:model="seo_linkedin" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500">
+                @error('seo_linkedin') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">YouTube</label>
+                <input type="url" wire:model="seo_youtube" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-brand-500">
+                @error('seo_youtube') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
+            </div>
+            <div class="md:col-span-2">
+                <label class="text-[9px] font-black uppercase text-gray-400 mb-1.5 block">Regras extras do robots.txt</label>
+                <textarea wire:model="seo_robots_extra" rows="3" class="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-mono focus:ring-2 focus:ring-brand-500" placeholder="Disallow: /busca"></textarea>
+                <p class="text-[10px] text-gray-400 font-medium normal-case mt-1">O sitemap já entra sozinho. Admin, login e painel do fornecedor já estão bloqueados.</p>
+            </div>
+        </div>
+
+        <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-xl font-black uppercase text-[11px] tracking-widest transition">
+            Salvar SEO e marca
+        </button>
+    </form>
+
 
     <div class="bg-white border {{ $maintenance_enabled ? 'border-amber-200' : 'border-gray-100' }} rounded-[2rem] p-8 shadow-sm space-y-5">
         <div class="flex items-start justify-between gap-4">

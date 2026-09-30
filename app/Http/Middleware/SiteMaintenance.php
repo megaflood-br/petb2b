@@ -46,6 +46,9 @@ class SiteMaintenance
             'livewire/*',
             'webhooks/*',
             'up',
+            'robots.txt',
+            'sitemap.xml',
+            'favicon.ico',
         ]);
     }
 }

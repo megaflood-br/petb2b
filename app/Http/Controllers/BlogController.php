@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Support\Seo;
+use App\Support\Settings;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -35,26 +37,14 @@ class BlogController extends Controller
     public function renderPost(Post $post)
     {
         $description = $post->meta_description ?? Str::limit(strip_tags($post->content), 150);
+        $image = $post->hasCover() ? $post->coverUrl() : null;
 
-        SEOTools::setTitle($post->title . ' | Revista Negócios Pet');
-        SEOTools::setDescription($description);
-
+        Seo::page($post->title.' | '.Settings::siteName(), $description, $image);
         if (! empty($post->meta_keywords)) {
             SEOTools::metatags()->addKeyword($post->meta_keywords);
         }
-
-        SEOTools::opengraph()->setUrl(url()->current());
         SEOTools::opengraph()->addProperty('type', 'article');
-        SEOTools::opengraph()->setTitle($post->title);
-        SEOTools::opengraph()->setDescription($description);
-
-        SEOTools::twitter()->setTitle($post->title);
-        SEOTools::twitter()->setDescription($description);
-
-        if ($post->hasCover()) {
-            SEOTools::opengraph()->addImage($post->coverUrl());
-            SEOTools::twitter()->setImage($post->coverUrl());
-        }
+        Seo::article($post);
 
         $relatedPosts = Post::where('is_active', true)
             ->where('id', '!=', $post->id)

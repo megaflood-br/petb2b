@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\JobPosting;
+use App\Support\Seo;
+use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -36,6 +38,11 @@ class JobList extends Component
     #[Layout('layouts.app')]
     public function render()
     {
+        Seo::page(
+            'Vagas no mercado pet | '.Settings::siteName(),
+            'Vagas de emprego em clínicas, pet shops, indústrias e fornecedores do mercado pet.'
+        );
+
         $states = JobPosting::query()
             ->where('is_active', true)
             ->whereNotNull('state')

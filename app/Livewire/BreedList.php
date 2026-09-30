@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Breed;
 use App\Models\Post;
+use App\Support\Seo;
+use App\Support\Settings;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
@@ -36,6 +38,11 @@ class BreedList extends Component
     #[Layout('layouts.app')]
     public function render()
     {
+        Seo::page(
+            'Guia de Raças | '.Settings::siteName(),
+            'Características, porte, temperamento e origem das principais raças de pets.'
+        );
+
         $usingPosts = $this->usingPosts();
 
         return view('livewire.breed-list', [

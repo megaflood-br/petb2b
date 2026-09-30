@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="pt-BR">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,7 @@
 
         {{-- SIMULAÇÃO YOAST PERFEITA --}}
         {!! SEO::generate() !!}
+        @include('partials.seo-head')
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,800,900&display=swap" rel="stylesheet" />
@@ -15,6 +16,9 @@
         @livewireStyles
     </head>
     <body class="font-sans antialiased bg-gray-50 text-gray-900 pb-16 sm:pb-0" x-data="{ mobileMenuOpen: false }">
+        @if($gtmId = \App\Support\Settings::gtmId())
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        @endif
         {{-- Adicionado um padding-bottom dinâmico no body acima apenas no mobile para o banner fixo não cobrir o rodapé real do site --}}
 
         {{-- OVERLAY MOBILE --}}

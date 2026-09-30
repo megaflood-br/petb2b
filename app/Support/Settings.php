@@ -126,4 +126,137 @@ class Settings
 
         return $custom !== '' ? $custom : $default;
     }
+
+    public static function siteName(): string
+    {
+        $custom = trim((string) self::get('seo_site_name', ''));
+
+        return $custom !== '' ? $custom : 'Revista Negócios Pet';
+    }
+
+    public static function seoDescription(): string
+    {
+        $custom = trim((string) self::get('seo_default_description', ''));
+
+        return $custom !== ''
+            ? $custom
+            : 'Portal B2B da Revista Negócios Pet: notícias, fornecedores e conteúdo do mercado pet brasileiro.';
+    }
+
+    /** @return array<int, string> */
+    public static function seoKeywords(): array
+    {
+        $raw = trim((string) self::get('seo_default_keywords', ''));
+        if ($raw === '') {
+            return ['negócios pet', 'mercado pet', 'fornecedores pet', 'revista pet'];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $raw))));
+    }
+
+    public static function seoKeywordsLine(): string
+    {
+        return implode(', ', self::seoKeywords());
+    }
+
+    public static function themeColor(): string
+    {
+        $custom = trim((string) self::get('seo_theme_color', ''));
+
+        return $custom !== '' ? $custom : '#ed258f';
+    }
+
+    public static function ga4Id(): ?string
+    {
+        $value = trim((string) self::get('seo_ga4_id', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function gtmId(): ?string
+    {
+        $value = trim((string) self::get('seo_gtm_id', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function googleVerification(): ?string
+    {
+        $value = trim((string) self::get('seo_google_verification', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function bingVerification(): ?string
+    {
+        $value = trim((string) self::get('seo_bing_verification', ''));
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function twitterHandle(): ?string
+    {
+        $value = ltrim(trim((string) self::get('seo_twitter', '')), '@');
+
+        return $value !== '' ? '@'.$value : null;
+    }
+
+    public static function robotsExtra(): string
+    {
+        return trim((string) self::get('seo_robots_extra', ''));
+    }
+
+    public static function faviconPath(): ?string
+    {
+        $path = trim((string) self::get('seo_favicon', ''));
+
+        return $path !== '' ? $path : null;
+    }
+
+    public static function ogImagePath(): ?string
+    {
+        $path = trim((string) self::get('seo_og_image', ''));
+
+        return $path !== '' ? $path : null;
+    }
+
+    public static function faviconUrl(): ?string
+    {
+        return self::publicStorageUrl(self::faviconPath());
+    }
+
+    public static function ogImageUrl(): ?string
+    {
+        return self::publicStorageUrl(self::ogImagePath());
+    }
+
+    /** @return array<int, string> */
+    public static function socialProfiles(): array
+    {
+        $urls = [
+            self::get('seo_facebook'),
+            self::get('seo_instagram'),
+            self::get('seo_linkedin'),
+            self::get('seo_youtube'),
+        ];
+
+        return array_values(array_filter(array_map(function ($url) {
+            $url = trim((string) $url);
+
+            return $url !== '' ? $url : null;
+        }, $urls)));
+    }
+
+    private static function publicStorageUrl(?string $path): ?string
+    {
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return asset('storage/'.ltrim($path, '/'));
+    }
 }

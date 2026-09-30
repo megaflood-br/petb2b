@@ -4,8 +4,9 @@ namespace App\Livewire;
 
 use App\Models\Supplier;
 use App\Models\Classified;
-use Livewire\Component;
+use App\Support\Seo;
 use Artesaos\SEOTools\Facades\SEOTools;
+use Livewire\Component;
 
 class SupplierDetail extends Component
 {
@@ -28,16 +29,10 @@ class SupplierDetail extends Component
         // Puxa as tags calculadas no banco de dados. Caso estejam vazias (registros antigos), gera um padrão profissional.
         $title = $supplier->seo_title ?? "{$supplier->name} | Fornecedor Pet em {$supplier->city} - {$supplier->state}";
         $description = $supplier->seo_description ?? "Conheça {$supplier->name} no Guia B2B da Revista Negócios Pet. Veja produtos, serviços e contatos rápidos.";
+        $image = $supplier->logo ? asset('storage/'.$supplier->logo) : null;
 
-        // Alimenta o motor do SEOTools para renderizar no {!! SEO::generate() !!} do seu layout
-        SEOTools::setTitle($title);
-        SEOTools::setDescription($description);
-        SEOTools::opengraph()->setUrl(request()->url());
+        Seo::page($title, $description, $image);
         SEOTools::opengraph()->addProperty('type', 'business.business');
-
-        if ($supplier->logo) {
-            SEOTools::opengraph()->addImage(asset('storage/' . $supplier->logo));
-        }
 
         // Retorna a view acoplando os dados
         return view('livewire.supplier-detail', compact('supplier', 'classifieds'))
