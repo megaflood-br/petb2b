@@ -120,4 +120,26 @@ class CreditEngineTest extends TestCase
         $this->assertGreaterThanOrEqual(0, (float) $supplier->fresh()->credit_balance);
         $this->assertEquals(2, $ad->fresh()->clicks);
     }
+
+    public function test_cortesia_nao_debita_nem_pausa_sem_saldo(): void
+    {
+        $supplier = $this->makeSupplier(0.10);
+        $ad = $this->makeAd($supplier, [
+            'skip_credits' => true,
+            'cost_per_click' => 0.50,
+            'cost_per_impression' => 0.0070,
+        ]);
+
+        $this->assertTrue($ad->chargeClick());
+        $this->assertTrue($ad->chargeImpression());
+
+        $this->assertEquals(1, $ad->fresh()->clicks);
+        $this->assertEquals(1, $ad->fresh()->views);
+        $this->assertTrue($ad->fresh()->is_active);
+        $this->assertEqualsWithDelta(0.10, (float) $supplier->fresh()->credit_balance, 0.0001);
+        $this->assertDatabaseMissing('supplier_credit_transactions', [
+            'supplier_id' => $supplier->id,
+            'advertisement_id' => $ad->id,
+        ]);
+    }
 }

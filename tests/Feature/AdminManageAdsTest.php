@@ -49,7 +49,57 @@ class AdminManageAdsTest extends TestCase
         $this->assertEquals('Campanha do Admin', $ad->title);
         $this->assertEquals('banner_topo', $ad->position);
         $this->assertTrue($ad->is_active);
+        $this->assertFalse($ad->skip_credits);
         $this->assertNotEmpty($ad->image_path);
+    }
+
+    public function test_admin_cria_banner_sem_gastar_creditos(): void
+    {
+        Storage::fake('public');
+        $supplier = $this->supplier();
+
+        Livewire::test(ManageAds::class)
+            ->call('openCreateModal')
+            ->assertSee('Não gastar créditos')
+            ->set('newSupplierId', $supplier->id)
+            ->set('newTitle', 'Banner Cortesia')
+            ->set('newLink', 'https://exemplo.com')
+            ->set('newPosition', 'banner_topo')
+            ->set('newImage', UploadedFile::fake()->image('banner.jpg'))
+            ->set('newCostPerClick', 0.50)
+            ->set('newCostPerImpression', 0.0070)
+            ->set('newSkipCredits', true)
+            ->call('createAd')
+            ->assertHasNoErrors();
+
+        $ad = Advertisement::where('title', 'Banner Cortesia')->first();
+        $this->assertNotNull($ad);
+        $this->assertTrue($ad->skip_credits);
+    }
+
+    public function test_admin_marca_cortesia_na_edicao(): void
+    {
+        $supplier = $this->supplier();
+        $ad = Advertisement::create([
+            'supplier_id' => $supplier->id,
+            'title' => 'Campanha Paga',
+            'link' => 'https://exemplo.com',
+            'position' => 'banner_topo',
+            'image_path' => 'ads/pago.png',
+            'is_active' => true,
+            'cost_per_click' => 0.50,
+            'cost_per_impression' => 0.0070,
+            'skip_credits' => false,
+        ]);
+
+        Livewire::test(ManageAds::class)
+            ->call('editAd', $ad->id)
+            ->assertSee('Não gastar créditos')
+            ->set('skip_credits', true)
+            ->call('saveAdSettings')
+            ->assertHasNoErrors();
+
+        $this->assertTrue($ad->fresh()->skip_credits);
     }
 
     public function test_criacao_valida_campos_obrigatorios(): void
