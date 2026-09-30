@@ -159,4 +159,16 @@ class Post extends Model
             'slug' => $this->slug,
         ]);
     }
+
+    /**
+     * Data de publicação em português (ex.: "29 de set, 2026").
+     */
+    public function publishedAt(string $pattern = 'd \d\e M, Y'): string
+    {
+        if (! $this->created_at) {
+            return '';
+        }
+
+        return $this->created_at->copy()->locale('pt_BR')->translatedFormat($pattern);
+    }
 }
