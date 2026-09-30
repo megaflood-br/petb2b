@@ -22,7 +22,10 @@
                 {{ $ad->category }}
             </nav>
 
-            <h1 class="text-5xl font-black text-gray-900 uppercase italic leading-tight mb-6">{{ $ad->title }}</h1>
+            <div class="flex items-start justify-between gap-4 mb-6">
+                <h1 class="text-5xl font-black text-gray-900 uppercase italic leading-tight">{{ $ad->title }}</h1>
+                <x-favorite-heart :model="$ad" class="relative shrink-0" />
+            </div>
 
             <div class="flex items-center gap-4 mb-8">
                 <div class="text-3xl font-black text-green-600">

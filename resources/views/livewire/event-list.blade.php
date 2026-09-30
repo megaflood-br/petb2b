@@ -25,6 +25,7 @@
                     {{-- Cabeçalho Principal --}}
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b pb-8 border-gray-100">
                         <div class="space-y-2">
+                            <x-favorite-heart :model="$selectedEvent" class="relative mb-3" />
                             <span class="bg-brand-50 text-brand-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
                                 📅 Evento Oficial do Setor
                             </span>
@@ -110,6 +111,7 @@
                 @foreach($events as $event)
                     {{-- CORRIGIDO: Passando o slug para o método de seleção --}}
                     <div wire:click="selectEvent('{{ $event->slug }}')" class="bg-white rounded-[3rem] border border-gray-100 shadow-sm flex flex-col items-center text-center group hover:shadow-xl transition-all overflow-hidden relative cursor-pointer">
+                        <x-favorite-heart :model="$event" />
 
                         {{-- Banner do Evento (Fundo do Calendário) --}}
                         <div class="w-full h-32 bg-gray-100 relative overflow-hidden shrink-0">

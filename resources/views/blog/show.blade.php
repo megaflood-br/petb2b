@@ -9,6 +9,7 @@
                         <span class="bg-brand-50 text-brand-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
                             {{ $post->blogCategories->first()->name ?? 'Geral' }}
                         </span>
+                        <x-favorite-heart :model="$post" class="relative" />
                         <span class="text-gray-300">•</span>
                         <span class="text-xs font-bold text-gray-400 uppercase tracking-tighter">
                             {{ $post->created_at->format('d \d\e M, Y') }}
@@ -137,7 +138,9 @@
                                         </div>
                                     @endif
 
-                                    <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-[calc(100%-1rem)]">
+                                    <x-favorite-heart :model="$related" context="related" class="absolute top-2 right-2 md:top-4 md:right-4 z-20" />
+
+                                    <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-[calc(100%-3.5rem)]">
                                         <span class="bg-white/90 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest text-brand-600 shadow-sm block truncate">
                                             {{ $related->blogCategories->first()->name ?? 'Geral' }}
                                         </span>

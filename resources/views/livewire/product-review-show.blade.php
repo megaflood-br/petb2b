@@ -3,9 +3,12 @@
         <span class="text-[10px] font-black text-brand-500 uppercase tracking-[0.3em] mb-4 block">
             {{ $review->category }}
         </span>
-        <h1 class="text-4xl md:text-6xl font-black text-gray-900 uppercase italic mb-8 leading-tight">
-            {{ $review->title }}
-        </h1>
+        <div class="flex items-start justify-between gap-4 mb-8">
+            <h1 class="text-4xl md:text-6xl font-black text-gray-900 uppercase italic leading-tight">
+                {{ $review->title }}
+            </h1>
+            <x-favorite-heart :model="$review" class="relative shrink-0 mt-2" />
+        </div>
 
         <div class="aspect-video w-full rounded-[3rem] overflow-hidden mb-12 shadow-2xl border border-gray-100 bg-gray-50/50 flex items-center justify-center p-8">
             @if($review->image)

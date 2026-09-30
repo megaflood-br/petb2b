@@ -7,9 +7,12 @@
 
         {{-- Topo com Informações --}}
         <div class="w-full max-w-6xl px-6 flex justify-between items-center mb-6">
-            <div class="text-white">
-                <h1 class="text-xl md:text-2xl font-black uppercase italic tracking-tighter">{{ $magazine->title }}</h1>
-                <p class="text-brand-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Edição {{ $magazine->issue_period }}</p>
+            <div class="text-white flex items-center gap-3">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black uppercase italic tracking-tighter">{{ $magazine->title }}</h1>
+                    <p class="text-brand-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Edição {{ $magazine->issue_period }}</p>
+                </div>
+                <x-favorite-heart :model="$magazine" class="relative" />
             </div>
             <a href="{{ route('home') }}" class="text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition">
                 ✕ <span class="hidden md:inline">Fechar Leitor</span>

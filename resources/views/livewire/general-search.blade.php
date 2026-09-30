@@ -21,9 +21,10 @@
                     <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b pb-2">Fornecedores Encontrados</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @foreach($suppliers as $supplier)
-                            <div class="bg-white border border-gray-100 p-6 rounded-[2.5rem] shadow-sm flex flex-col justify-between transition hover:shadow-md">
+                            <div class="relative bg-white border border-gray-100 p-6 rounded-[2.5rem] shadow-sm flex flex-col justify-between transition hover:shadow-md">
+                                <x-favorite-heart :model="$supplier" class="absolute top-4 right-4 z-20" />
                                 <div>
-                                    <h4 class="font-black text-gray-900 uppercase tracking-tight text-base line-clamp-1">{{ $supplier->name }}</h4>
+                                    <h4 class="font-black text-gray-900 uppercase tracking-tight text-base line-clamp-1 pr-10">{{ $supplier->name }}</h4>
                                     <p class="text-[9px] font-black text-brand-500 mb-2 uppercase tracking-wider">{{ str_replace('-', ' ', $supplier->category) }}</p>
                                     <p class="text-xs text-gray-500 font-medium line-clamp-2 mb-4">{{ $supplier->description }}</p>
                                 </div>
@@ -42,7 +43,9 @@
                     <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b pb-2">Agenda de Eventos</h2>
                     <div class="space-y-4">
                         @foreach($events as $event)
-                            <a href="{{ route('events.index', ['slug' => $event->slug]) }}" class="flex items-center gap-6 p-5 bg-white rounded-[2rem] border border-gray-100 hover:shadow-md transition group">
+                            <div class="relative">
+                            <x-favorite-heart :model="$event" class="absolute top-4 right-4 z-20" />
+                            <a href="{{ route('events.index', ['slug' => $event->slug]) }}" class="flex items-center gap-6 p-5 bg-white rounded-[2rem] border border-gray-100 hover:shadow-md transition group pr-14">
                                 <div class="w-16 h-16 bg-brand-50 rounded-xl overflow-hidden shrink-0 flex flex-col items-center justify-center text-brand-600 font-black">
                                     <span class="text-[8px] uppercase leading-none mb-0.5">{{ $event->start_date->translatedFormat('M') }}</span>
                                     <span class="text-lg leading-none">{{ $event->start_date->format('d') }}</span>
@@ -52,6 +55,7 @@
                                     <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $event->city }}/{{ $event->state }}</p>
                                 </div>
                             </a>
+                            </div>
                         @endforeach
                     </div>
                 </section>
@@ -63,8 +67,9 @@
                     <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b pb-2">Classificados & Oportunidades</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @foreach($classifieds as $ad)
-                            <div class="bg-white border border-gray-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-between gap-4 transition hover:shadow-md">
-                                <div class="flex-1 min-w-0">
+                            <div class="relative bg-white border border-gray-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-between gap-4 transition hover:shadow-md">
+                                <x-favorite-heart :model="$ad" class="absolute top-3 right-3 z-20" />
+                                <div class="flex-1 min-w-0 pr-10">
                                     <h4 class="font-black text-gray-900 uppercase tracking-tight text-sm line-clamp-1">{{ $ad->title }}</h4>
                                     <p class="text-sm font-mono font-black text-gray-900 mt-1">R$ {{ number_format($ad->price, 2, ',', '.') }}</p>
                                 </div>
@@ -89,7 +94,9 @@
                             @endphp
 
                             {{-- CORREÇÃO CRÍTICA: Passando explicitamente o array associativo com prefixCategory e slug --}}
-                            <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition group block">
+                            <div class="relative">
+                            <x-favorite-heart :model="$post" class="absolute top-4 right-4 z-20" />
+                            <a href="{{ route('blog.show', ['prefixCategory' => $postCatSlug, 'slug' => $post->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition group block pr-14">
                                 <div class="w-32 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 relative">
                                     @if($post->hasCover())
                                         <img src="{{ $post->coverUrl() }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
@@ -105,6 +112,7 @@
                                     <p class="text-[9px] text-gray-400 font-bold mt-1 uppercase">{{ $post->created_at->format('d/m/Y') }}</p>
                                 </div>
                             </a>
+                            </div>
                         @endforeach
                     </div>
                 </section>

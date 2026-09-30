@@ -23,7 +23,10 @@
                     @endif
                 </div>
 
-                <h1 class="text-2xl md:text-3xl font-black text-gray-900 uppercase italic tracking-tight">{{ $job->title }}</h1>
+                <div class="flex items-start justify-between gap-3">
+                    <h1 class="text-2xl md:text-3xl font-black text-gray-900 uppercase italic tracking-tight">{{ $job->title }}</h1>
+                    <x-favorite-heart :model="$job" class="relative shrink-0" />
+                </div>
                 <p class="text-sm text-gray-500 font-medium mt-2">
                     @if($job->supplier)
                         <a href="{{ route('suppliers.show', $job->supplier->slug) }}" class="text-brand-500 hover:underline font-bold">{{ $job->supplier->name }}</a> ·

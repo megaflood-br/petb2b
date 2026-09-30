@@ -40,22 +40,25 @@
         {{-- Lista --}}
         <div class="space-y-4">
             @forelse($jobs as $job)
-                <a href="{{ route('jobs.show', $job->slug) }}" class="block bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="min-w-0">
-                            <h2 class="text-lg font-black text-gray-900 uppercase group-hover:text-brand-500 transition truncate">{{ $job->title }}</h2>
-                            <p class="text-xs text-gray-500 font-medium mt-1">
-                                {{ $job->supplier->name ?? 'Empresa' }} · {{ $job->city ?: 'Local a combinar' }}{{ $job->state ? '/' . $job->state : '' }}
-                            </p>
+                <div class="relative bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                    <x-favorite-heart :model="$job" class="absolute top-4 right-4 z-20" />
+                    <a href="{{ route('jobs.show', $job->slug) }}" class="block pr-12">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <h2 class="text-lg font-black text-gray-900 uppercase group-hover:text-brand-500 transition truncate">{{ $job->title }}</h2>
+                                <p class="text-xs text-gray-500 font-medium mt-1">
+                                    {{ $job->supplier->name ?? 'Empresa' }} · {{ $job->city ?: 'Local a combinar' }}{{ $job->state ? '/' . $job->state : '' }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $job->type }}</span>
+                                @if($job->salary)
+                                    <span class="text-[9px] font-black uppercase tracking-wider bg-green-50 text-green-600 px-3 py-1.5 rounded-full">{{ $job->salary }}</span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $job->type }}</span>
-                            @if($job->salary)
-                                <span class="text-[9px] font-black uppercase tracking-wider bg-green-50 text-green-600 px-3 py-1.5 rounded-full">{{ $job->salary }}</span>
-                            @endif
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             @empty
                 <div class="py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
                     <p class="text-gray-400 font-bold uppercase tracking-widest">Nenhuma vaga encontrada.</p>

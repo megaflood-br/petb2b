@@ -11,7 +11,10 @@
                 @endif
 
                 <div class="p-8 md:p-10">
-                    <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $breed->species }}</span>
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $breed->species }}</span>
+                        <x-favorite-heart :model="$breed" class="relative" />
+                    </div>
                     <h1 class="text-3xl font-black text-gray-900 uppercase italic tracking-tight mt-4">{{ $breed->name }}</h1>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
