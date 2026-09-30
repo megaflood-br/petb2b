@@ -143,7 +143,7 @@ Route::get('/canis/{slug}', function ($slug) {
 
 // Estante de Revistas (Banca Digital)
 Route::get('/revistas', function () {
-    $magazines = Magazine::where('is_active', true)->latest()->get();
+    $magazines = Magazine::where('is_active', true)->latest('created_at')->get();
     $latest = $magazines->first();
     \App\Support\Seo::page(
         'Estante de Revistas Digitais | '.\App\Support\Settings::siteName(),

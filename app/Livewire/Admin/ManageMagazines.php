@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Magazine;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -22,7 +23,16 @@ class ManageMagazines extends Component
 
     // Propriedades do formulário
     public $title, $issue_period, $pdf, $cover, $editingMagazineId;
+    public string $created_at = '';
     public $showForm = false;
+
+    public function toggleForm(): void
+    {
+        $this->reset(['title', 'issue_period', 'pdf', 'cover', 'editingMagazineId']);
+        $this->created_at = now()->format('Y-m-d\TH:i');
+        $this->showForm = ! $this->showForm;
+        $this->resetErrorBag();
+    }
 
     #[Layout('layouts.admin')]
     public function render()
@@ -39,6 +49,7 @@ class ManageMagazines extends Component
         $this->editingMagazineId = $id;
         $this->title = $mag->title;
         $this->issue_period = $mag->issue_period;
+        $this->created_at = $mag->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
         $this->showForm = true;
     }
 
@@ -60,6 +71,7 @@ class ManageMagazines extends Component
         $this->validate([
             'title' => 'required|min:3',
             'issue_period' => 'required',
+            'created_at' => 'nullable|date',
             'pdf' => $this->editingMagazineId ? 'nullable|mimes:pdf|max:51200' : 'required|mimes:pdf|max:51200',
             'cover' => $this->editingMagazineId ? 'nullable|image|max:2048' : 'required|image|max:2048',
         ]);
@@ -80,14 +92,17 @@ class ManageMagazines extends Component
             $data['cover_path'] = $this->cover->store('magazines/covers', 'public');
         }
 
-        if ($this->editingMagazineId) {
-            Magazine::find($this->editingMagazineId)->update($data);
-            session()->flash('message', 'Revista atualizada!');
-        } else {
-            Magazine::create($data);
-            session()->flash('message', 'Revista publicada com sucesso!');
-        }
+        $magazine = $this->editingMagazineId
+            ? Magazine::findOrFail($this->editingMagazineId)
+            : new Magazine();
+        $magazine->fill($data);
+        $magazine->created_at = $this->created_at !== ''
+            ? Carbon::parse($this->created_at)
+            : ($magazine->created_at ?? now());
+        $magazine->save();
 
-        $this->reset(['title', 'issue_period', 'pdf', 'cover', 'editingMagazineId', 'showForm']);
+        session()->flash('message', $this->editingMagazineId ? 'Revista atualizada!' : 'Revista publicada com sucesso!');
+
+        $this->reset(['title', 'issue_period', 'pdf', 'cover', 'editingMagazineId', 'created_at', 'showForm']);
     }
 }
