@@ -45,11 +45,6 @@ class Seo
             SEOTools::metatags()->addKeyword($keywords);
         }
 
-        if ($image = Settings::ogImageUrl()) {
-            SEOTools::opengraph()->addImage($image);
-            SEOTools::twitter()->setImage($image);
-        }
-
         if ($handle = Settings::twitterHandle()) {
             SEOTools::twitter()->addValue('site', $handle);
         }
@@ -71,7 +66,41 @@ class Seo
         SEOTools::metatags()->setCanonical(url()->current());
 
         if ($image) {
-            SEOTools::opengraph()->addImage($image);
+            self::setPrimaryImage($image, $title);
+        }
+    }
+
+    /**
+     * Define a imagem de compartilhamento (WhatsApp/Facebook usam a primeira og:image).
+     */
+    public static function setPrimaryImage(string $image, ?string $alt = null): void
+    {
+        $og = SEOTools::opengraph();
+        $images = new \ReflectionProperty($og, 'images');
+        $images->setAccessible(true);
+        $images->setValue($og, []);
+
+        $attributes = array_filter([
+            'alt' => $alt,
+        ]);
+        $og->addImage($image, $attributes);
+        SEOTools::twitter()->setImage($image);
+    }
+
+    /**
+     * Se a página não definiu capa, usa a imagem padrão do painel.
+     */
+    public static function ensureDefaultImage(): void
+    {
+        $og = SEOTools::opengraph();
+        $images = new \ReflectionProperty($og, 'images');
+        $images->setAccessible(true);
+        if (! empty($images->getValue($og))) {
+            return;
+        }
+
+        if ($image = Settings::ogImageUrl()) {
+            $og->addImage($image);
             SEOTools::twitter()->setImage($image);
         }
     }
