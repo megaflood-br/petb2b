@@ -18,13 +18,15 @@ class Advertisement extends Model
         'clicks',
         'views',
         'cost_per_click',
-        'cost_per_impression'
+        'cost_per_impression',
+        'skip_credits',
     ];
 
     protected $casts = [
         'views' => 'integer',
         'clicks' => 'integer',
         'is_active' => 'boolean',
+        'skip_credits' => 'boolean',
         'cost_per_click' => 'decimal:4',
         'cost_per_impression' => 'decimal:4',
     ];
@@ -207,7 +209,8 @@ class Advertisement extends Model
     /**
      * Cobrança atômica de uma impressão (executada pelo Job de fila).
      *
-     * @return bool true quando a cobrança ocorreu; false quando não houve
+     * @return bool true quando a cobrança ocorreu, quando o anúncio é cortesia
+     *              (só contabiliza view/clique) ou false quando não houve
      *              saldo (e o anúncio foi pausado) ou não há fornecedor.
      */
     public function chargeImpression(): bool
@@ -245,6 +248,12 @@ class Advertisement extends Model
     {
         if (! $this->supplier_id) {
             return false;
+        }
+
+        if ($this->skip_credits) {
+            $this->increment($counterColumn);
+
+            return true;
         }
 
         return DB::transaction(function () use ($cost, $counterColumn, $type, $description) {
