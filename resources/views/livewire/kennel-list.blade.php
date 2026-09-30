@@ -63,6 +63,7 @@
                                 </span>
                             </div>
                         @endif
+                        <x-favorite-heart :model="$kennel" />
                     </div>
 
                     {{-- Conteúdo do Card --}}

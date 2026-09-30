@@ -21,6 +21,7 @@
 
                         {{-- O "Livro" na prateleira --}}
                         <div class="relative aspect-[3/4] mb-6 perspective-1000">
+                            <x-favorite-heart :model="$mag" class="absolute top-3 right-3 z-30" />
                             {{-- Efeito 3D Corrigido na Borda e Rotação --}}
                             <div class="w-full h-full rounded-r-xl shadow-[10px_10px_25px_rgba(0,0,0,0.2)] overflow-hidden transition-transform duration-500 group-hover:rotate-y-[-25deg] origin-left border-l-8 border-gray-900/10 relative">
                                 <img src="{{ asset('storage/' . $mag->cover_path) }}"

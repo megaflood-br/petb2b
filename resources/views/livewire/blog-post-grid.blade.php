@@ -16,7 +16,9 @@
                             </div>
                         @endif
 
-                        <div class="absolute top-2 left-2 md:top-4 md:left-4 flex gap-1 md:gap-2 max-w-[calc(100%-1rem)]">
+                        <x-favorite-heart :model="$post" class="absolute top-2 right-2 md:top-4 md:right-4 z-20" />
+
+                        <div class="absolute top-2 left-2 md:top-4 md:left-4 flex gap-1 md:gap-2 max-w-[calc(100%-3.5rem)]">
                             @if($post->is_featured)
                                 <span class="bg-amber-400 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest text-black shadow-sm flex items-center gap-1">
                                     ⚡ Destaque

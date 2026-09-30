@@ -14,6 +14,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
+        <style>[x-cloak]{display:none!important}</style>
     </head>
     <body class="font-sans antialiased bg-gray-50 text-gray-900 pb-16 sm:pb-0" x-data="{ mobileMenuOpen: false }">
         @if($gtmId = \App\Support\Settings::gtmId())
@@ -84,6 +85,23 @@
                     <a href="{{ route('reviews.index') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Análises</a>
                     <a href="{{ route('magazines.index') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Revistas</a>
                     <a href="{{ route('events.index') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Feiras Pet</a>
+
+                    <div class="pt-6 border-t border-gray-100 space-y-4">
+                        @auth
+                            <a href="{{ route('profile') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Meu perfil</a>
+                            <a href="{{ route('favorites.index') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Favoritos</a>
+                            @if(auth()->user()->hasPanel())
+                                <a href="{{ route('dashboard') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Painel</a>
+                            @endif
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="text-lg font-black uppercase italic text-red-600">Sair</button>
+                            </form>
+                        @else
+                            <a href="{{ route('login') }}" class="block text-lg font-black uppercase italic text-gray-900 hover:text-brand-500 transition">Entrar</a>
+                            <a href="{{ route('register.select') }}" class="block text-lg font-black uppercase italic text-brand-500">Anuncie ou Cadastre-se</a>
+                        @endauth
+                    </div>
                 </nav>
             </div>
         </div>
@@ -155,25 +173,17 @@
                         </div>
 
                         {{-- BOTÕES DE AUTENTICAÇÃO --}}
-                        <div class="flex items-center">
-                            <div class="hidden sm:flex sm:items-center sm:ml-6">
-                                @auth
-                                    <div class="flex items-center space-x-4">
-                                        <a href="{{ route('dashboard') }}" class="text-sm text-gray-700 hover:text-brand-500 font-bold transition">Dashboard</a>
-                                        <form method="POST" action="{{ route('logout') }}">
-                                            @csrf
-                                            <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-bold transition">Sair</button>
-                                        </form>
-                                    </div>
-                                @else
-                                    <div class="flex items-center space-x-4">
-                                        <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-brand-500 font-bold transition">Entrar</a>
-                                        <a href="{{ route('register.select') }}" class="bg-brand-500 text-white px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-brand-600 transition shadow-sm">
-                                            Anuncie ou Cadastre-se
-                                        </a>
-                                    </div>
-                                @endauth
-                            </div>
+                        <div class="flex items-center gap-3">
+                            @auth
+                                @include('partials.user-menu')
+                            @else
+                                <div class="hidden sm:flex sm:items-center sm:space-x-4">
+                                    <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-brand-500 font-bold transition">Entrar</a>
+                                    <a href="{{ route('register.select') }}" class="bg-brand-500 text-white px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-brand-600 transition shadow-sm">
+                                        Anuncie ou Cadastre-se
+                                    </a>
+                                </div>
+                            @endauth
 
                             <div class="flex items-center sm:hidden">
                                 <button @click="mobileMenuOpen = true" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:bg-gray-100 transition">

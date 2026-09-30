@@ -34,7 +34,9 @@
                     $badge = $isPost ? ($item->category ?: 'Raças') : $item->species;
                     $meta = $isPost ? '' : trim(($item->size ? 'Porte '.$item->size : '').($item->origin ? ' · '.$item->origin : ''));
                 @endphp
-                <a href="{{ route('breeds.show', $item->slug) }}" class="block bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                <div class="relative bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                    <x-favorite-heart :model="$item" />
+                    <a href="{{ route('breeds.show', $item->slug) }}" class="block">
                     <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
                         @if($hasImage)
                             <img src="{{ $imageUrl }}" alt="{{ $title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -49,7 +51,8 @@
                             <p class="text-xs text-gray-500 font-medium mt-1">{{ $meta }}</p>
                         @endif
                     </div>
-                </a>
+                    </a>
+                </div>
             @empty
                 <div class="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
                     <p class="text-gray-400 font-bold uppercase tracking-widest">Nenhuma raça encontrada.</p>

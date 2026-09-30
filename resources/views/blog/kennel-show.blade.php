@@ -26,7 +26,10 @@
                         @endif
                     </div>
 
-                    <h1 class="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">{{ $kennel->name }}</h1>
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                        <h1 class="text-2xl font-black text-gray-900 uppercase tracking-tight">{{ $kennel->name }}</h1>
+                        <x-favorite-heart :model="$kennel" class="relative" />
+                    </div>
                     @if($kennel->affix)
                         <p class="text-xs font-black text-brand-500 uppercase tracking-widest mb-4">Afixo: {{ $kennel->affix }}</p>
                     @endif

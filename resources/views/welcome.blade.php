@@ -73,6 +73,7 @@
                                 @else
                                     <div class="w-full h-full bg-brand-600 flex items-center justify-center text-white/20 font-black italic text-2xl tracking-tighter">RNPET</div>
                                 @endif
+                                <x-favorite-heart :model="$featured" context="home-featured" />
                                 <div class="absolute top-4 left-4">
                                     <span class="bg-amber-400 text-black text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1">
                                         ⚡ Super Destaque
@@ -137,6 +138,7 @@
                             <div class="absolute -inset-4 bg-white/10 rounded-[2.5rem] blur-2xl group-hover:bg-brand-500/20 transition duration-700"></div>
                             <img src="{{ asset('storage/' . $latestMagazine->cover_path) }}"
                                 class="rounded-2xl w-full shadow-[20px_20px_60px_rgba(0,0,0,0.5)] rotate-2 group-hover:rotate-0 transition-transform duration-700 relative z-10 border border-white/10">
+                            <x-favorite-heart :model="$latestMagazine" class="absolute top-2 right-2 z-20" />
                         </div>
 
                         <div class="flex-1 text-center md:text-left text-white">
@@ -189,7 +191,8 @@
                                 @else
                                     <div class="w-full h-full bg-slate-200 flex items-center justify-center text-gray-400 font-bold text-[10px] md:text-xs">Sem Imagem</div>
                                 @endif
-                                <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-[calc(100%-1rem)]">
+                                <x-favorite-heart :model="$post" context="home-grid" class="absolute top-2 right-2 md:top-4 md:right-4 z-20" />
+                                <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-[calc(100%-3.5rem)]">
                                     <span class="bg-white/95 backdrop-blur px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest text-brand-600 shadow-sm block truncate">
                                         {{ $post->blogCategories->first()->name ?? 'Geral' }}
                                     </span>
@@ -224,7 +227,9 @@
                 </div>
                 <div class="space-y-6">
                     @forelse($upcomingEvents as $event)
-                        <a href="{{ route('events.index', ['slug' => $event->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all group">
+                        <div class="relative">
+                        <x-favorite-heart :model="$event" class="absolute top-4 right-4 z-20" />
+                        <a href="{{ route('events.index', ['slug' => $event->slug]) }}" class="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all group pr-14">
                             <div class="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 relative border border-gray-50">
                                 @if($event->image)
                                     <img src="{{ asset('storage/' . $event->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -240,6 +245,7 @@
                                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ $event->city }}/{{ $event->state }} • {{ $event->start_date->format('d/m/Y') }}</p>
                             </div>
                         </a>
+                        </div>
                     @empty
                         <p class="text-gray-400 text-xs font-bold uppercase italic text-center py-4">Nenhum evento próximo agendado.</p>
                     @endforelse
@@ -265,7 +271,8 @@
 
                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-10">
                         @foreach($featuredBreeds as $breed)
-                            <article class="flex flex-col group bg-white p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition">
+                            <article class="relative flex flex-col group bg-white p-3 md:p-5 rounded-2xl md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition">
+                                <x-favorite-heart :model="$breed" class="absolute top-5 right-5 z-20" />
                                 <a href="{{ route('breeds.show', $breed->slug) }}" class="relative w-full aspect-[16/10] mb-3 md:mb-5 overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-100 block">
                                     @if($breed->image)
                                         <img src="{{ asset('storage/'.$breed->image) }}" alt="{{ $breed->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -292,7 +299,8 @@
                 <h2 class="text-2xl font-black text-gray-900 mb-10 uppercase tracking-tight">Fornecedores em Destaque</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     @foreach($featuredSuppliers as $supplier)
-                        <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition group">
+                        <div class="relative bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition group">
+                            <x-favorite-heart :model="$supplier" class="absolute top-6 right-6 z-20" />
                             <div class="w-20 h-20 bg-gray-50 rounded-2xl mb-6 flex items-center justify-center overflow-hidden border border-gray-100">
                                 @if($supplier->logo)
                                     <img src="{{ asset('storage/' . $supplier->logo) }}" alt="{{ $supplier->name }}" class="w-full h-full object-contain">
@@ -351,7 +359,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     @forelse($homeClassifieds as $ad)
-                        <a href="{{ route('classifieds.show', $ad->slug) }}" class="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl transition">
+                        <div class="relative bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl transition">
+                            <x-favorite-heart :model="$ad" />
+                            <a href="{{ route('classifieds.show', $ad->slug) }}" class="block">
                             <div class="aspect-square bg-white relative overflow-hidden flex items-center justify-center p-4">
                                 @if($ad->image)
                                     <img src="{{ asset('storage/' . $ad->image) }}" alt="{{ $ad->title }}" class="max-w-full max-h-full object-contain transition duration-500 group-hover:scale-105">
@@ -369,7 +379,8 @@
                                     <span class="text-[10px] font-black uppercase text-brand-500 tracking-widest">Saiba Mais</span>
                                 </div>
                             </div>
-                        </a>
+                            </a>
+                        </div>
                     @empty
                         <div class="col-span-full py-12 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
                             <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Nenhum classificado publicado no momento.</p>
@@ -398,7 +409,9 @@
 
                 <div class="space-y-4">
                     @forelse($homeJobs as $job)
-                        <a href="{{ route('jobs.show', $job->slug) }}" class="block bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                        <div class="relative bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                            <x-favorite-heart :model="$job" class="absolute top-4 right-4 z-20" />
+                            <a href="{{ route('jobs.show', $job->slug) }}" class="block pr-12">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="min-w-0">
                                     <h3 class="text-lg font-black text-gray-900 uppercase group-hover:text-brand-500 transition truncate">{{ $job->title }}</h3>
@@ -413,7 +426,8 @@
                                     @endif
                                 </div>
                             </div>
-                        </a>
+                            </a>
+                        </div>
                     @empty
                         <div class="py-12 text-center border-2 border-dashed border-gray-200 rounded-[2rem] bg-white">
                             <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Nenhuma vaga publicada no momento.</p>
@@ -442,7 +456,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     @forelse($homeKennels as $kennel)
-                        <a href="{{ route('kennels.show', $kennel->slug) }}" class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition group flex flex-col">
+                        <div class="relative bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition group flex flex-col">
+                            <x-favorite-heart :model="$kennel" />
+                            <a href="{{ route('kennels.show', $kennel->slug) }}" class="flex flex-col flex-1">
                             <div class="w-full aspect-[16/7] bg-gray-100 relative overflow-hidden">
                                 @if($kennel->cover_image)
                                     <img src="{{ asset('storage/' . $kennel->cover_image) }}" alt="{{ $kennel->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -469,7 +485,8 @@
                                     </div>
                                 @endif
                             </div>
-                        </a>
+                            </a>
+                        </div>
                     @empty
                         <div class="col-span-full py-12 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
                             <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Nenhum canil cadastrado no momento.</p>
@@ -491,7 +508,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                     @foreach($featuredReviews as $review)
-                        <a href="{{ route('reviews.show', $review->slug) }}" class="flex flex-col group">
+                        <div class="relative flex flex-col group">
+                            <x-favorite-heart :model="$review" class="absolute top-3 right-3 z-20" />
+                            <a href="{{ route('reviews.show', $review->slug) }}" class="flex flex-col">
                             <div class="relative w-full aspect-[16/9] bg-gray-100 rounded-[2.5rem] mb-6 overflow-hidden border border-gray-100">
                                 @if($review->image)
                                     <img src="{{ asset('storage/' . $review->image) }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" alt="{{ $review->title }}">
@@ -502,7 +521,8 @@
                                 <h3 class="text-xl font-black text-gray-900 uppercase leading-tight group-hover:text-brand-500 transition mb-3">{{ $review->title }}</h3>
                                 <p class="text-gray-500 text-sm line-clamp-2 font-medium">{{ \Illuminate\Support\Str::limit(strip_tags($review->content), 140) }}</p>
                             </div>
-                        </a>
+                            </a>
+                        </div>
                     @endforeach
                 </div>
             </section>

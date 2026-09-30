@@ -60,6 +60,7 @@
                                 {{ $ad->condition }}
                             </span>
                         </div>
+                        <x-favorite-heart :model="$ad" />
                     </div>
 
                     {{-- Bloco de Textos e Preços --}}

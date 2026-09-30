@@ -43,6 +43,7 @@ use App\Livewire\GeneralSearch;
 use App\Livewire\ClassifiedShow;
 use App\Livewire\ContactForm;
 use App\Livewire\KennelList;
+use App\Livewire\FavoritesIndex;
 
 // Controllers & Livewire do Fornecedor (Supplier)
 use App\Livewire\Supplier\ManageAds;
@@ -214,6 +215,7 @@ Route::get('/anuncie-conosco', function () { return view('pages.advertise'); })-
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::view('profile', 'profile')->name('profile');
+    Route::get('/favoritos', FavoritesIndex::class)->name('favorites.index');
 
     // Redirecionamento Inteligente Único Pós-Login de acordo com a Role
     Route::get('/dashboard', function () {

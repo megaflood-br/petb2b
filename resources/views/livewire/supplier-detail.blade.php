@@ -30,9 +30,12 @@
 
                         {{-- Título e Tags --}}
                         <div class="text-center md:text-left">
-                            <h1 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight tracking-tighter uppercase italic">
-                                {{ $supplier->name }}
-                            </h1>
+                            <div class="flex items-start justify-center md:justify-start gap-3">
+                                <h1 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight tracking-tighter uppercase italic">
+                                    {{ $supplier->name }}
+                                </h1>
+                                <x-favorite-heart :model="$supplier" class="relative shrink-0 mt-1" />
+                            </div>
                             <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
                                 <span class="bg-brand-50 text-brand-500 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">
                                     {{ str_replace('-', ' ', $supplier->category) }}

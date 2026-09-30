@@ -18,6 +18,7 @@
                         @else
                             <div class="text-gray-300 font-black italic text-xs tracking-widest">SEM FOTO</div>
                         @endif
+                        <x-favorite-heart :model="$review" />
                     </div>
 
                     <div class="p-6 flex-1 flex flex-col justify-between">
