@@ -35,7 +35,7 @@
 
                     <div class="px-0.5 md:px-2">
                         <div class="hidden md:flex items-center gap-2 text-xs text-gray-400 font-bold mb-3 uppercase tracking-tighter">
-                            <span>{{ $post->created_at->format('d M, Y') }}</span>
+                            <span>{{ $post->publishedAt() }}</span>
                             <span class="text-brand-300">•</span>
 
                             @php

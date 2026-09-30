@@ -200,7 +200,7 @@
                             </a>
                             <div class="px-0.5 md:px-2">
                                 <div class="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] text-gray-400 font-black mb-1.5 md:mb-2 uppercase">
-                                    <span>{{ $post->created_at->format('d \d\e M') }}</span>
+                                    <span>{{ $post->publishedAt('d \d\e M') }}</span>
                                     <span>•</span>
                                     <span class="text-brand-500 truncate">Revista NP</span>
                                 </div>

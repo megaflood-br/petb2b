@@ -12,7 +12,7 @@
                         <x-favorite-heart :model="$post" class="relative" />
                         <span class="text-gray-300">•</span>
                         <span class="text-xs font-bold text-gray-400 uppercase tracking-tighter">
-                            {{ $post->created_at->format('d \d\e M, Y') }}
+                            {{ $post->publishedAt() }}
                         </span>
                         @if($post->is_premium)
                             <span class="text-gray-300">•</span>
