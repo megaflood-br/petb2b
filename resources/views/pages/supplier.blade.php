@@ -58,6 +58,10 @@
         </div>
     @endif
 
+    <div class="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm mb-12">
+        @livewire('profile.payment-history')
+    </div>
+
     {{-- Bloco do Formulário do Fornecedor (Livewire) --}}
     <div class="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
         <div class="mb-8 border-b pb-4">
