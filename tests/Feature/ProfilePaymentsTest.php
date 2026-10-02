@@ -79,6 +79,30 @@ class ProfilePaymentsTest extends TestCase
             ->assertSee('Gerar novo PIX');
     }
 
+    public function test_dashboard_do_fornecedor_mostra_pagamentos(): void
+    {
+        [$user, $supplier] = $this->supplierUser();
+
+        PixCharge::create([
+            'supplier_id' => $supplier->id,
+            'asaas_payment_id' => 'pay_dash',
+            'amount' => 65,
+            'status' => 'PENDING',
+            'pix_payload' => 'PIX-DASHBOARD',
+            'pix_expiration' => now()->addDay(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('supplier.dashboard'))
+            ->assertOk()
+            ->assertSee('Pagamentos')
+            ->assertSee('PIX gerados')
+            ->assertSee('Pagamentos efetuados')
+            ->assertSee('R$ 65,00')
+            ->assertSee('PIX-DASHBOARD')
+            ->assertSee('Aguardando pagamento');
+    }
+
     public function test_nao_mostra_pix_de_outra_empresa(): void
     {
         [$user] = $this->supplierUser();
