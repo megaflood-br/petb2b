@@ -1,8 +1,9 @@
-@props(['position', 'variant' => 'leaderboard'])
+@props(['position', 'variant' => 'leaderboard', 'pitch' => null])
 
 @php
     $ad = \App\Models\Advertisement::pickRandom($position);
     $houseUrl = route('advertise');
+    $pitch = $pitch ?: 'Sua marca neste espaço do guia de fornecedores.';
 @endphp
 
 @if($variant === 'mobile')
@@ -54,7 +55,7 @@
     @else
         <div class="bg-white border-2 border-dashed border-brand-100 p-8 rounded-[3rem] text-center space-y-4">
             <p class="text-brand-500 font-black uppercase tracking-widest text-[10px]">Anuncie aqui</p>
-            <p class="text-gray-400 text-xs font-medium leading-relaxed">Sua marca neste espaço do guia de fornecedores.</p>
+            <p class="text-gray-400 text-xs font-medium leading-relaxed">{{ $pitch }}</p>
             <a href="{{ $houseUrl }}" class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-black uppercase text-[9px] tracking-widest px-5 py-3 rounded-xl shadow-md transition">
                 Quero anunciar
             </a>

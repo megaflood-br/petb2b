@@ -42,8 +42,10 @@
             </div>
         </div>
 
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            <div class="w-full lg:flex-1">
         {{-- Grid de Canis --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             @forelse($kennels as $kennel)
                 <div class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition group relative flex flex-col justify-between">
 
@@ -124,6 +126,13 @@
         </div>
 
         <x-infinite-scroll :paginator="$kennels" class="mt-12" />
+            </div>
+
+            <x-listing-ad-sidebar
+                position="sidebar_canis"
+                pitch="Sua marca neste espaço do guia de canis."
+            />
+        </div>
 
     </div>
 </div>

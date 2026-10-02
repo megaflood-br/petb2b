@@ -63,7 +63,16 @@
                 @endif
             </div>
 
-            <livewire:blog-post-grid :category="$categorySlug" />
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <div class="w-full lg:flex-1 min-w-0">
+                    <livewire:blog-post-grid :category="$categorySlug" />
+                </div>
+
+                <x-listing-ad-sidebar
+                    position="sidebar_blog"
+                    pitch="Sua marca neste espaço das notícias."
+                />
+            </div>
 
             <x-ad-space position="meio_blog" />
 

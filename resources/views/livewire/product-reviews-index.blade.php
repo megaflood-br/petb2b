@@ -9,44 +9,53 @@
 
         <x-ad-space position="setor_analises" />
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            @forelse($reviews as $review)
-                <div class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-xl transition group">
-                    <div class="relative w-full aspect-[16/10] bg-gray-50 flex items-center justify-center p-8 border-b border-gray-50/50">
-                        @if($review->image)
-                            <img src="{{ asset('storage/'.$review->image) }}" class="max-h-full object-contain group-hover:scale-105 transition duration-500" alt="{{ $review->title }}">
-                        @else
-                            <div class="text-gray-300 font-black italic text-xs tracking-widest">SEM FOTO</div>
-                        @endif
-                        <x-favorite-heart :model="$review" />
-                    </div>
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            <div class="w-full lg:flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    @forelse($reviews as $review)
+                        <div class="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden flex flex-col shadow-sm hover:shadow-xl transition group">
+                            <div class="relative w-full aspect-[16/10] bg-gray-50 flex items-center justify-center p-8 border-b border-gray-50/50">
+                                @if($review->image)
+                                    <img src="{{ asset('storage/'.$review->image) }}" class="max-h-full object-contain group-hover:scale-105 transition duration-500" alt="{{ $review->title }}">
+                                @else
+                                    <div class="text-gray-300 font-black italic text-xs tracking-widest">SEM FOTO</div>
+                                @endif
+                                <x-favorite-heart :model="$review" />
+                            </div>
 
-                    <div class="p-6 flex-1 flex flex-col justify-between">
-                        <div>
-                            <span class="text-[9px] font-black text-brand-500 uppercase tracking-[0.3em] mb-2 block">
-                                {{ $review->category }}
-                            </span>
-                            <h3 class="text-xl font-black text-gray-900 uppercase leading-tight mb-3 group-hover:text-brand-500 transition line-clamp-2 italic">
-                                <a href="{{ route('reviews.show', $review->slug) }}">{{ $review->title }}</a>
-                            </h3>
-                            <p class="text-gray-500 text-sm line-clamp-3 mb-6 font-medium">
-                                {{ \Illuminate\Support\Str::limit(strip_tags($review->content), 140) }}
-                            </p>
+                            <div class="p-6 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[9px] font-black text-brand-500 uppercase tracking-[0.3em] mb-2 block">
+                                        {{ $review->category }}
+                                    </span>
+                                    <h3 class="text-xl font-black text-gray-900 uppercase leading-tight mb-3 group-hover:text-brand-500 transition line-clamp-2 italic">
+                                        <a href="{{ route('reviews.show', $review->slug) }}">{{ $review->title }}</a>
+                                    </h3>
+                                    <p class="text-gray-500 text-sm line-clamp-3 mb-6 font-medium">
+                                        {{ \Illuminate\Support\Str::limit(strip_tags($review->content), 140) }}
+                                    </p>
+                                </div>
+                                <div class="mt-auto pt-2">
+                                    <a href="{{ route('reviews.show', $review->slug) }}" class="block w-full text-center py-4 bg-gray-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-brand-500 transition shadow-md shadow-gray-200">
+                                        Ler análise →
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mt-auto pt-2">
-                            <a href="{{ route('reviews.show', $review->slug) }}" class="block w-full text-center py-4 bg-gray-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-brand-500 transition shadow-md shadow-gray-200">
-                                Ler análise →
-                            </a>
+                    @empty
+                        <div class="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
+                            <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Nenhuma análise publicada até o momento.</p>
                         </div>
-                    </div>
+                    @endforelse
                 </div>
-            @empty
-                <div class="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
-                    <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Nenhuma análise publicada até o momento.</p>
-                </div>
-            @endforelse
+
+                <x-infinite-scroll :paginator="$reviews" class="mt-16" />
+            </div>
+
+            <x-listing-ad-sidebar
+                position="sidebar_analises"
+                pitch="Sua marca neste espaço das análises de produtos."
+            />
         </div>
-
-        <x-infinite-scroll :paginator="$reviews" class="mt-16" />
     </div>
 </div>

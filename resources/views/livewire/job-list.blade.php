@@ -1,5 +1,5 @@
 <div class="bg-gray-50 min-h-screen py-16">
-    <div class="max-w-6xl mx-auto px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
 
         {{-- Cabeçalho da Página (padrão do portal) --}}
         <div class="max-w-2xl mb-12">
@@ -37,35 +37,44 @@
             </select>
         </div>
 
-        {{-- Lista --}}
-        <div class="space-y-4">
-            @forelse($jobs as $job)
-                <div class="relative bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
-                    <x-favorite-heart :model="$job" class="absolute top-4 right-4 z-20" />
-                    <a href="{{ route('jobs.show', $job->slug) }}" class="block pr-12">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="min-w-0">
-                                <h2 class="text-lg font-black text-gray-900 uppercase group-hover:text-brand-500 transition truncate">{{ $job->title }}</h2>
-                                <p class="text-xs text-gray-500 font-medium mt-1">
-                                    {{ $job->supplier->name ?? 'Empresa' }} · {{ $job->city ?: 'Local a combinar' }}{{ $job->state ? '/' . $job->state : '' }}
-                                </p>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $job->type }}</span>
-                                @if($job->salary)
-                                    <span class="text-[9px] font-black uppercase tracking-wider bg-green-50 text-green-600 px-3 py-1.5 rounded-full">{{ $job->salary }}</span>
-                                @endif
-                            </div>
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            <div class="w-full lg:flex-1">
+                {{-- Lista --}}
+                <div class="space-y-4">
+                    @forelse($jobs as $job)
+                        <div class="relative bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                            <x-favorite-heart :model="$job" class="absolute top-4 right-4 z-20" />
+                            <a href="{{ route('jobs.show', $job->slug) }}" class="block pr-12">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <h2 class="text-lg font-black text-gray-900 uppercase group-hover:text-brand-500 transition truncate">{{ $job->title }}</h2>
+                                        <p class="text-xs text-gray-500 font-medium mt-1">
+                                            {{ $job->supplier->name ?? 'Empresa' }} · {{ $job->city ?: 'Local a combinar' }}{{ $job->state ? '/' . $job->state : '' }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1.5 rounded-full">{{ $job->type }}</span>
+                                        @if($job->salary)
+                                            <span class="text-[9px] font-black uppercase tracking-wider bg-green-50 text-green-600 px-3 py-1.5 rounded-full">{{ $job->salary }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    </a>
+                    @empty
+                        <div class="py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
+                            <p class="text-gray-400 font-bold uppercase tracking-widest">Nenhuma vaga encontrada.</p>
+                        </div>
+                    @endforelse
                 </div>
-            @empty
-                <div class="py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
-                    <p class="text-gray-400 font-bold uppercase tracking-widest">Nenhuma vaga encontrada.</p>
-                </div>
-            @endforelse
-        </div>
 
-        <x-infinite-scroll :paginator="$jobs" class="mt-10" />
+                <x-infinite-scroll :paginator="$jobs" class="mt-10" />
+            </div>
+
+            <x-listing-ad-sidebar
+                position="sidebar_vagas"
+                pitch="Sua marca neste espaço do guia de vagas."
+            />
+        </div>
     </div>
 </div>
