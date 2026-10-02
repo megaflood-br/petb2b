@@ -53,6 +53,12 @@
                 {{-- Input e Botão de Geração de PIX --}}
                 <div class="pt-5 border-t border-gray-900 space-y-3">
                     <p class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Adicionar Crédito via PIX</p>
+                    @unless($supplier->pixDocument())
+                        <p class="text-[10px] text-amber-400 font-medium normal-case leading-relaxed">
+                            Para gerar o PIX, cadastre um CPF ou CNPJ válido no
+                            <a href="{{ route('supplier.dashboard') }}" class="underline hover:text-amber-200">perfil da empresa</a>.
+                        </p>
+                    @endunless
                     <form wire:submit.prevent="generatePix" class="flex gap-2">
                         <div class="relative flex-1">
                             <span class="absolute left-3 top-3.5 text-gray-500 font-mono text-[10px]">R$</span>

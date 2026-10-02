@@ -6,6 +6,8 @@ use App\Models\Advertisement;
 use App\Models\PixCharge;
 use App\Models\Supplier;
 use App\Models\SupplierCreditTransaction;
+use App\Services\Pix\AsaasPixGateway;
+use App\Services\Pix\PixException;
 use App\Services\Pix\PixGateway;
 use App\Support\Settings;
 use Illuminate\Support\Carbon;
@@ -79,7 +81,21 @@ class ManageAds extends Component
             'amount.max' => 'O valor máximo por recarga é R$ ' . number_format($max, 2, ',', '.'),
         ]);
 
-        $result = $gateway->createCharge($this->supplier, (float) $this->amount);
+        $this->supplier->refresh();
+
+        if (! $this->supplier->pixDocument()) {
+            session()->flash('error', AsaasPixGateway::MISSING_DOCUMENT_MESSAGE);
+
+            return;
+        }
+
+        try {
+            $result = $gateway->createCharge($this->supplier, (float) $this->amount);
+        } catch (PixException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
 
         $charge = PixCharge::create([
             'supplier_id' => $this->supplier->id,
