@@ -1,5 +1,5 @@
 <div class="bg-gray-50 min-h-screen py-16">
-    <div class="max-w-6xl mx-auto px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
 
         {{-- Cabeçalho da Página (padrão do portal) --}}
         <div class="max-w-2xl mb-12">
@@ -23,43 +23,52 @@
             @endif
         </div>
 
-        {{-- Grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($breeds as $item)
-                @php
-                    $isPost = $item instanceof \App\Models\Post;
-                    $title = $isPost ? $item->title : $item->name;
-                    $hasImage = $isPost ? $item->hasCover() : filled($item->image);
-                    $imageUrl = $isPost ? $item->coverUrl() : ($item->image ? asset('storage/'.$item->image) : null);
-                    $badge = $isPost ? ($item->category ?: 'Raças') : $item->species;
-                    $meta = $isPost ? '' : trim(($item->size ? 'Porte '.$item->size : '').($item->origin ? ' · '.$item->origin : ''));
-                @endphp
-                <div class="relative bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
-                    <x-favorite-heart :model="$item" />
-                    <a href="{{ route('breeds.show', $item->slug) }}" class="block">
-                    <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
-                        @if($hasImage)
-                            <img src="{{ $imageUrl }}" alt="{{ $title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl font-black italic">{{ \Illuminate\Support\Str::substr($title, 0, 1) }}</div>
-                        @endif
-                    </div>
-                    <div class="p-5">
-                        <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1 rounded-full">{{ $badge }}</span>
-                        <h2 class="text-lg font-black text-gray-900 uppercase mt-2 group-hover:text-brand-500 transition">{{ $title }}</h2>
-                        @if($meta !== '')
-                            <p class="text-xs text-gray-500 font-medium mt-1">{{ $meta }}</p>
-                        @endif
-                    </div>
-                    </a>
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            <div class="w-full lg:flex-1">
+                {{-- Grid --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    @forelse($breeds as $item)
+                        @php
+                            $isPost = $item instanceof \App\Models\Post;
+                            $title = $isPost ? $item->title : $item->name;
+                            $hasImage = $isPost ? $item->hasCover() : filled($item->image);
+                            $imageUrl = $isPost ? $item->coverUrl() : ($item->image ? asset('storage/'.$item->image) : null);
+                            $badge = $isPost ? ($item->category ?: 'Raças') : $item->species;
+                            $meta = $isPost ? '' : trim(($item->size ? 'Porte '.$item->size : '').($item->origin ? ' · '.$item->origin : ''));
+                        @endphp
+                        <div class="relative bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition group">
+                            <x-favorite-heart :model="$item" />
+                            <a href="{{ route('breeds.show', $item->slug) }}" class="block">
+                            <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+                                @if($hasImage)
+                                    <img src="{{ $imageUrl }}" alt="{{ $title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-gray-300 text-5xl font-black italic">{{ \Illuminate\Support\Str::substr($title, 0, 1) }}</div>
+                                @endif
+                            </div>
+                            <div class="p-5">
+                                <span class="text-[9px] font-black uppercase tracking-wider bg-brand-50 text-brand-600 px-3 py-1 rounded-full">{{ $badge }}</span>
+                                <h2 class="text-lg font-black text-gray-900 uppercase mt-2 group-hover:text-brand-500 transition">{{ $title }}</h2>
+                                @if($meta !== '')
+                                    <p class="text-xs text-gray-500 font-medium mt-1">{{ $meta }}</p>
+                                @endif
+                            </div>
+                            </a>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
+                            <p class="text-gray-400 font-bold uppercase tracking-widest">Nenhuma raça encontrada.</p>
+                        </div>
+                    @endforelse
                 </div>
-            @empty
-                <div class="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
-                    <p class="text-gray-400 font-bold uppercase tracking-widest">Nenhuma raça encontrada.</p>
-                </div>
-            @endforelse
-        </div>
 
-        <x-infinite-scroll :paginator="$breeds" class="mt-10" />
+                <x-infinite-scroll :paginator="$breeds" class="mt-10" />
+            </div>
+
+            <x-listing-ad-sidebar
+                position="sidebar_racas"
+                pitch="Sua marca neste espaço do guia de raças."
+            />
+        </div>
     </div>
 </div>

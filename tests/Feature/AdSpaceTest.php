@@ -87,4 +87,54 @@ class AdSpaceTest extends TestCase
             ->assertSee('Anuncie aqui')
             ->assertDontSee('Campanha Pausada');
     }
+
+    public function test_guia_de_fornecedores_mantem_sidebar_original(): void
+    {
+        $this->get('/fornecedores')
+            ->assertOk()
+            ->assertSee('Anuncie aqui')
+            ->assertSee('Quero anunciar')
+            ->assertSee('Sua marca neste espaço do guia de fornecedores.');
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string, 2: string}>
+     */
+    public static function listingSidebarPages(): array
+    {
+        return [
+            'classificados' => ['/classificados', 'Sua marca neste espaço dos classificados.', 'sidebar_classificados'],
+            'noticias' => ['/noticias', 'Sua marca neste espaço das notícias.', 'sidebar_blog'],
+            'vagas' => ['/vagas', 'Sua marca neste espaço do guia de vagas.', 'sidebar_vagas'],
+            'analises' => ['/analises-produtos', 'Sua marca neste espaço das análises de produtos.', 'sidebar_analises'],
+            'canis' => ['/canis', 'Sua marca neste espaço do guia de canis.', 'sidebar_canis'],
+            'racas' => ['/racas', 'Sua marca neste espaço do guia de raças.', 'sidebar_racas'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('listingSidebarPages')]
+    public function test_listagens_mostram_sidebar_anuncie_aqui(string $path, string $pitch, string $_position): void
+    {
+        $this->get($path)
+            ->assertOk()
+            ->assertSee('Anuncie aqui')
+            ->assertSee('Quero anunciar')
+            ->assertSee($pitch)
+            ->assertDontSee('Sua marca neste espaço do guia de fornecedores.')
+            ->assertSee(route('advertise', absolute: false));
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('listingSidebarPages')]
+    public function test_listagens_exibem_campanha_da_sidebar(string $path, string $pitch, string $position): void
+    {
+        $this->makeAd($position, 'Campanha Sidebar da Aba');
+        $this->makeAd('sidebar_guia', 'Campanha do Guia');
+
+        $this->get($path)
+            ->assertOk()
+            ->assertSee('Campanha Sidebar da Aba')
+            ->assertDontSee('Campanha do Guia')
+            ->assertDontSee('Quero anunciar')
+            ->assertDontSee($pitch);
+    }
 }

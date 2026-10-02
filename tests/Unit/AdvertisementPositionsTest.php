@@ -19,6 +19,7 @@ class AdvertisementPositionsTest extends TestCase
         foreach ([
             'banner_topo', 'sidebar_guia', 'meio_blog', 'post_top', 'post_footer', 'banner_mobile_footer',
             'setor_vagas', 'setor_racas', 'setor_analises', 'setor_eventos', 'setor_canis', 'setor_classificados', 'setor_revistas',
+            'sidebar_classificados', 'sidebar_blog', 'sidebar_vagas', 'sidebar_analises', 'sidebar_canis', 'sidebar_racas',
         ] as $expected) {
             $this->assertContains($expected, $positions, "Posição ausente em getPositions(): {$expected}");
         }
@@ -44,6 +45,8 @@ class AdvertisementPositionsTest extends TestCase
 
         $this->assertSame('1200 × 160 px', Advertisement::dimensionFor('banner_topo'));
         $this->assertSame('300 × 250 px', Advertisement::dimensionFor('sidebar_guia'));
+        $this->assertSame('300 × 250 px', Advertisement::dimensionFor('sidebar_classificados'));
+        $this->assertSame('300 × 250 px', Advertisement::dimensionFor('sidebar_blog'));
         $this->assertSame('320 × 50 px', Advertisement::dimensionFor('banner_mobile_footer'));
         $this->assertSame('—', Advertisement::dimensionFor('posicao_inexistente'));
     }
