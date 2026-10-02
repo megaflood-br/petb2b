@@ -4,6 +4,7 @@ namespace App\Livewire\Supplier;
 
 use App\Models\Supplier;
 use App\Models\Category;
+use App\Support\CpfCnpj;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,20 +21,27 @@ class EditProfile extends Component
     public $whatsapp, $phone;
     public $logo, $existingLogo;
 
-    protected $rules = [
-        'name' => 'required|min:3',
-        'email' => 'required|email',
-        'category' => 'required',
-        'description' => 'required|min:10',
-        'address' => 'required',
-        'city' => 'required',  // Obrigatórios para não quebrar a busca regional
-        'state' => 'required', // Obrigatórios para não quebrar a busca regional
-        'website' => 'nullable',
-        'cnpj' => 'nullable',
-        'whatsapp' => 'nullable|min:10',
-        'phone' => 'nullable|min:10',
-        'logo' => 'nullable|image|max:2048',
-    ];
+    protected function rules(): array
+    {
+        return [
+            'name' => 'required|min:3',
+            'email' => 'required|email',
+            'category' => 'required',
+            'description' => 'required|min:10',
+            'address' => 'required',
+            'city' => 'required',
+            'state' => 'required',
+            'website' => 'nullable',
+            'cnpj' => ['nullable', function (string $attribute, mixed $value, \Closure $fail) {
+                if (filled($value) && ! CpfCnpj::isValid((string) $value)) {
+                    $fail('Informe um CPF ou CNPJ válido.');
+                }
+            }],
+            'whatsapp' => 'nullable|min:10',
+            'phone' => 'nullable|min:10',
+            'logo' => 'nullable|image|max:2048',
+        ];
+    }
 
     public function mount()
     {
@@ -43,6 +51,7 @@ class EditProfile extends Component
                 'name' => Auth::user()->name ?? 'Empresa Nova',
                 'slug' => Str::slug(Auth::user()->name ?? 'empresa-nova'),
                 'email' => Auth::user()->email ?? 'contacto@empresa.com',
+                'cnpj' => Auth::user()->cnpj,
                 'description' => 'Preencha a descrição da sua empresa aqui.',
                 'address' => 'Preencha o seu endereço comercial.',
                 'city' => null,

@@ -28,6 +28,7 @@ class ManageAdsPixTest extends TestCase
             'description' => 'd',
             'category' => 'racas',
             'user_id' => $user->id,
+            'cnpj' => '12.345.678/0001-95',
             'is_active' => true,
             'is_approved' => true,
         ]);
@@ -57,7 +58,8 @@ class ManageAdsPixTest extends TestCase
         ]);
         Supplier::create([
             'name' => 'Loja', 'email' => 'l_' . uniqid() . '@t.com', 'description' => 'd',
-            'category' => 'racas', 'user_id' => $user->id, 'is_active' => true, 'is_approved' => true,
+            'category' => 'racas', 'user_id' => $user->id, 'cnpj' => '12.345.678/0001-95',
+            'is_active' => true, 'is_approved' => true,
         ]);
         $this->actingAs($user);
 
@@ -65,6 +67,27 @@ class ManageAdsPixTest extends TestCase
             ->set('amount', 1)
             ->call('generatePix')
             ->assertHasErrors(['amount']);
+    }
+
+    public function test_gerar_pix_sem_cnpj_mostra_erro_e_nao_quebra(): void
+    {
+        $user = User::create([
+            'name' => 'F', 'email' => 'u_' . uniqid() . '@t.com', 'password' => 'secret',
+        ]);
+        Supplier::create([
+            'name' => 'Loja', 'email' => 'l_' . uniqid() . '@t.com', 'description' => 'd',
+            'category' => 'racas', 'user_id' => $user->id, 'is_active' => true, 'is_approved' => true,
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(ManageAds::class)
+            ->set('amount', 50)
+            ->call('generatePix')
+            ->assertHasNoErrors()
+            ->assertSee('Cadastre um CPF ou CNPJ válido')
+            ->assertSee('perfil da empresa');
+
+        $this->assertDatabaseCount('pix_charges', 0);
     }
 
     public function test_aba_exibe_tabela_com_todas_as_medidas_e_posicoes(): void

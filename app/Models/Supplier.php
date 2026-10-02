@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Http\Controllers\HomeController;
 use App\Models\Concerns\FlushesHomeCache;
 use App\Models\Concerns\Searchable;
+use App\Support\CpfCnpj;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -75,6 +76,17 @@ class Supplier extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * CPF/CNPJ aceito pelo Asaas: o da empresa ou, se faltar, o do dono da conta.
+     */
+    public function pixDocument(): ?string
+    {
+        $this->loadMissing('user');
+
+        return CpfCnpj::normalize($this->cnpj)
+            ?? CpfCnpj::normalize($this->user?->cnpj);
     }
 
     /**

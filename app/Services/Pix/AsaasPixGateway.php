@@ -3,6 +3,7 @@
 namespace App\Services\Pix;
 
 use App\Models\Supplier;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -16,6 +17,8 @@ use RuntimeException;
  */
 class AsaasPixGateway implements PixGateway
 {
+    public const MISSING_DOCUMENT_MESSAGE = 'Cadastre um CPF ou CNPJ válido no perfil da empresa para gerar o PIX.';
+
     public function __construct(
         private readonly string $baseUrl,
         private readonly string $apiKey,
@@ -38,7 +41,7 @@ class AsaasPixGateway implements PixGateway
         $paymentId = $payment['id'] ?? null;
 
         if (! $paymentId) {
-            throw new RuntimeException('Asaas: resposta de cobrança sem id.');
+            throw new PixException('Não foi possível gerar o PIX agora. Tente novamente em instantes.');
         }
 
         $qr = $this->request('get', "/v3/payments/{$paymentId}/pixQrCode");
@@ -58,16 +61,22 @@ class AsaasPixGateway implements PixGateway
             return $supplier->asaas_customer_id;
         }
 
+        $document = $supplier->pixDocument();
+
+        if (! $document) {
+            throw new PixException(self::MISSING_DOCUMENT_MESSAGE);
+        }
+
         $customer = $this->request('post', '/v3/customers', [
             'name' => $supplier->name,
-            'cpfCnpj' => preg_replace('/\D/', '', (string) $supplier->cnpj) ?: '00000000000',
+            'cpfCnpj' => $document,
             'email' => $supplier->email,
         ]);
 
         $customerId = $customer['id'] ?? null;
 
         if (! $customerId) {
-            throw new RuntimeException('Asaas: resposta de customer sem id.');
+            throw new PixException('Não foi possível cadastrar a empresa no PIX. Confira o CPF/CNPJ no perfil.');
         }
 
         $supplier->forceFill(['asaas_customer_id' => $customerId])->save();
@@ -84,11 +93,33 @@ class AsaasPixGateway implements PixGateway
             ->{$method}($path, $data);
 
         if ($response->failed()) {
-            throw new RuntimeException(
-                "Asaas API error ({$response->status()}) em {$path}: " . $response->body()
-            );
+            throw new PixException($this->friendlyError($path, $response));
         }
 
         return $response->json() ?? [];
+    }
+
+    private function friendlyError(string $path, Response $response): string
+    {
+        $descriptions = collect($response->json('errors') ?? [])
+            ->pluck('description')
+            ->filter()
+            ->values();
+
+        $joined = mb_strtolower($descriptions->implode(' '));
+
+        if (str_contains($joined, 'cpf') || str_contains($joined, 'cnpj')) {
+            return self::MISSING_DOCUMENT_MESSAGE;
+        }
+
+        if ($response->clientError() && $descriptions->isNotEmpty()) {
+            return (string) $descriptions->first();
+        }
+
+        report(new RuntimeException(
+            "Asaas API error ({$response->status()}) em {$path}: " . $response->body()
+        ));
+
+        return 'Não foi possível gerar o PIX agora. Tente novamente em instantes.';
     }
 }
