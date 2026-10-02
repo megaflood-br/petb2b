@@ -14,6 +14,7 @@ class PixCharge extends Model
         'pix_payload',
         'pix_encoded_image',
         'pix_expiration',
+        'credited_at',
     ];
 
     protected $casts = [
@@ -30,5 +31,30 @@ class PixCharge extends Model
     public function isCredited(): bool
     {
         return ! is_null($this->credited_at);
+    }
+
+    public function isExpired(): bool
+    {
+        return ! $this->isCredited()
+            && $this->pix_expiration
+            && $this->pix_expiration->isPast();
+    }
+
+    public function isAwaitingPayment(): bool
+    {
+        return ! $this->isCredited() && ! $this->isExpired();
+    }
+
+    public function statusLabel(): string
+    {
+        if ($this->isCredited()) {
+            return 'Pago';
+        }
+
+        if ($this->isExpired()) {
+            return 'Expirado';
+        }
+
+        return 'Aguardando pagamento';
     }
 }
