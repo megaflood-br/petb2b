@@ -108,6 +108,11 @@ class Supplier extends Model
         return $this->hasMany(SupplierCreditTransaction::class);
     }
 
+    public function pixCharges()
+    {
+        return $this->hasMany(PixCharge::class);
+    }
+
     public function classifieds()
     {
         return $this->hasMany(Classified::class);
