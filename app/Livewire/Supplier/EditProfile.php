@@ -32,11 +32,7 @@ class EditProfile extends Component
             'city' => 'required',
             'state' => 'required',
             'website' => 'nullable',
-            'cnpj' => ['nullable', function (string $attribute, mixed $value, \Closure $fail) {
-                if (filled($value) && ! CpfCnpj::isValid((string) $value)) {
-                    $fail('Informe um CPF ou CNPJ válido.');
-                }
-            }],
+            'cnpj' => CpfCnpj::rule(),
             'whatsapp' => 'nullable|min:10',
             'phone' => 'nullable|min:10',
             'logo' => 'nullable|image|max:2048',
@@ -103,7 +99,7 @@ class EditProfile extends Component
             'email' => $this->email,
             'website' => $this->website,
             'category' => $this->category,
-            'cnpj' => $this->cnpj,
+            'cnpj' => CpfCnpj::format($this->cnpj),
             'description' => $this->description,
             'address' => $this->address,
             'city' => $this->city,   // Salva Cidade isolada

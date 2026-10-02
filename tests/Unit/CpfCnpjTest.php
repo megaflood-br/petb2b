@@ -13,6 +13,10 @@ class CpfCnpjTest extends TestCase
         $this->assertTrue(CpfCnpj::isValid('12.345.678/0001-95'));
         $this->assertEquals('12345678000195', CpfCnpj::normalize('12.345.678/0001-95'));
         $this->assertEquals('39053344705', CpfCnpj::normalize('390.533.447-05'));
+        $this->assertEquals('CPF', CpfCnpj::label('39053344705'));
+        $this->assertEquals('CNPJ', CpfCnpj::label('12345678000195'));
+        $this->assertEquals('390.533.447-05', CpfCnpj::format('39053344705'));
+        $this->assertEquals('12.345.678/0001-95', CpfCnpj::format('12345678000195'));
     }
 
     public function test_rejeita_vazios_repetidos_e_digitos_errados(): void

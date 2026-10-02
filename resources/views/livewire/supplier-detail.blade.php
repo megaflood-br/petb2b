@@ -55,7 +55,7 @@
                         <h3 class="text-xl font-black text-gray-900 uppercase mb-4 tracking-tight border-b pb-2">Sobre a Empresa</h3>
                         @if($supplier->cnpj)
                             <div class="flex items-center gap-2 mt-2 mb-4">
-                                <span class="text-[10px] font-black uppercase text-gray-400">CNPJ:</span>
+                                <span class="text-[10px] font-black uppercase text-gray-400">{{ \App\Support\CpfCnpj::label($supplier->cnpj) }}:</span>
                                 <span class="text-[10px] font-mono font-bold text-gray-600">{{ $supplier->cnpj }}</span>
                             </div>
                         @endif

@@ -29,6 +29,43 @@ class CpfCnpj
         return static::isValid($value) ? static::digits($value) : null;
     }
 
+    public static function label(?string $value): string
+    {
+        return strlen(static::digits($value)) === 11 ? 'CPF' : 'CNPJ';
+    }
+
+    public static function format(?string $value): ?string
+    {
+        $digits = static::normalize($value);
+
+        if ($digits === null) {
+            return filled($value) ? (string) $value : null;
+        }
+
+        if (strlen($digits) === 11) {
+            return substr($digits, 0, 3).'.'.substr($digits, 3, 3).'.'.substr($digits, 6, 3).'-'.substr($digits, 9, 2);
+        }
+
+        return substr($digits, 0, 2).'.'.substr($digits, 2, 3).'.'.substr($digits, 5, 3).'/'.substr($digits, 8, 4).'-'.substr($digits, 12, 2);
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    public static function rule(): array
+    {
+        return [
+            'nullable',
+            'string',
+            'max:18',
+            function (string $attribute, mixed $value, \Closure $fail) {
+                if (filled($value) && ! static::isValid((string) $value)) {
+                    $fail('Informe um CPF ou CNPJ válido.');
+                }
+            },
+        ];
+    }
+
     private static function isValidCpf(string $cpf): bool
     {
         if (preg_match('/^(\d)\1{10}$/', $cpf)) {

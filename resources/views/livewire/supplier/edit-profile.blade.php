@@ -66,8 +66,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">CNPJ (Opcional)</label>
-                <input type="text" wire:model="cnpj" placeholder="00.000.000/0000-00" class="w-full bg-gray-50 border-none rounded-xl p-4 text-gray-900 focus:ring-2 focus:ring-brand-500">
+                <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">CPF ou CNPJ</label>
+                <input type="text" wire:model="cnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" class="w-full bg-gray-50 border-none rounded-xl p-4 text-gray-900 focus:ring-2 focus:ring-brand-500">
+                <p class="text-[9px] text-gray-400 font-medium normal-case mt-1">Pessoa física usa CPF; empresa usa CNPJ. Necessário para gerar PIX.</p>
+                @error('cnpj') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
             </div>
 
             <div>

@@ -5,7 +5,7 @@
                 <div>
                     <p class="text-[10px] font-black uppercase text-brand-500 tracking-[0.25em] mb-1">Conta</p>
                     <h1 class="text-4xl font-black text-gray-900 uppercase italic tracking-tight">Meu <span class="text-brand-500">Perfil</span></h1>
-                    <p class="mt-3 text-base text-gray-500 font-medium">Atualize foto, dados de acesso e senha.</p>
+                    <p class="mt-3 text-base text-gray-500 font-medium">Atualize foto, dados de acesso, CPF/CNPJ e senha.</p>
                 </div>
                 <a href="{{ route('favorites.index') }}" class="bg-brand-50 text-brand-600 hover:bg-brand-500 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition shadow-sm">
                     Ver favoritos →
