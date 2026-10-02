@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\CpfCnpj;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
@@ -13,12 +14,14 @@ new class extends Component
 
     public string $name = '';
     public string $email = '';
+    public string $cnpj = '';
     public $avatar = null;
 
     public function mount(): void
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->cnpj = (string) (Auth::user()->cnpj ?? '');
     }
 
     public function updateProfileInformation(): void
@@ -28,12 +31,14 @@ new class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'cnpj' => CpfCnpj::rule(),
             'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $user->fill([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'cnpj' => CpfCnpj::format($validated['cnpj'] ?? null),
         ]);
 
         if ($user->isDirty('email')) {
@@ -74,7 +79,7 @@ new class extends Component
         </h2>
 
         <p class="mt-1 text-sm text-gray-500 font-medium">
-            Foto de perfil, nome e e-mail usados para entrar no portal.
+            Foto de perfil, nome, e-mail e CPF ou CNPJ da conta.
         </p>
     </header>
 
@@ -101,6 +106,13 @@ new class extends Component
             <x-input-label for="name" value="Nome" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
+        </div>
+
+        <div>
+            <x-input-label for="cnpj" value="CPF ou CNPJ" />
+            <x-text-input wire:model="cnpj" id="cnpj" name="cnpj" type="text" class="mt-1 block w-full" maxlength="18" placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+            <p class="mt-1 text-[10px] text-gray-400 font-medium">Pessoa física usa CPF; empresa usa CNPJ.</p>
+            <x-input-error class="mt-2" :messages="$errors->get('cnpj')" />
         </div>
 
         <div>

@@ -33,4 +33,22 @@ class RegistrationTest extends TestCase
 
         $this->assertAuthenticated();
     }
+
+    public function test_cadastro_aceita_cpf(): void
+    {
+        Volt::test('pages.auth.register')
+            ->set('name', 'Pessoa Fisica')
+            ->set('email', 'cpf@example.com')
+            ->set('password', 'password')
+            ->set('password_confirmation', 'password')
+            ->set('cnpj', '390.533.447-05')
+            ->call('register')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'cpf@example.com',
+            'cnpj' => '390.533.447-05',
+        ]);
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\CpfCnpj;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -48,9 +49,10 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-            'cnpj' => ['nullable', 'string', 'max:18'],
+            'cnpj' => CpfCnpj::rule(),
         ]);
 
+        $validated['cnpj'] = CpfCnpj::format($validated['cnpj'] ?? null);
         $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create($validated);
@@ -95,8 +97,8 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
         <div class="mt-4">
-    <x-input-label for="cnpj" :value="__('CNPJ (Opcional)')" />
-    <x-text-input wire:model="cnpj" id="cnpj" class="block mt-1 w-full" type="text" name="cnpj" />
+    <x-input-label for="cnpj" :value="__('CPF ou CNPJ (opcional)')" />
+    <x-text-input wire:model="cnpj" id="cnpj" class="block mt-1 w-full" type="text" name="cnpj" maxlength="18" placeholder="000.000.000-00 ou 00.000.000/0000-00" />
     <x-input-error :messages="$errors->get('cnpj')" class="mt-2" />
 </div>
 
