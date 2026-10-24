@@ -129,6 +129,25 @@ class Supplier extends Model
     }
 
     /**
+     * URL absoluta do site cadastrado, ou null quando o campo está vazio.
+     * Aceita valor com ou sem http(s)://.
+     */
+    public function websiteUrl(): ?string
+    {
+        $website = trim((string) $this->website);
+
+        if ($website === '' || preg_match('#^(javascript|data):#i', $website)) {
+            return null;
+        }
+
+        if (! preg_match('#^https?://#i', $website)) {
+            $website = 'https://'.$website;
+        }
+
+        return $website;
+    }
+
+    /**
      * Selo azul do guia: nome, categoria, e-mail real, cidade, UF, logo,
      * telefone ou WhatsApp, descrição e endereço — sem placeholders da importação.
      */
