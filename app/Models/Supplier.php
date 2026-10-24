@@ -129,28 +129,28 @@ class Supplier extends Model
     }
 
     /**
-     * Selo azul do guia: só empresas com os dados públicos preenchidos de verdade.
-     * Placeholders da importação e e-mails temporários não contam.
+     * Selo azul do guia: nome, categoria, e-mail real, cidade, UF, logo,
+     * telefone ou WhatsApp, descrição e endereço — sem placeholders da importação.
      */
     public function hasCompleteProfile(): bool
     {
         $email = trim((string) $this->email);
 
-        return $this->isFilledValue($this->name)
-            && $this->isFilledValue($this->category)
-            && $this->isFilledValue($this->description)
+        return static::isUsableText($this->name)
+            && static::isUsableText($this->category)
+            && static::isUsableText($this->description)
             && mb_strlen(trim((string) $this->description)) >= 10
-            && $this->isFilledValue($this->address)
-            && $this->isFilledValue($this->city)
-            && $this->isFilledValue($this->state)
-            && $this->isFilledValue($this->logo)
+            && static::isUsableText($this->address)
+            && static::isUsableText($this->city)
+            && static::isUsableText($this->state)
+            && static::isUsableText($this->logo)
             && $email !== ''
             && filter_var($email, FILTER_VALIDATE_EMAIL) !== false
             && ! str_contains(mb_strtolower($email), '@temporario-')
-            && ($this->isFilledValue($this->phone) || $this->isFilledValue($this->whatsapp));
+            && (static::isUsableText($this->phone) || static::isUsableText($this->whatsapp));
     }
 
-    protected function isFilledValue(?string $value): bool
+    public static function isUsableText(?string $value): bool
     {
         $value = trim((string) $value);
 

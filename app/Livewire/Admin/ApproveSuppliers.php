@@ -6,6 +6,7 @@ use App\Livewire\Concerns\WithInfiniteScroll;
 use App\Models\Supplier;
 use App\Models\Category;
 use App\Imports\SuppliersImport;
+use App\Support\CpfCnpj;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -36,6 +37,9 @@ class ApproveSuppliers extends Component
     public $editingId;
     public $editName, $editCategory, $editEmail, $editPhone, $editCity, $editState, $editWhatsapp;
     public $editDescription = '';
+    public $editAddress = '';
+    public $editWebsite = '';
+    public $editCnpj = '';
     public bool $editApproved = true;
     public $editLogo;
     public $existingLogo;
@@ -139,6 +143,10 @@ class ApproveSuppliers extends Component
         $this->editCity = $supplier->city;
         $this->editState = $supplier->state;
         $this->editWhatsapp = $supplier->whatsapp;
+        $this->editDescription = Supplier::isUsableText($supplier->description) ? $supplier->description : '';
+        $this->editAddress = Supplier::isUsableText($supplier->address) ? $supplier->address : '';
+        $this->editWebsite = $supplier->website;
+        $this->editCnpj = $supplier->cnpj;
         $this->editLogo = null;
         $this->existingLogo = $supplier->logo;
         $this->isCreating = false;
@@ -148,9 +156,21 @@ class ApproveSuppliers extends Component
 
     public function update()
     {
-        $this->validate(array_merge($this->companyRules(), [
+        $this->validate(array_merge($this->companyRules(updating: true), [
             'editEmail' => 'required|email',
         ]));
+
+        if (! Supplier::isUsableText($this->editDescription)) {
+            $this->addError('editDescription', 'Preencha a descrição da empresa.');
+
+            return;
+        }
+
+        if (! Supplier::isUsableText($this->editAddress)) {
+            $this->addError('editAddress', 'Preencha o endereço da empresa.');
+
+            return;
+        }
 
         $supplier = Supplier::findOrFail($this->editingId);
         $logo = $this->storeLogo($supplier->logo);
@@ -163,6 +183,12 @@ class ApproveSuppliers extends Component
             'whatsapp' => $this->blankToNull($this->editWhatsapp),
             'city' => $this->blankToNull($this->editCity),
             'state' => $this->blankToNull($this->editState),
+            'description' => $this->blankToNull($this->editDescription)
+                ?? 'Empresa ainda não preencheu esta informação.',
+            'address' => $this->blankToNull($this->editAddress)
+                ?? 'Endereço a completar',
+            'website' => $this->blankToNull($this->editWebsite),
+            'cnpj' => $this->blankToNull($this->editCnpj),
             'logo' => $logo,
         ]);
 
@@ -191,6 +217,9 @@ class ApproveSuppliers extends Component
             'editState',
             'editWhatsapp',
             'editDescription',
+            'editAddress',
+            'editWebsite',
+            'editCnpj',
             'editLogo',
             'existingLogo',
         ]);
@@ -220,7 +249,10 @@ class ApproveSuppliers extends Component
             'state' => $this->blankToNull($this->editState),
             'description' => $this->blankToNull($this->editDescription)
                 ?? 'Empresa ainda não preencheu esta informação.',
-            'address' => 'Endereço a completar',
+            'address' => $this->blankToNull($this->editAddress)
+                ?? 'Endereço a completar',
+            'website' => $this->blankToNull($this->editWebsite),
+            'cnpj' => $this->blankToNull($this->editCnpj),
             'logo' => $this->storeLogo(),
             'is_active' => true,
             'is_approved' => $this->editApproved,
@@ -238,9 +270,12 @@ class ApproveSuppliers extends Component
     /**
      * @return array<string, string>
      */
-    private function companyRules(): array
+    /**
+     * @return array<string, mixed>
+     */
+    private function companyRules(bool $updating = false): array
     {
-        return [
+        $rules = [
             'editName' => 'required|min:3',
             'editCategory' => 'required',
             'editPhone' => 'nullable',
@@ -248,8 +283,22 @@ class ApproveSuppliers extends Component
             'editCity' => 'nullable|string',
             'editState' => 'nullable|string',
             'editDescription' => 'nullable|string',
+            'editAddress' => 'nullable|string',
+            'editWebsite' => 'nullable|string',
+            'editCnpj' => CpfCnpj::rule(),
             'editLogo' => 'nullable|image|max:2048',
         ];
+
+        if ($updating) {
+            $rules['editCity'] = 'required|string';
+            $rules['editState'] = 'required|string';
+            $rules['editDescription'] = 'required|string|min:10';
+            $rules['editAddress'] = 'required|string|min:5';
+            $rules['editPhone'] = 'required_without:editWhatsapp';
+            $rules['editWhatsapp'] = 'required_without:editPhone';
+        }
+
+        return $rules;
     }
 
     private function storeLogo(?string $existing = null): ?string
