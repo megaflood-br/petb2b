@@ -49,8 +49,9 @@
                 <div class="w-full lg:flex-1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @forelse($suppliers as $supplier)
-                            {{-- Se for verificado, ganha uma borda sutil azul/celeste que destaca o card --}}
-                            <div class="bg-white border p-8 rounded-[3rem] shadow-sm flex flex-col justify-between transition hover:shadow-xl group relative overflow-hidden {{ $supplier->is_approved ? 'border-sky-100 ring-1 ring-sky-50/50' : 'border-gray-100' }}">
+                            {{-- Selo azul só para quem preencheu o perfil por completo --}}
+                            @php $profileComplete = $supplier->hasCompleteProfile(); @endphp
+                            <div class="bg-white border p-8 rounded-[3rem] shadow-sm flex flex-col justify-between transition hover:shadow-xl group relative overflow-hidden {{ $profileComplete ? 'border-sky-100 ring-1 ring-sky-50/50' : 'border-gray-100' }}">
                                 <div>
                                     <div class="flex justify-between items-start mb-6">
                                         <div class="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-50 overflow-hidden shrink-0">
@@ -61,10 +62,9 @@
                                             @endif
                                         </div>
 
-                                        {{-- CORRIGIDO: Selo de Verificado Otimizado, Centralizado e Legível (Padrão Oficial) --}}
                                         <div class="flex items-center gap-2">
-                                            @if($supplier->is_approved)
-                                                <div class="w-9 h-9 bg-[#0095f6] text-white rounded-full shadow-md flex items-center justify-center shrink-0 border-4 border-sky-50" title="Fornecedor Verificado Oficial">
+                                            @if($profileComplete)
+                                                <div class="w-9 h-9 bg-[#0095f6] text-white rounded-full shadow-md flex items-center justify-center shrink-0 border-4 border-sky-50" title="Perfil completo" data-profile-complete="{{ $supplier->id }}">
                                                     <svg class="w-4 h-4 stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                                     </svg>
