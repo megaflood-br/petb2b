@@ -215,7 +215,11 @@ class AdminCreateSupplierTest extends TestCase
         $supplier = Supplier::create([
             'name' => 'Empresa Editada',
             'email' => 'editar-logo@empresa.com',
-            'description' => 'd',
+            'description' => 'Clínica veterinária com atendimento completo.',
+            'address' => 'Rua das Flores, 10',
+            'city' => 'Campinas',
+            'state' => 'SP',
+            'phone' => '1933334444',
             'category' => 'clinicas',
             'logo' => 'suppliers/logos/antigo.png',
             'is_active' => true,
@@ -228,6 +232,10 @@ class AdminCreateSupplierTest extends TestCase
             ->call('edit', $supplier->id)
             ->assertSet('existingLogo', 'suppliers/logos/antigo.png')
             ->assertSee('Logo da empresa')
+            ->assertSee('Endereço (Rua, Nº, Bairro)')
+            ->assertSee('Descrição')
+            ->assertSee('CPF ou CNPJ')
+            ->assertSee('Website')
             ->set('editLogo', UploadedFile::fake()->image('novo.jpg', 180, 180))
             ->call('update')
             ->assertHasNoErrors();
@@ -248,7 +256,11 @@ class AdminCreateSupplierTest extends TestCase
         $supplier = Supplier::create([
             'name' => 'Empresa Mantem Logo',
             'email' => 'mantem-logo@empresa.com',
-            'description' => 'd',
+            'description' => 'Clínica veterinária com atendimento completo.',
+            'address' => 'Rua das Flores, 10',
+            'city' => 'Campinas',
+            'state' => 'SP',
+            'phone' => '1933334444',
             'category' => 'clinicas',
             'logo' => 'suppliers/logos/keep.png',
             'is_active' => true,
@@ -265,5 +277,74 @@ class AdminCreateSupplierTest extends TestCase
 
         $this->assertEquals('suppliers/logos/keep.png', $supplier->fresh()->logo);
         Storage::disk('public')->assertExists('suppliers/logos/keep.png');
+    }
+
+    public function test_editar_salva_todos_os_campos_do_selo(): void
+    {
+        $this->category();
+
+        $supplier = Supplier::create([
+            'name' => 'WS Metalúrgica',
+            'email' => 'vendas@wscorrentes.com.br',
+            'description' => 'Empresa ainda não preencheu esta informação.',
+            'address' => 'Endereço a completar',
+            'category' => 'distribuidores',
+            'city' => 'Ribeirão Pires',
+            'state' => 'SP',
+            'phone' => '1148273444',
+            'whatsapp' => '5511997816098',
+            'logo' => 'suppliers/logos/ws.png',
+            'is_active' => true,
+            'is_approved' => true,
+        ]);
+
+        $this->assertFalse($supplier->hasCompleteProfile());
+
+        Livewire::actingAs($this->admin())
+            ->test(ApproveSuppliers::class)
+            ->call('setStatus', 'approved')
+            ->call('edit', $supplier->id)
+            ->assertSet('editDescription', '')
+            ->assertSet('editAddress', '')
+            ->assertSee('Endereço (Rua, Nº, Bairro)')
+            ->set('editDescription', 'A WS Metalúrgica produz correntes e fixadores para o mercado pet.')
+            ->set('editAddress', 'Rua das Indústrias, 100 - Centro')
+            ->set('editWebsite', 'https://wscorrentes.com.br')
+            ->set('editCnpj', '12.345.678/0001-95')
+            ->call('update')
+            ->assertHasNoErrors();
+
+        $supplier->refresh();
+        $this->assertEquals('A WS Metalúrgica produz correntes e fixadores para o mercado pet.', $supplier->description);
+        $this->assertEquals('Rua das Indústrias, 100 - Centro', $supplier->address);
+        $this->assertEquals('https://wscorrentes.com.br', $supplier->website);
+        $this->assertNotEmpty($supplier->cnpj);
+        $this->assertTrue($supplier->hasCompleteProfile());
+    }
+
+    public function test_editar_exige_descricao_endereco_cidade_e_contato(): void
+    {
+        $this->category();
+
+        $supplier = Supplier::create([
+            'name' => 'Empresa Incompleta',
+            'email' => 'incompleta@empresa.com',
+            'description' => 'Empresa ainda não preencheu esta informação.',
+            'address' => 'Endereço a completar',
+            'category' => 'clinicas',
+            'is_active' => true,
+            'is_approved' => true,
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(ApproveSuppliers::class)
+            ->call('setStatus', 'approved')
+            ->call('edit', $supplier->id)
+            ->set('editCity', '')
+            ->set('editState', '')
+            ->set('editPhone', '')
+            ->set('editWhatsapp', '')
+            ->call('update')
+            ->assertHasErrors(['editDescription', 'editAddress', 'editCity', 'editState', 'editPhone', 'editWhatsapp']);
     }
 }

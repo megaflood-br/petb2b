@@ -168,10 +168,31 @@
                     <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Cidade</label>
                         <input type="text" wire:model="editCity" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                        @error('editCity') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">UF</label>
                         <input type="text" wire:model="editState" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                        @error('editState') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Website</label>
+                        <input type="text" wire:model="editWebsite" placeholder="https://site.com.br" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">CPF ou CNPJ</label>
+                        <input type="text" wire:model="editCnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                        @error('editCnpj') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Endereço (Rua, Nº, Bairro)</label>
+                        <input type="text" wire:model="editAddress" placeholder="Ex: Rua Machado de Assis, 465" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs">
+                        @error('editAddress') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Descrição</label>
+                        <textarea wire:model="editDescription" rows="3" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs" placeholder="{{ $isCreating ? 'Opcional. Pode completar depois.' : 'Texto que aparece no guia de fornecedores.' }}"></textarea>
+                        @error('editDescription') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
                     </div>
                     <div class="md:col-span-2">
                         <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Logo da empresa</label>
@@ -191,10 +212,6 @@
                         @error('editLogo') <span class="text-red-500 text-[9px] font-black uppercase mt-1 block">{{ $message }}</span> @enderror
                     </div>
                     @if($isCreating)
-                        <div class="md:col-span-2">
-                            <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Descrição</label>
-                            <textarea wire:model="editDescription" rows="3" class="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-xs" placeholder="Opcional. Pode completar depois."></textarea>
-                        </div>
                         <div class="md:col-span-2">
                             <label class="inline-flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" wire:model="editApproved" class="w-5 h-5 rounded-lg border-gray-200 text-indigo-600">

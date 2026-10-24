@@ -36,17 +36,17 @@ class SupplierCompleteProfileTest extends TestCase
         $this->assertTrue((new Supplier($this->completeAttrs()))->hasCompleteProfile());
     }
 
-    public function test_descricao_e_endereco_de_importacao_nao_bloqueiam_o_selo(): void
+    public function test_descricao_e_endereco_de_importacao_nao_sao_completos(): void
     {
         $supplier = new Supplier($this->completeAttrs([
             'description' => 'Empresa ainda não preencheu esta informação.',
             'address' => 'Endereço a completar',
         ]));
 
-        $this->assertTrue($supplier->hasCompleteProfile());
+        $this->assertFalse($supplier->hasCompleteProfile());
     }
 
-    public function test_empresa_do_admin_com_logo_e_contato_ganha_selo(): void
+    public function test_admin_completa_o_perfil_e_ganha_selo(): void
     {
         $supplier = new Supplier($this->completeAttrs([
             'name' => 'WS Metalúrgica',
@@ -60,6 +60,13 @@ class SupplierCompleteProfileTest extends TestCase
             'description' => 'Empresa ainda não preencheu esta informação.',
             'address' => 'Endereço a completar',
         ]));
+
+        $this->assertFalse($supplier->hasCompleteProfile());
+
+        $supplier->fill([
+            'description' => 'A WS Metalúrgica produz correntes e fixadores para o mercado pet.',
+            'address' => 'Rua das Indústrias, 100 - Ribeirão Pires',
+        ]);
 
         $this->assertTrue($supplier->hasCompleteProfile());
     }
