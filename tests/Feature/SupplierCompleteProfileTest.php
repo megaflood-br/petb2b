@@ -36,22 +36,32 @@ class SupplierCompleteProfileTest extends TestCase
         $this->assertTrue((new Supplier($this->completeAttrs()))->hasCompleteProfile());
     }
 
-    public function test_descricao_de_importacao_nao_e_completa(): void
+    public function test_descricao_e_endereco_de_importacao_nao_bloqueiam_o_selo(): void
     {
         $supplier = new Supplier($this->completeAttrs([
             'description' => 'Empresa ainda não preencheu esta informação.',
-        ]));
-
-        $this->assertFalse($supplier->hasCompleteProfile());
-    }
-
-    public function test_endereco_placeholder_nao_e_completo(): void
-    {
-        $supplier = new Supplier($this->completeAttrs([
             'address' => 'Endereço a completar',
         ]));
 
-        $this->assertFalse($supplier->hasCompleteProfile());
+        $this->assertTrue($supplier->hasCompleteProfile());
+    }
+
+    public function test_empresa_do_admin_com_logo_e_contato_ganha_selo(): void
+    {
+        $supplier = new Supplier($this->completeAttrs([
+            'name' => 'WS Metalúrgica',
+            'email' => 'vendas@wscorrentes.com.br',
+            'category' => 'distribuidores',
+            'city' => 'Ribeirão Pires',
+            'state' => 'SP',
+            'phone' => '1148273444',
+            'whatsapp' => '5511997816098',
+            'logo' => 'suppliers/logos/ws.png',
+            'description' => 'Empresa ainda não preencheu esta informação.',
+            'address' => 'Endereço a completar',
+        ]));
+
+        $this->assertTrue($supplier->hasCompleteProfile());
     }
 
     public function test_email_temporario_nao_e_completo(): void
@@ -87,9 +97,9 @@ class SupplierCompleteProfileTest extends TestCase
             'name' => 'Beta Incompleta',
             'email' => 'beta_incompleta_' . uniqid() . '@t.com',
             'slug' => 'beta-incompleta-' . uniqid(),
-            'description' => 'Empresa ainda não preencheu esta informação.',
-            'address' => 'Endereço a completar',
             'logo' => null,
+            'phone' => null,
+            'whatsapp' => null,
         ]));
 
         $this->get('/fornecedores')

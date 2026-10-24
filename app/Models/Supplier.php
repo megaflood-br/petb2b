@@ -129,8 +129,9 @@ class Supplier extends Model
     }
 
     /**
-     * Selo azul do guia: só empresas com os dados públicos preenchidos de verdade.
-     * Placeholders da importação e e-mails temporários não contam.
+     * Selo azul do guia: dados que o admin consegue completar no cadastro.
+     * Descrição e endereço não entram — o formulário de edição não tem esses campos.
+     * E-mails temporários da importação não contam.
      */
     public function hasCompleteProfile(): bool
     {
@@ -138,9 +139,6 @@ class Supplier extends Model
 
         return $this->isFilledValue($this->name)
             && $this->isFilledValue($this->category)
-            && $this->isFilledValue($this->description)
-            && mb_strlen(trim((string) $this->description)) >= 10
-            && $this->isFilledValue($this->address)
             && $this->isFilledValue($this->city)
             && $this->isFilledValue($this->state)
             && $this->isFilledValue($this->logo)
